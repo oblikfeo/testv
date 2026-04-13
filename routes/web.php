@@ -6,7 +6,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
+
+Route::view('/agreement', 'agreement')->name('agreement');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

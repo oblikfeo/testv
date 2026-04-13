@@ -15,6 +15,12 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'brand_name' => env('APP_BRAND_NAME', 'AVA'),
+
+    'brand_suffix' => env('APP_BRAND_SUFFIX', 'VPN'),
+
+    'telegram_support_url' => env('TELEGRAM_SUPPORT_URL', 'https://t.me/'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
