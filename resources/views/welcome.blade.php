@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
 @endpush
 
-@section('title', config('app.brand_name').' '.config('app.brand_suffix').' — безграничный доступ к сети')
+@section('title', 'AVA VPN — безграничный доступ к сети')
 
 @section('content')
     <section class="hero">

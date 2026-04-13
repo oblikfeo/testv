@@ -2,8 +2,8 @@
     <div class="auth-page">
         <div class="auth-card">
             <a href="{{ route('home') }}" class="auth-logo">
-                <img src="{{ asset('assets/logo.png') }}" alt="{{ config('app.brand_name') }}">
-                <span>{{ config('app.brand_name') }} <em>{{ config('app.brand_suffix') }}</em></span>
+                <img src="{{ asset('assets/logo.png') }}" alt="AVA VPN">
+                <span>AVA <em>VPN</em></span>
             </a>
             <h1>Войти в аккаунт</h1>
 
