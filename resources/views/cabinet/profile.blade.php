@@ -33,13 +33,12 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="name">Имя</label>
-                    <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name">
+                    <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" placeholder="Как вас зовут">
                     <x-input-error :messages="$errors->get('name')" class="form-error" />
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required autocomplete="username">
-                    <x-input-error :messages="$errors->get('email')" class="form-error" />
+                    <input type="email" id="email" value="{{ $user->email }}" disabled>
                 </div>
             </div>
 

@@ -1,0 +1,384 @@
+/* ===== AVA VPN — Cabinet Styles (sidebar) ===== */
+
+.cabinet {
+    padding-top: 73px;
+    min-height: 100vh;
+    display: flex;
+}
+
+/* Sidebar */
+.cab-sidebar {
+    position: fixed;
+    top: 73px;
+    left: 0;
+    bottom: 0;
+    width: 220px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+}
+
+.cab-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 10px;
+    flex: 1;
+}
+
+.cab-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: all var(--transition);
+    text-decoration: none;
+}
+
+.cab-nav a:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.cab-nav a.active {
+    color: var(--text-primary);
+    background: rgba(220, 38, 38, 0.08);
+}
+
+.cab-nav-icon {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.cab-nav a.active .cab-nav-icon {
+    color: var(--red-primary);
+}
+
+.cab-nav-sep {
+    height: 1px;
+    background: var(--border-color);
+    margin: 10px 14px;
+}
+
+.cab-nav-bottom {
+    padding: 12px 10px 0;
+    margin-top: auto;
+    border-top: 1px solid var(--border-color);
+}
+
+.cab-nav-bottom a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all var(--transition);
+    text-decoration: none;
+}
+
+.cab-nav-bottom a:hover {
+    color: var(--red-light);
+}
+
+/* Main */
+.cab-main {
+    margin-left: 220px;
+    flex: 1;
+    padding: 36px 40px;
+    max-width: 780px;
+}
+
+.cab-page-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.cab-page-desc {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+    line-height: 1.5;
+}
+
+/* Card */
+.cab-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+}
+
+.cab-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.cab-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Badges */
+.cab-badge {
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.cab-badge.green { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.cab-badge.gray { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
+.cab-badge.red { background: rgba(220, 38, 38, 0.1); color: var(--red-light); }
+
+/* Key display */
+.key-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-top: 16px;
+}
+
+.key-row code {
+    flex: 1;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-family: 'Consolas', 'Courier New', monospace;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+/* Subscription rows */
+.sub-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sub-row:last-child { border-bottom: none; }
+
+.sub-row-label { font-size: 0.85rem; color: var(--text-muted); }
+.sub-row-value { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+.sub-row-value.muted { color: var(--text-muted); font-weight: 400; }
+
+/* Info lines */
+.info-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.88rem;
+}
+
+.info-line:last-child { border-bottom: none; }
+.info-line .label { color: var(--text-muted); }
+.info-line .value { color: var(--text-primary); font-weight: 500; }
+
+/* Forms */
+.cab-card .form-group {
+    margin-bottom: 16px;
+}
+
+.cab-card .form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.cab-card .form-group label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.cab-card .form-group input {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: var(--font-main);
+    transition: border-color var(--transition);
+    outline: none;
+}
+
+.cab-card .form-group input:focus {
+    border-color: var(--red-primary);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.cab-card .form-group input:disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+
+/* Danger */
+.cab-card.danger {
+    border-color: rgba(220, 38, 38, 0.2);
+}
+
+.cab-card.danger .cab-card-title {
+    color: var(--red-light);
+}
+
+.danger-text {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.btn-danger {
+    background: transparent;
+    color: var(--red-light);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.btn-danger:hover {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: var(--red-primary);
+}
+
+/* History */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+    padding: 14px 0;
+    text-align: left;
+    font-size: 0.88rem;
+}
+
+.history-table th {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.history-table td {
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.history-table tr:last-child td { border-bottom: none; }
+.history-table .amount { font-weight: 600; color: var(--text-primary); }
+.history-table .status-paid { color: #22c55e; font-weight: 500; }
+
+.cab-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.cab-empty p { margin-bottom: 20px; }
+
+/* Navbar tg (shared) */
+.navbar-tg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+.navbar-tg:hover { color: var(--red-light); }
+.navbar-tg svg { flex-shrink: 0; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cab-sidebar {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        padding: 0;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        z-index: 100;
+    }
+
+    .cab-nav {
+        flex-direction: row;
+        padding: 6px 8px;
+        gap: 2px;
+        flex: 1;
+        justify-content: center;
+        overflow-x: auto;
+    }
+
+    .cab-nav a {
+        flex-direction: column;
+        gap: 3px;
+        padding: 8px 10px;
+        font-size: 0.65rem;
+        text-align: center;
+        min-width: 0;
+    }
+
+    .cab-nav-icon { font-size: 1.1rem; }
+    .cab-nav-sep { display: none; }
+    .cab-nav-bottom { display: none; }
+
+    .cab-main {
+        margin-left: 0;
+        padding: 24px 16px 80px;
+    }
+
+    .cab-card { padding: 20px; }
+    .form-row { grid-template-columns: 1fr; }
+
+    .key-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .navbar-tg span { display: none; }
+}

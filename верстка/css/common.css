@@ -1,0 +1,231 @@
+:root {
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #111111;
+    --bg-card: #161616;
+    --bg-card-hover: #1c1c1c;
+    --border-color: rgba(255, 255, 255, 0.06);
+    --border-accent: rgba(220, 38, 38, 0.3);
+
+    --red-primary: #dc2626;
+    --red-light: #ef4444;
+    --red-dark: #991b1b;
+    --red-glow: rgba(220, 38, 38, 0.25);
+
+    --text-primary: #f5f5f5;
+    --text-secondary: #a3a3a3;
+    --text-muted: #6b6b6b;
+
+    --font-main: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+
+    --transition: 0.25s ease;
+}
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+body {
+    font-family: var(--font-main);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+}
+
+a {
+    color: var(--red-light);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+a:hover {
+    color: var(--red-primary);
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 16px 0;
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-color);
+    transition: background var(--transition);
+}
+
+.navbar .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.navbar-logo img {
+    height: 40px;
+    width: 40px;
+    border-radius: 8px;
+}
+
+.navbar-logo span {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+}
+
+.navbar-logo span em {
+    font-style: normal;
+    color: var(--red-primary);
+}
+
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: var(--font-main);
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition);
+    text-decoration: none;
+    line-height: 1.4;
+}
+
+.btn-primary {
+    background: var(--red-primary);
+    color: #fff;
+    box-shadow: 0 0 20px var(--red-glow);
+}
+
+.btn-primary:hover {
+    background: var(--red-light);
+    color: #fff;
+    box-shadow: 0 0 30px rgba(220, 38, 38, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    border-color: var(--red-primary);
+    color: var(--red-light);
+    background: rgba(220, 38, 38, 0.05);
+}
+
+.btn-sm {
+    padding: 8px 20px;
+    font-size: 0.85rem;
+}
+
+.btn-lg {
+    padding: 16px 36px;
+    font-size: 1.05rem;
+    border-radius: var(--radius-md);
+}
+
+.footer {
+    padding: 40px 0;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.footer p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.7;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.footer a {
+    color: var(--text-secondary);
+}
+
+.footer a:hover {
+    color: var(--red-light);
+}
+
+.text-center { text-align: center; }
+.text-red { color: var(--red-primary); }
+.text-muted { color: var(--text-secondary); }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mt-32 { margin-top: 32px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+
+@media (max-width: 768px) {
+    html { font-size: 15px; }
+
+    .container { padding: 0 16px; }
+
+    .navbar-logo img {
+        height: 32px;
+        width: 32px;
+    }
+
+    .navbar-logo span {
+        font-size: 1.1rem;
+    }
+
+    .btn-lg {
+        padding: 14px 28px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    html { font-size: 14px; }
+}

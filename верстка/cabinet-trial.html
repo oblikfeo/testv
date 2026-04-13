@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVA VPN — Тест-драйв</title>
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/cabinet.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-logo">
+                <img src="assets/logo.png" alt="AVA VPN">
+                <span>AVA <em>VPN</em></span>
+            </a>
+            <div class="navbar-actions">
+                <a href="https://t.me/" target="_blank" class="navbar-tg">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                </a>
+                <a href="index.html" class="btn btn-secondary btn-sm">На сайт</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="cabinet">
+        <aside class="cab-sidebar">
+            <nav class="cab-nav">
+                <a href="cabinet.html">
+                    <span class="cab-nav-icon">◈</span>
+                    <span>Подписка</span>
+                </a>
+                <a href="cabinet-trial.html" class="active">
+                    <span class="cab-nav-icon">▷</span>
+                    <span>Тест-драйв</span>
+                </a>
+                <div class="cab-nav-sep"></div>
+                <a href="cabinet-profile.html">
+                    <span class="cab-nav-icon">○</span>
+                    <span>Профиль</span>
+                </a>
+                <a href="cabinet-security.html">
+                    <span class="cab-nav-icon">◑</span>
+                    <span>Безопасность</span>
+                </a>
+                <a href="cabinet-history.html">
+                    <span class="cab-nav-icon">☰</span>
+                    <span>Покупки</span>
+                </a>
+            </nav>
+            <div class="cab-nav-bottom">
+                <a href="index.html">
+                    <span class="cab-nav-icon">←</span>
+                    <span>Выйти</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="cab-main">
+            <h1 class="cab-page-title">Тест-драйв</h1>
+            <p class="cab-page-desc">Бесплатный ключ на 8 часов, чтобы проверить сервис перед покупкой. Выдаётся один раз на аккаунт.</p>
+
+            <div class="cab-card">
+                <div class="cab-card-header">
+                    <span class="cab-card-title">Тестовый ключ</span>
+                    <span class="cab-badge red">Доступно</span>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px;">
+                    Нажмите кнопку — мы сгенерируем временный ключ подключения. Скопируйте его в приложение и пользуйтесь 8 часов бесплатно.
+                </p>
+                <button class="btn btn-primary btn-sm" onclick="generateTrial(this)">Получить ключ</button>
+                <div class="key-block" id="trialKey" style="display: none;">
+                    <div class="key-row">
+                        <code id="trialKeyValue"></code>
+                        <button class="btn btn-secondary btn-sm" onclick="copyKey()">Копировать</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function generateTrial(btn) {
+            btn.disabled = true;
+            btn.textContent = 'Генерация...';
+            setTimeout(function() {
+                var key = 'vless://test-' + Math.random().toString(36).substring(2, 10) + '@ava-vpn.net:443';
+                document.getElementById('trialKeyValue').textContent = key;
+                document.getElementById('trialKey').style.display = 'block';
+                btn.textContent = 'Ключ выдан';
+                btn.closest('.cab-card').querySelector('.cab-badge').textContent = 'Использовано';
+                btn.closest('.cab-card').querySelector('.cab-badge').className = 'cab-badge gray';
+            }, 800);
+        }
+
+        function copyKey() {
+            var key = document.getElementById('trialKeyValue').textContent;
+            navigator.clipboard.writeText(key);
+            var copyBtn = document.querySelector('#trialKey .btn');
+            copyBtn.textContent = 'Скопировано!';
+            setTimeout(function() { copyBtn.textContent = 'Копировать'; }, 1500);
+        }
+    </script>
+
+</body>
+</html>

@@ -17,6 +17,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/cabinet', [CabinetController::class, 'subscription'])->name('cabinet.subscription');
+    Route::get('/cabinet/trial', [CabinetController::class, 'trial'])->name('cabinet.trial');
     Route::get('/cabinet/profile', [CabinetController::class, 'profile'])->name('cabinet.profile');
     Route::get('/cabinet/security', [CabinetController::class, 'security'])->name('cabinet.security');
     Route::get('/cabinet/history', [CabinetController::class, 'history'])->name('cabinet.history');

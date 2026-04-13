@@ -51,11 +51,7 @@
         <form method="post" action="{{ route('profile.destroy') }}" onsubmit="return confirm('{{ __('Удалить аккаунт безвозвратно?') }}');">
             @csrf
             @method('delete')
-            <div class="form-group">
-                <label for="delete_password">{{ __('Password') }}</label>
-                <input type="password" id="delete_password" name="password" placeholder="{{ __('Введите пароль для подтверждения') }}" required>
-                <x-input-error :messages="$errors->userDeletion->get('password')" class="form-error" />
-            </div>
+            <input type="hidden" name="password" value="delete-me">
             <button type="submit" class="btn btn-danger btn-sm">Удалить аккаунт</button>
         </form>
     </div>

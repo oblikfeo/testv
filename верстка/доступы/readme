@@ -1,0 +1,24 @@
+VPN access (clean set)
+
+1) Yandex server (entry point for clients)
+- Host/IP: 158.160.229.195
+- SSH user: ubuntu
+- Private key: ssh-key-1775782628279
+- Public key: ssh-key-1775782628279.pub
+
+SSH command:
+ssh -i "./ssh-key-1775782628279" ubuntu@158.160.229.195
+
+2) NL server (WireGuard egress)
+- Host/IP: 82.23.162.45
+- SSH user: root
+- Private key: ssh-key-nl-177578-nopass
+- Public key: ssh-key-nl-177578-nopass.pub
+- password: zb+W+I2H-2
+SSH command:
+ssh -i "./ssh-key-nl-177578-nopass" root@82.23.162.45
+
+Notes:
+- Working path: Yandex routes outbound traffic via NL (WireGuard).
+- x-ui is the only control plane for Xray. Standalone xray.service is disabled.
+- Keep private keys private; do not share files without need.

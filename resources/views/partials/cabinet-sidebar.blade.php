@@ -7,9 +7,9 @@
             <span class="cab-nav-icon">◈</span>
             <span>Подписка</span>
         </a>
-        <a href="{{ route('keys.index') }}" class="{{ $active === 'keys' ? 'active' : '' }}">
+        <a href="{{ route('cabinet.trial') }}" class="{{ $active === 'trial' ? 'active' : '' }}">
             <span class="cab-nav-icon">▷</span>
-            <span>Тест-драйв / ключи</span>
+            <span>Тест-драйв</span>
         </a>
         <div class="cab-nav-sep"></div>
         <a href="{{ route('cabinet.profile') }}" class="{{ $active === 'profile' ? 'active' : '' }}">

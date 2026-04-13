@@ -15,6 +15,14 @@ class CabinetController extends Controller
         ]);
     }
 
+    public function trial(Request $request): View
+    {
+        return view('cabinet.trial', [
+            'activeRoute' => 'trial',
+            'user' => $request->user(),
+        ]);
+    }
+
     public function profile(Request $request): View
     {
         return view('cabinet.profile', [

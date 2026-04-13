@@ -9,25 +9,15 @@
             <form method="POST" action="{{ route('register') }}">
                 @csrf
                 <div class="form-group">
-                    <label for="name">Имя</label>
-                    <input type="text" id="name" name="name" value="{{ old('name') }}" placeholder="{{ __('Как вас зовут') }}" required autofocus autocomplete="name">
-                    <x-input-error :messages="$errors->get('name')" class="form-error" />
-                </div>
-                <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="name@mail.ru" required autocomplete="username">
+                    <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="name@mail.ru" required autofocus autocomplete="username">
                     <x-input-error :messages="$errors->get('email')" class="form-error" />
                 </div>
                 <div class="form-group">
                     <label for="password">Придумайте пароль</label>
-                    <input type="password" id="password" name="password" placeholder="{{ __('От 8 символов') }}" required autocomplete="new-password">
+                    <input type="password" id="password" name="password" placeholder="От 8 символов" required minlength="8" autocomplete="new-password">
                     <p class="form-hint">Если забудете — можно восстановить через почту.</p>
                     <x-input-error :messages="$errors->get('password')" class="form-error" />
-                </div>
-                <div class="form-group">
-                    <label for="password_confirmation">{{ __('Повтор пароля') }}</label>
-                    <input type="password" id="password_confirmation" name="password_confirmation" placeholder="{{ __('Ещё раз') }}" required autocomplete="new-password">
-                    <x-input-error :messages="$errors->get('password_confirmation')" class="form-error" />
                 </div>
                 <label class="form-checkbox">
                     <input type="checkbox" name="terms" value="1" required @checked(old('terms'))>
