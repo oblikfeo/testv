@@ -19,7 +19,10 @@ class SubscriptionKeyController extends Controller
             ->orderByDesc('id')
             ->paginate(20);
 
-        return view('subscription-keys.index', ['keys' => $keys]);
+        return view('subscription-keys.index', [
+            'keys' => $keys,
+            'activeRoute' => 'keys',
+        ]);
     }
 
     public function issue(Request $request, KeyPoolService $pool): RedirectResponse

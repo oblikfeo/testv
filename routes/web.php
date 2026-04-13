@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionKeyController;
 use Illuminate\Support\Facades\Route;
@@ -11,8 +12,15 @@ Route::get('/', function () {
 Route::view('/agreement', 'agreement')->name('agreement');
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return redirect()->route('cabinet.subscription');
 })->middleware('auth')->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/cabinet', [CabinetController::class, 'subscription'])->name('cabinet.subscription');
+    Route::get('/cabinet/profile', [CabinetController::class, 'profile'])->name('cabinet.profile');
+    Route::get('/cabinet/security', [CabinetController::class, 'security'])->name('cabinet.security');
+    Route::get('/cabinet/history', [CabinetController::class, 'history'])->name('cabinet.history');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/keys', [SubscriptionKeyController::class, 'index'])->name('keys.index');

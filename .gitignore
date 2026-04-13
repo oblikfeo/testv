@@ -13,6 +13,8 @@
 /.zed
 /auth.json
 /deploy-keys
+# SSH-ключи и секреты из папки вёрстки (не в репозиторий)
+/Верстка/доступы/
 /node_modules
 /public/build
 /public/hot

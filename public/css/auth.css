@@ -1,0 +1,218 @@
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    position: relative;
+}
+
+.auth-page::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(220, 38, 38, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 40px 36px;
+    position: relative;
+    z-index: 1;
+}
+
+.auth-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 36px;
+    text-decoration: none;
+}
+
+.auth-logo img {
+    height: 44px;
+    width: 44px;
+    border-radius: 8px;
+}
+
+.auth-logo span {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+}
+
+.auth-logo span em {
+    font-style: normal;
+    color: var(--red-primary);
+}
+
+.auth-card h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: var(--font-main);
+    transition: border-color var(--transition);
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: var(--red-primary);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.form-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.5;
+}
+
+.form-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 24px;
+    cursor: pointer;
+}
+
+.form-checkbox input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    border: 2px solid var(--text-muted);
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    margin-top: 2px;
+    transition: all var(--transition);
+}
+
+.form-checkbox input[type="checkbox"]:checked {
+    background: var(--red-primary);
+    border-color: var(--red-primary);
+}
+
+.form-checkbox input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: -1px;
+    left: 2px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.form-checkbox span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.auth-actions {
+    margin-bottom: 20px;
+}
+
+.auth-actions .btn {
+    width: 100%;
+}
+
+.auth-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.auth-links a {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.auth-links a:hover {
+    color: var(--red-light);
+}
+
+.auth-links .separator {
+    width: 4px;
+    height: 4px;
+    background: var(--text-muted);
+    border-radius: 50%;
+}
+
+.form-row-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.form-row-between a {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.form-row-between a:hover {
+    color: var(--red-light);
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 32px 24px;
+    }
+
+    .auth-card h1 {
+        font-size: 1.4rem;
+    }
+}
+
+.form-error {
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--red-light);
+}
+
+.auth-flash {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
