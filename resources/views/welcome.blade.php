@@ -118,21 +118,6 @@
                     <a href="{{ route('register') }}" class="btn btn-primary btn-lg">Оформить подписку →</a>
                 @endauth
             </div>
-
-            <div class="pricing-notes">
-                <div class="pricing-note">
-                    <span class="check">✓</span>
-                    <span>Карты РФ и СБП</span>
-                </div>
-                <div class="pricing-note">
-                    <span class="check">✓</span>
-                    <span>Без автосписаний — продлеваете сами</span>
-                </div>
-                <div class="pricing-note">
-                    <span class="check">✓</span>
-                    <span>Возврат в течение 24 часов</span>
-                </div>
-            </div>
         </div>
     </section>
 @endsection
