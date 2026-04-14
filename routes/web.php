@@ -10,6 +10,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::view('/agreement', 'agreement')->name('agreement');
+Route::view('/privacy', 'privacy')->name('privacy');
 
 Route::get('/dashboard', function () {
     return redirect()->route('cabinet.subscription');
