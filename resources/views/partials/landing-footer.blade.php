@@ -6,7 +6,8 @@
             в соответствии с действующим законодательством.<br><br>
             <a href="{{ route('agreement') }}">Условия использования</a> ·
             <a href="{{ route('privacy') }}">Политика конфиденциальности</a> ·
-            <a href="{{ route('offer') }}">Оферта</a>
+            <a href="{{ route('offer') }}">Оферта</a> ·
+            <a href="{{ route('personal-data') }}">Обработка персональных данных</a>
         </p>
     </div>
 </footer>
