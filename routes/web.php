@@ -9,7 +9,6 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('/agreement', 'agreement')->name('agreement');
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/offer', 'offer')->name('offer');
 Route::view('/personal-data', 'personal-data')->name('personal-data');

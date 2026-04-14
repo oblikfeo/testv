@@ -21,7 +21,7 @@
                 </div>
                 <label class="form-checkbox">
                     <input type="checkbox" name="terms" value="1" required @checked(old('terms'))>
-                    <span>Принимаю <a href="{{ route('agreement') }}" target="_blank">условия использования</a></span>
+                    <span>Принимаю <a href="{{ route('offer') }}" target="_blank">условия использования</a></span>
                 </label>
                 <div class="auth-actions">
                     <button type="submit" class="btn btn-primary">Создать</button>
