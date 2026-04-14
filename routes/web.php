@@ -11,6 +11,7 @@ Route::get('/', function () {
 
 Route::view('/agreement', 'agreement')->name('agreement');
 Route::view('/privacy', 'privacy')->name('privacy');
+Route::view('/offer', 'offer')->name('offer');
 
 Route::get('/dashboard', function () {
     return redirect()->route('cabinet.subscription');
