@@ -4,16 +4,16 @@
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
 @endpush
 
-@section('title', 'AVA VPN — безграничный доступ к сети')
+@section('title', 'AVA VPN — приватность и защита соединения')
 
 @section('content')
     <section class="hero">
         <div class="container">
-            <div class="hero-badge">Работает там, где другие не могут</div>
-            <h1>Твой интернет —<br><span class="accent">без границ</span></h1>
+            <div class="hero-badge">Приватность и защита — без лишних настроек</div>
+            <h1>Ваше соединение —<br><span class="accent">под защитой</span></h1>
             <p class="hero-subtitle">
-                Мощная защита канала, обход любых ограничений и стабильный пинг.
-                Подключил — и забыл. Всё работает само.
+                Шифрование трафика, стабильная работа и комфортное использование интернета.
+                Подключили — и пользуетесь. Всё работает само.
             </p>
             <div class="hero-cta">
                 @auth
@@ -36,7 +36,7 @@
                 <span class="stat-dot"></span>
                 <span class="stat-word">Стабильно</span>
                 <span class="stat-dot"></span>
-                <span class="stat-word accent">Без границ</span>
+                <span class="stat-word accent">Просто</span>
             </div>
         </div>
     </section>
