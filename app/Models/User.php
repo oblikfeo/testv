@@ -24,6 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'trial_used',
     ];
 
     /**
@@ -57,6 +58,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function keyOrders(): HasMany
     {
         return $this->hasMany(KeyOrder::class);
+    }
+
+    public function trialKey()
+    {
+        return $this->hasOne(TrialKey::class);
+    }
+
+    public function canUseTrial(): bool
+    {
+        return $this->hasVerifiedEmail() && !$this->trial_used;
     }
 
     public function sendEmailVerificationNotification(): void

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionKeyController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,10 +22,14 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cabinet', [CabinetController::class, 'subscription'])->name('cabinet.subscription');
     Route::get('/cabinet/trial', [CabinetController::class, 'trial'])->name('cabinet.trial');
+    Route::post('/cabinet/trial', [CabinetController::class, 'createTrial'])->name('cabinet.trial.create');
     Route::get('/cabinet/profile', [CabinetController::class, 'profile'])->name('cabinet.profile');
     Route::get('/cabinet/security', [CabinetController::class, 'security'])->name('cabinet.security');
     Route::get('/cabinet/history', [CabinetController::class, 'history'])->name('cabinet.history');
 });
+
+// Subscription endpoint (public, no auth required)
+Route::get('/sub/{subId}', [SubscriptionController::class, 'show'])->name('subscription.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/keys', [SubscriptionKeyController::class, 'index'])->name('keys.index');

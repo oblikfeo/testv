@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\TrialKeyService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CabinetController extends Controller
 {
+    public function __construct(
+        protected TrialKeyService $trialKeyService
+    ) {}
     public function subscription(Request $request): View
     {
         return view('cabinet.subscription', [
@@ -17,10 +21,36 @@ class CabinetController extends Controller
 
     public function trial(Request $request): View
     {
+        $user = $request->user();
+        $trialKey = $user->trialKey;
+
+        if ($trialKey) {
+            $this->trialKeyService->syncTrafficFromPanel($trialKey);
+            $trialKey->refresh();
+        }
+
         return view('cabinet.trial', [
             'activeRoute' => 'trial',
-            'user' => $request->user(),
+            'user' => $user,
+            'trialKey' => $trialKey,
+            'canUseTrial' => $user->canUseTrial(),
         ]);
+    }
+
+    public function createTrial(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->canUseTrial()) {
+            return back()->withErrors(['trial' => 'Вы уже использовали тестовый период']);
+        }
+
+        try {
+            $trialKey = $this->trialKeyService->createTrialKey($user);
+            return back()->with('success', 'Тестовый ключ успешно создан!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['trial' => $e->getMessage()]);
+        }
     }
 
     public function profile(Request $request): View
