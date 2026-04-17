@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Models\KeyOrder;
 use App\Models\Plan;
 use App\Services\YooKassaService;
@@ -25,7 +26,7 @@ class PaymentController extends Controller
         $order = KeyOrder::create([
             'user_id' => $user->id,
             'plan_id' => $plan->id,
-            'status' => 'pending',
+            'status' => OrderStatus::Pending,
             'amount' => $plan->price,
             'note' => "Оплата тарифа {$plan->name}",
         ]);
@@ -33,7 +34,7 @@ class PaymentController extends Controller
         $payment = $this->yooKassaService->createPayment($user, $plan, $order);
 
         if (!$payment) {
-            $order->update(['status' => 'cancelled']);
+            $order->update(['status' => OrderStatus::Cancelled]);
             return back()->withErrors(['payment' => 'Не удалось создать платёж. Попробуйте позже.']);
         }
 

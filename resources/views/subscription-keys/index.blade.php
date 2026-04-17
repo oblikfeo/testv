@@ -4,7 +4,24 @@
 
 @section('content')
     <h1 class="cab-page-title">Тест-драйв и ключи</h1>
-    <p class="cab-page-desc">Получите ключ подключения и управляйте конфигурациями.</p>
+    <p class="cab-page-desc">Подписка Happ для оплаченного тарифа и пул ключей (legacy).</p>
+
+    @if(!empty($saleKey))
+        <div class="cab-card" style="margin-bottom: 24px;">
+            <div class="cab-card-header">
+                <span class="cab-card-title">Подписка Happ (оплаченный тариф)</span>
+                @if($saleKey->is_sponsor)
+                    <span class="cab-badge gray">2 соединения</span>
+                @endif
+            </div>
+            <p class="cab-page-desc" style="margin-bottom: 12px;">Добавьте ссылку в Happ — трафик и срок синхронизируются с сервером.</p>
+            <div class="key-row">
+                <code id="happ-sale-url" style="word-break: break-all; font-size: 0.82rem;">{{ url('/sub/'.$saleKey->sub_id) }}</code>
+                <button type="button" class="btn btn-primary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('happ-sale-url').innerText)">{{ __('Копировать') }}</button>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;">Альтернатива: <code>{{ url('/api/sub/'.$saleKey->sub_id) }}</code></p>
+        </div>
+    @endif
 
     @if (session('status') === 'key-issued')
         <p style="color: var(--red-light); font-size: 0.9rem; margin-bottom: 16px;">{{ __('Ключ выдан.') }}</p>
@@ -21,7 +38,7 @@
             <span class="cab-card-title">Выдача ключа</span>
         </div>
         <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px;">
-            {{ __('В продакшене выдача может быть привязана к оплате; сейчас это тестовая кнопка.') }}
+            {{ __('Выдача из пула серверов (отдельно от оплаченной подписки Happ выше).') }}
         </p>
         <form method="POST" action="{{ route('keys.issue') }}">
             @csrf

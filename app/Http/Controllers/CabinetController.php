@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plan;
+use App\Models\SaleKey;
 use App\Services\TrialKeyService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,11 +17,19 @@ class CabinetController extends Controller
     {
         $user = $request->user();
         $subscription = $user->activeSubscription;
-        
+        $saleKey = null;
+        if ($subscription) {
+            $saleKey = SaleKey::query()
+                ->where('subscription_id', $subscription->id)
+                ->where('status', 'active')
+                ->first();
+        }
+
         return view('cabinet.subscription', [
             'activeRoute' => 'subscription',
             'user' => $user,
             'subscription' => $subscription,
+            'saleKey' => $saleKey,
         ]);
     }
 

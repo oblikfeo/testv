@@ -74,4 +74,22 @@ class XuiApiService
 
         return $response->json() ?? ['success' => false, 'msg' => 'Failed to parse response'];
     }
+
+    /**
+     * Обновление клиента на панели 3x-ui (срок, трафик, лимит IP).
+     */
+    public function updateClient(string $baseUrl, string $username, string $password, int $inboundId, array $clientData): array
+    {
+        $cookies = $this->getSession($baseUrl, $username, $password);
+        $uuid = $clientData['id'] ?? '';
+
+        $response = Http::withOptions(['verify' => false, 'cookies' => $cookies])
+            ->asJson()
+            ->post("{$baseUrl}/panel/api/inbounds/updateClient/{$uuid}", [
+                'id' => $inboundId,
+                'settings' => json_encode(['clients' => [$clientData]]),
+            ]);
+
+        return $response->json() ?? ['success' => false, 'msg' => 'Failed to parse response'];
+    }
 }

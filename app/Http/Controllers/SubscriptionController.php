@@ -2,101 +2,59 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SaleKey;
 use App\Models\TrialKey;
-use App\Services\TrialKeyService;
+use App\Services\SubscriptionFeedBuilder;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 class SubscriptionController extends Controller
 {
     public function __construct(
-        protected TrialKeyService $trialKeyService
+        protected SubscriptionFeedBuilder $feedBuilder
     ) {}
 
-    public function show(string $subId, Request $request)
+    public function show(string $subId, Request $request): Response
     {
-        $trialKey = TrialKey::where('sub_id', $subId)->first();
+        $saleKey = SaleKey::query()->where('sub_id', $subId)->first();
+        if ($saleKey) {
+            $data = $this->feedBuilder->buildForSale($saleKey);
+            if (isset($data['error'])) {
+                return response($data['error'], $data['code'] ?? 500);
+            }
 
-        if (!$trialKey) {
-            return response("Подписка не найдена", 404);
+            return $this->respondHapp($request, $data['body'], $data['user_info'], $data['profile_title']);
         }
 
-        $this->trialKeyService->syncTrafficFromPanel($trialKey);
-        $trialKey->refresh();
-
-        $inbound = $this->trialKeyService->getInboundSettings($trialKey);
-
-        if (!$inbound) {
-            return response("Ошибка получения настроек", 500);
+        $trialKey = TrialKey::query()->where('sub_id', $subId)->first();
+        if (! $trialKey) {
+            return response('Подписка не найдена', 404);
         }
 
-        $config = $this->generateSubscriptionConfig($trialKey, $inbound);
+        $data = $this->feedBuilder->buildForTrial($trialKey);
+        if (isset($data['error'])) {
+            return response($data['error'], $data['code'] ?? 500);
+        }
 
+        return $this->respondHapp($request, $data['body'], $data['user_info'], $data['profile_title']);
+    }
+
+    protected function respondHapp(Request $request, string $body, string $userInfo, string $profileTitle): Response
+    {
         $userAgent = $request->header('User-Agent', '');
-        
+
         if ($this->isHappClient($userAgent)) {
-            return response($config)
+            return response($body)
                 ->header('Content-Type', 'text/plain; charset=utf-8')
-                ->header('subscription-userinfo', $this->buildUserInfo($trialKey))
-                ->header('profile-title', 'base64:' . base64_encode('AVA тестовый период'))
+                ->header('subscription-userinfo', $userInfo)
+                ->header('profile-title', 'base64:'.base64_encode($profileTitle))
                 ->header('profile-update-interval', '1')
-                ->header('support-url', 'https://avavpn.ru');
+                ->header('support-url', config('app.url'));
         }
 
-        return response($config)
+        return response($body)
             ->header('Content-Type', 'text/plain; charset=utf-8')
-            ->header('subscription-userinfo', $this->buildUserInfo($trialKey));
-    }
-
-    protected function generateSubscriptionConfig(TrialKey $trialKey, array $inbound): string
-    {
-        $streamSettings = json_decode($inbound['streamSettings'], true);
-        $realitySettings = $streamSettings['realitySettings'] ?? [];
-
-        $serverNames = $realitySettings['serverNames'] ?? ['www.cloudflare.com'];
-        $publicKey = $realitySettings['settings']['publicKey'] ?? '';
-        $shortIds = $realitySettings['shortIds'] ?? [''];
-
-        $serverIp = config('admin.test_panel.server_ip');
-        $port = $inbound['port'];
-
-        $params = [
-            'type' => 'tcp',
-            'security' => 'reality',
-            'encryption' => 'none',
-            'fp' => 'chrome',
-            'pbk' => $publicKey,
-            'sid' => $shortIds[0] ?? '',
-            'sni' => $serverNames[0] ?? 'www.cloudflare.com',
-            'flow' => 'xtls-rprx-vision',
-        ];
-
-        $vlessLink = sprintf(
-            "vless://%s@%s:%d?%s#%s",
-            $trialKey->uuid,
-            $serverIp,
-            $port,
-            http_build_query($params),
-            urlencode('🇷🇺 AVA тестовый период')
-        );
-
-        return $vlessLink;
-    }
-
-    protected function buildUserInfo(TrialKey $trialKey): string
-    {
-        $upload = 0;
-        $download = $trialKey->used_bytes;
-        $total = $trialKey->total_bytes;
-        $expire = $trialKey->expires_at->timestamp;
-
-        return sprintf(
-            "upload=%d; download=%d; total=%d; expire=%d",
-            $upload,
-            $download,
-            $total,
-            $expire
-        );
+            ->header('subscription-userinfo', $userInfo);
     }
 
     protected function isHappClient(string $userAgent): bool

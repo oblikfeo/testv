@@ -17,6 +17,7 @@ class Plan extends Model
         'is_popular',
         'is_active',
         'sort_order',
+        'traffic_gb',
     ];
 
     protected function casts(): array

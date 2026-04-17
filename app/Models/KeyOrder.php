@@ -14,6 +14,7 @@ class KeyOrder extends Model
         'user_id',
         'status',
         'subscription_key_id',
+        'sale_key_id',
         'plan_id',
         'payment_id',
         'payment_status',
@@ -44,5 +45,10 @@ class KeyOrder extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    public function saleKey(): BelongsTo
+    {
+        return $this->belongsTo(SaleKey::class);
     }
 }

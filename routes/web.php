@@ -65,6 +65,10 @@ Route::prefix('admin')->group(function () {
         Route::get('/test-keys', [AdminController::class, 'testKeys'])->name('admin.test-keys');
         Route::post('/test-keys/create', [AdminController::class, 'createTestKey'])->name('admin.test-keys.create');
         Route::post('/test-keys/delete', [AdminController::class, 'deleteTestKey'])->name('admin.test-keys.delete');
+        Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
+        Route::post('/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
+        Route::get('/sponsor', [AdminController::class, 'sponsorKeys'])->name('admin.sponsor');
+        Route::post('/sponsor', [AdminController::class, 'createSponsor'])->name('admin.sponsor.create');
     });
 });
 

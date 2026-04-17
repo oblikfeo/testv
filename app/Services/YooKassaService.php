@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
 use App\Models\KeyOrder;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -12,11 +14,14 @@ use Illuminate\Support\Str;
 class YooKassaService
 {
     protected string $shopId;
+
     protected string $secretKey;
+
     protected string $apiUrl = 'https://api.yookassa.ru/v3';
 
-    public function __construct()
-    {
+    public function __construct(
+        protected SaleKeyService $saleKeyService
+    ) {
         $this->shopId = config('yookassa.shop_id');
         $this->secretKey = config('yookassa.secret_key');
     }
@@ -137,7 +142,7 @@ class YooKassaService
         }
 
         if ($event === 'payment.canceled') {
-            $order->update(['status' => 'cancelled']);
+            $order->update(['status' => OrderStatus::Cancelled]);
         }
 
         return true;
@@ -145,8 +150,14 @@ class YooKassaService
 
     protected function handleSuccessfulPayment(KeyOrder $order, array $paymentData): bool
     {
+        $order->refresh();
+
+        if ($order->status === OrderStatus::Fulfilled) {
+            return true;
+        }
+
         $order->update([
-            'status' => 'fulfilled',
+            'status' => OrderStatus::Fulfilled,
             'paid_at' => now(),
             'payment_method' => $paymentData['payment_method']['type'] ?? 'unknown',
         ]);
@@ -156,19 +167,29 @@ class YooKassaService
 
         if ($plan && $user) {
             $existingSubscription = $user->activeSubscription;
-            
+
             if ($existingSubscription && $existingSubscription->plan_id === $plan->id) {
                 $existingSubscription->update([
-                    'expires_at' => $existingSubscription->expires_at->addDays($plan->days),
+                    'expires_at' => $existingSubscription->expires_at->copy()->addDays($plan->days),
                 ]);
+                $subscription = $existingSubscription->fresh();
             } else {
-                \App\Models\Subscription::create([
+                $subscription = Subscription::create([
                     'user_id' => $user->id,
                     'plan_id' => $plan->id,
                     'status' => 'active',
                     'max_devices' => $plan->devices,
                     'starts_at' => now(),
                     'expires_at' => now()->addDays($plan->days),
+                ]);
+            }
+
+            try {
+                $this->saleKeyService->syncAfterSuccessfulPayment($user, $subscription, $plan, $order);
+            } catch (\Throwable $e) {
+                Log::error('SaleKey after payment failed', [
+                    'order_id' => $order->id,
+                    'message' => $e->getMessage(),
                 ]);
             }
         }
@@ -197,7 +218,7 @@ class YooKassaService
         if ($status && $status !== $order->payment_status) {
             $order->update(['payment_status' => $status]);
 
-            if ($status === 'succeeded' && $order->status !== 'fulfilled') {
+            if ($status === 'succeeded' && $order->status !== OrderStatus::Fulfilled) {
                 $this->handleSuccessfulPayment($order, $payment);
             }
         }

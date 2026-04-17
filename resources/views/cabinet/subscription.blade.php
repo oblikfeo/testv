@@ -43,6 +43,21 @@
                 </span>
             </div>
 
+            @if(!empty($saleKey))
+                <div class="sub-row">
+                    <span class="sub-row-label">Подписка Happ</span>
+                    <span class="sub-row-value" style="font-weight: 500; text-align: right; max-width: 65%; word-break: break-all;">
+                        <code class="happ-sub-url">{{ url('/sub/'.$saleKey->sub_id) }}</code>
+                    </span>
+                </div>
+                <div style="margin-top: 8px;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.querySelector('.happ-sub-url').innerText)">Копировать ссылку</button>
+                    @if($saleKey->is_sponsor)
+                        <span class="cab-badge gray" style="margin-left:8px;">Спонсор · 2 соединения</span>
+                    @endif
+                </div>
+            @endif
+
             <div style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 12px;">
                 <a href="{{ route('cabinet.devices') }}" class="btn btn-secondary btn-sm">Управление устройствами</a>
                 <a href="{{ route('cabinet.history') }}" class="btn btn-primary btn-sm">Продлить подписку</a>

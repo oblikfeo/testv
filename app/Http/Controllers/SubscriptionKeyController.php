@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SaleKey;
 use App\Models\SubscriptionKey;
 use App\Services\KeyPoolService;
 use Illuminate\Http\RedirectResponse;
@@ -19,8 +20,14 @@ class SubscriptionKeyController extends Controller
             ->orderByDesc('id')
             ->paginate(20);
 
+        $subscription = $request->user()->activeSubscription;
+        $saleKey = $subscription
+            ? SaleKey::query()->where('subscription_id', $subscription->id)->where('status', 'active')->first()
+            : null;
+
         return view('subscription-keys.index', [
             'keys' => $keys,
+            'saleKey' => $saleKey,
             'activeRoute' => 'keys',
         ]);
     }

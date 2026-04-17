@@ -78,6 +78,14 @@ class User extends Authenticatable implements MustVerifyEmail
             ->latest('expires_at');
     }
 
+    /**
+     * @return HasMany<SaleKey, User>
+     */
+    public function saleKeys(): HasMany
+    {
+        return $this->hasMany(SaleKey::class);
+    }
+
     public function canUseTrial(): bool
     {
         return $this->hasVerifiedEmail() && !$this->trial_used;

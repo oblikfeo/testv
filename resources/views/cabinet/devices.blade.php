@@ -71,7 +71,7 @@
             @else
                 <div class="cab-empty">
                     <p>Нет привязанных устройств.</p>
-                    <p class="text-muted">Устройства автоматически привязываются при первом подключении к VPN.</p>
+                    <p class="text-muted">Регистрация HWID: <code>POST {{ url('/api/device/register') }}</code> с заголовком <code>X-Api-Token</code> и телом <code>sub_id</code>, <code>hwid</code> (после настройки <code>API_TOKEN</code> в .env).</p>
                 </div>
             @endif
         </div>

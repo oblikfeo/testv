@@ -20,6 +20,7 @@ class PlansSeeder extends Seeder
                 'discount' => 0,
                 'is_popular' => false,
                 'sort_order' => 1,
+                'traffic_gb' => 0,
             ],
             [
                 'name' => 'Стандартный',
@@ -30,6 +31,7 @@ class PlansSeeder extends Seeder
                 'discount' => 20,
                 'is_popular' => false,
                 'sort_order' => 2,
+                'traffic_gb' => 0,
             ],
             [
                 'name' => 'Стандартный',
@@ -40,6 +42,7 @@ class PlansSeeder extends Seeder
                 'discount' => 34,
                 'is_popular' => false,
                 'sort_order' => 3,
+                'traffic_gb' => 0,
             ],
 
             // Расширенный - 5 устройств
@@ -52,6 +55,7 @@ class PlansSeeder extends Seeder
                 'discount' => 0,
                 'is_popular' => false,
                 'sort_order' => 4,
+                'traffic_gb' => 0,
             ],
             [
                 'name' => 'Расширенный',
@@ -62,6 +66,7 @@ class PlansSeeder extends Seeder
                 'discount' => 18,
                 'is_popular' => true,
                 'sort_order' => 5,
+                'traffic_gb' => 0,
             ],
             [
                 'name' => 'Расширенный',
@@ -72,6 +77,7 @@ class PlansSeeder extends Seeder
                 'discount' => 27,
                 'is_popular' => false,
                 'sort_order' => 6,
+                'traffic_gb' => 0,
             ],
         ];
 
@@ -81,5 +87,20 @@ class PlansSeeder extends Seeder
                 $plan
             );
         }
+
+        Plan::updateOrCreate(
+            ['slug' => 'sponsor-bundle'],
+            [
+                'name' => 'Спонсорская подписка',
+                'devices' => 5,
+                'days' => 30,
+                'price' => 0,
+                'discount' => 0,
+                'is_popular' => false,
+                'is_active' => false,
+                'sort_order' => 999,
+                'traffic_gb' => 0,
+            ]
+        );
     }
 }

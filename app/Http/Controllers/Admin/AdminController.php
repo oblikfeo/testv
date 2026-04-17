@@ -3,6 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\SaleKey;
+use App\Models\Setting;
+use App\Models\TrialKey;
+use App\Models\User;
+use App\Services\SaleKeyService;
 use App\Services\XuiApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -56,21 +61,21 @@ class AdminController extends Controller
     public function testKeys()
     {
         $testPanel = config('admin.test_panel');
-        
+
         $clients = [];
         $error = null;
 
         try {
             $inbounds = $this->xuiApi->getInbounds($testPanel['url'], $testPanel['username'], $testPanel['password']);
-            
-            if (!empty($inbounds['obj'])) {
+
+            if (! empty($inbounds['obj'])) {
                 foreach ($inbounds['obj'] as $inbound) {
                     $settings = json_decode($inbound['settings'], true);
-                    if (!empty($settings['clients'])) {
+                    if (! empty($settings['clients'])) {
                         foreach ($settings['clients'] as $client) {
                             $clientStats = collect($inbound['clientStats'] ?? [])
                                 ->firstWhere('email', $client['email']);
-                            
+
                             $clients[] = [
                                 'inbound_id' => $inbound['id'],
                                 'email' => $client['email'],
@@ -90,7 +95,75 @@ class AdminController extends Controller
             $error = $e->getMessage();
         }
 
-        return view('admin.test-keys', compact('clients', 'error', 'testPanel'));
+        $emails = collect($clients)->pluck('email')->filter()->unique()->values()->all();
+        $trialByEmail = TrialKey::query()->whereIn('email', $emails)->get()->keyBy('email');
+
+        return view('admin.test-keys', compact('clients', 'error', 'testPanel', 'trialByEmail'));
+    }
+
+    public function settings()
+    {
+        $panels = config('admin.sale_panels', []);
+        $active = (int) Setting::get('active_sale_panel', '0');
+        $health = [];
+
+        foreach (array_keys($panels) as $idx) {
+            $p = $panels[$idx];
+            try {
+                $this->xuiApi->getInbounds($p['url'], $p['username'], $p['password']);
+                $health[$idx] = 'ok';
+            } catch (\Throwable $e) {
+                $health[$idx] = $e->getMessage();
+            }
+        }
+
+        return view('admin.settings', compact('panels', 'active', 'health'));
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $panels = config('admin.sale_panels', []);
+        $max = max(0, count($panels) - 1);
+
+        $request->validate([
+            'active_sale_panel' => 'required|integer|min:0|max:'.$max,
+        ]);
+
+        Setting::set('active_sale_panel', (string) $request->integer('active_sale_panel'));
+
+        return back()->with('success', 'Активная связка сохранена');
+    }
+
+    public function sponsorKeys()
+    {
+        $remaining = max(0, SaleKeyService::MAX_SPONSOR_KEYS - SaleKey::query()->where('is_sponsor', true)->count());
+
+        return view('admin.sponsor', compact('remaining'));
+    }
+
+    public function createSponsor(Request $request, SaleKeyService $saleKeyService)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'days' => 'required|integer|min:1|max:3650',
+            'traffic_gb' => 'required|integer|min:0|max:100000',
+            'max_devices' => 'required|integer|min:1|max:50',
+        ]);
+
+        $user = User::query()->where('email', $request->input('email'))->firstOrFail();
+
+        try {
+            $saleKey = $saleKeyService->createSponsorBundle(
+                $user,
+                $request->integer('days'),
+                $request->integer('traffic_gb'),
+                $request->integer('max_devices')
+            );
+
+            return back()->with('success', 'Спонсорская подписка создана. URL: '.url('/sub/'.$saleKey->sub_id));
+        } catch (\Throwable $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
     }
 
     public function createTestKey(Request $request)
