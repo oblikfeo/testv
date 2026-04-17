@@ -20,79 +20,67 @@
         </div>
     @endif
 
-    <div class="cab-card">
-        <div class="cab-card-header">
-            <span class="cab-card-title">Тарифы</span>
+    <div class="tariffs-section">
+        <div class="tariffs-header">
+            <h2 class="tariffs-title">Выберите тариф</h2>
         </div>
 
-        <div class="pricing-table-wrap">
-            <table class="pricing-table">
-                <thead>
-                    <tr>
-                        <th>Период</th>
-                        <th>
-                            <div class="plan-name">Стандартный</div>
-                            <div class="plan-desc">2 устройства</div>
-                        </th>
-                        <th class="plan-highlight">
-                            <span class="plan-badge">выгодно</span>
-                            <div class="plan-name">Расширенный</div>
-                            <div class="plan-desc">5 устройств</div>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php
-                        $standardPlans = $plans->where('devices', 2);
-                        $extendedPlans = $plans->where('devices', 5);
-                        $periods = [30 => '30 дней', 90 => '90 дней', 180 => '180 дней'];
-                    @endphp
-                    
-                    @foreach($periods as $days => $label)
-                        @php
-                            $standard = $standardPlans->where('days', $days)->first();
-                            $extended = $extendedPlans->where('days', $days)->first();
-                        @endphp
-                        <tr>
-                            <td>{{ $label }}</td>
-                            <td>
-                                @if($standard)
-                                    <div class="plan-price-row">
-                                        <strong>{{ $standard->formatted_price }}</strong>
-                                        @if($standard->discount > 0)
-                                            <span class="table-badge">−{{ $standard->discount }}%</span>
-                                        @endif
-                                    </div>
-                                    <form action="{{ route('payment.create') }}" method="POST" class="plan-buy-form">
-                                        @csrf
-                                        <input type="hidden" name="plan_id" value="{{ $standard->id }}">
-                                        <button type="submit" class="btn btn-secondary btn-xs">Купить</button>
-                                    </form>
-                                @else
-                                    <span class="text-muted">—</span>
+        @php
+            $standardPlans = $plans->where('devices', 2)->sortBy('days');
+            $extendedPlans = $plans->where('devices', 5)->sortBy('days');
+        @endphp
+
+        <div class="tariffs-grid">
+            <div class="tariff-card">
+                <div class="tariff-card-head">
+                    <span class="tariff-name">Стандартный</span>
+                    <span class="tariff-devices">2 устройства</span>
+                </div>
+                <div class="tariff-options">
+                    @foreach($standardPlans as $plan)
+                        <div class="tariff-option">
+                            <div class="tariff-option-info">
+                                <span class="tariff-period">{{ $plan->period_label }}</span>
+                                <span class="tariff-price">{{ $plan->formatted_price }}</span>
+                                @if($plan->discount > 0)
+                                    <span class="tariff-discount">−{{ $plan->discount }}%</span>
                                 @endif
-                            </td>
-                            <td class="plan-highlight">
-                                @if($extended)
-                                    <div class="plan-price-row">
-                                        <strong>{{ $extended->formatted_price }}</strong>
-                                        @if($extended->discount > 0)
-                                            <span class="table-badge">−{{ $extended->discount }}%</span>
-                                        @endif
-                                    </div>
-                                    <form action="{{ route('payment.create') }}" method="POST" class="plan-buy-form">
-                                        @csrf
-                                        <input type="hidden" name="plan_id" value="{{ $extended->id }}">
-                                        <button type="submit" class="btn btn-primary btn-xs">Купить</button>
-                                    </form>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-                        </tr>
+                            </div>
+                            <form action="{{ route('payment.create') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                <button type="submit" class="tariff-btn">Купить</button>
+                            </form>
+                        </div>
                     @endforeach
-                </tbody>
-            </table>
+                </div>
+            </div>
+
+            <div class="tariff-card tariff-card--popular">
+                <div class="tariff-popular-tag">Выгодно</div>
+                <div class="tariff-card-head">
+                    <span class="tariff-name">Расширенный</span>
+                    <span class="tariff-devices">5 устройств</span>
+                </div>
+                <div class="tariff-options">
+                    @foreach($extendedPlans as $plan)
+                        <div class="tariff-option">
+                            <div class="tariff-option-info">
+                                <span class="tariff-period">{{ $plan->period_label }}</span>
+                                <span class="tariff-price">{{ $plan->formatted_price }}</span>
+                                @if($plan->discount > 0)
+                                    <span class="tariff-discount">−{{ $plan->discount }}%</span>
+                                @endif
+                            </div>
+                            <form action="{{ route('payment.create') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                <button type="submit" class="tariff-btn tariff-btn--primary">Купить</button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </div>
 
@@ -183,107 +171,152 @@
     color: var(--red-light);
 }
 
-.pricing-table-wrap {
-    overflow-x: auto;
-    margin: 0 -28px -28px;
-    padding: 0 28px 28px;
+/* Tariffs Section */
+.tariffs-section {
+    margin-bottom: 24px;
 }
 
-.pricing-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 500px;
+.tariffs-header {
+    margin-bottom: 20px;
 }
 
-.pricing-table th,
-.pricing-table td {
-    padding: 16px 12px;
-    text-align: center;
-    font-size: 0.9rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.pricing-table th {
-    background: var(--bg-primary);
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-
-.pricing-table th:first-child {
-    text-align: left;
-    padding-left: 0;
-}
-
-.pricing-table td:first-child {
-    text-align: left;
-    padding-left: 0;
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-
-.pricing-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.plan-name {
+.tariffs-title {
+    font-size: 1.1rem;
     font-weight: 600;
-    font-size: 0.95rem;
     color: var(--text-primary);
 }
 
-.plan-desc {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-top: 2px;
+.tariffs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
 }
 
-.plan-highlight {
-    background: rgba(220, 38, 38, 0.03);
+@media (max-width: 640px) {
+    .tariffs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tariff-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
     position: relative;
 }
 
-.plan-badge {
-    display: inline-block;
+.tariff-card--popular {
+    border-color: var(--red-primary);
+}
+
+.tariff-popular-tag {
+    position: absolute;
+    top: 12px;
+    right: 12px;
     background: var(--red-primary);
     color: #fff;
     font-size: 0.65rem;
     font-weight: 600;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border-radius: 100px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+.tariff-card-head {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tariff-name {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
-.table-badge {
-    display: inline-block;
-    background: rgba(34, 197, 94, 0.15);
-    color: #22c55e;
-    font-size: 0.7rem;
+.tariff-devices {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.tariff-options {
+    padding: 8px 0;
+}
+
+.tariff-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    transition: background var(--transition);
+}
+
+.tariff-option:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.tariff-option-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tariff-period {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    min-width: 70px;
+}
+
+.tariff-price {
+    font-size: 0.95rem;
     font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 6px;
-}
-
-.plan-price-row {
-    margin-bottom: 8px;
-}
-
-.plan-price-row strong {
-    font-size: 1rem;
     color: var(--text-primary);
 }
 
-.plan-buy-form {
-    margin: 0;
+.tariff-discount {
+    display: inline-block;
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 4px;
 }
 
-.btn-xs {
-    padding: 6px 14px;
+.tariff-btn {
+    padding: 7px 16px;
     font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: var(--font-main);
 }
 
+.tariff-btn:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+}
+
+.tariff-btn--primary {
+    background: var(--red-primary);
+    border-color: var(--red-primary);
+    color: #fff;
+}
+
+.tariff-btn--primary:hover {
+    background: var(--red-hover);
+    border-color: var(--red-hover);
+    color: #fff;
+}
+
+/* History Table */
 .status-pending {
     color: #f59e0b;
 }
