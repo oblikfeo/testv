@@ -41,6 +41,24 @@ class YooKassaService
                 ],
                 'capture' => true,
                 'description' => "Оплата тарифа {$plan->name} - {$plan->period_label}",
+                'receipt' => [
+                    'customer' => [
+                        'email' => $user->email,
+                    ],
+                    'items' => [
+                        [
+                            'description' => "VPN подписка: {$plan->name} ({$plan->period_label})",
+                            'quantity' => '1.00',
+                            'amount' => [
+                                'value' => number_format($plan->price, 2, '.', ''),
+                                'currency' => 'RUB',
+                            ],
+                            'vat_code' => 1,
+                            'payment_mode' => 'full_payment',
+                            'payment_subject' => 'service',
+                        ],
+                    ],
+                ],
                 'metadata' => [
                     'order_id' => $order->id,
                     'user_id' => $user->id,
