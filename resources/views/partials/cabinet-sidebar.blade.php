@@ -7,11 +7,19 @@
             <span class="cab-nav-icon">◈</span>
             <span>Подписка</span>
         </a>
+        <a href="{{ route('cabinet.devices') }}" class="{{ $active === 'devices' ? 'active' : '' }}">
+            <span class="cab-nav-icon">◇</span>
+            <span>Управление</span>
+        </a>
         <a href="{{ route('cabinet.trial') }}" class="{{ $active === 'trial' ? 'active' : '' }}">
             <span class="cab-nav-icon">▷</span>
             <span>Тест-драйв</span>
         </a>
         <div class="cab-nav-sep"></div>
+        <a href="{{ route('cabinet.history') }}" class="{{ $active === 'history' ? 'active' : '' }}">
+            <span class="cab-nav-icon">☰</span>
+            <span>Покупки</span>
+        </a>
         <a href="{{ route('cabinet.profile') }}" class="{{ $active === 'profile' ? 'active' : '' }}">
             <span class="cab-nav-icon">○</span>
             <span>Профиль</span>
@@ -19,10 +27,6 @@
         <a href="{{ route('cabinet.security') }}" class="{{ $active === 'security' ? 'active' : '' }}">
             <span class="cab-nav-icon">◑</span>
             <span>Безопасность</span>
-        </a>
-        <a href="{{ route('cabinet.history') }}" class="{{ $active === 'history' ? 'active' : '' }}">
-            <span class="cab-nav-icon">☰</span>
-            <span>Покупки</span>
         </a>
     </nav>
     <div class="cab-nav-bottom">

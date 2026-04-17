@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\CabinetController;
+use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionKeyController;
@@ -21,15 +23,23 @@ Route::get('/dashboard', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cabinet', [CabinetController::class, 'subscription'])->name('cabinet.subscription');
+    Route::get('/cabinet/devices', [CabinetController::class, 'devices'])->name('cabinet.devices');
+    Route::delete('/cabinet/devices/{device}', [DeviceController::class, 'destroy'])->name('cabinet.devices.destroy');
     Route::get('/cabinet/trial', [CabinetController::class, 'trial'])->name('cabinet.trial');
     Route::post('/cabinet/trial', [CabinetController::class, 'createTrial'])->name('cabinet.trial.create');
     Route::get('/cabinet/profile', [CabinetController::class, 'profile'])->name('cabinet.profile');
     Route::get('/cabinet/security', [CabinetController::class, 'security'])->name('cabinet.security');
     Route::get('/cabinet/history', [CabinetController::class, 'history'])->name('cabinet.history');
+
+    Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
+    Route::get('/payment/status', [PaymentController::class, 'checkStatus'])->name('payment.status');
 });
 
 // Subscription endpoint (public, no auth required)
 Route::get('/sub/{subId}', [SubscriptionController::class, 'show'])->name('subscription.show');
+
+// YooKassa webhook (public)
+Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/keys', [SubscriptionKeyController::class, 'index'])->name('keys.index');

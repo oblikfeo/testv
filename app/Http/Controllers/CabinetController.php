@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Plan;
 use App\Services\TrialKeyService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,9 +14,13 @@ class CabinetController extends Controller
     ) {}
     public function subscription(Request $request): View
     {
+        $user = $request->user();
+        $subscription = $user->activeSubscription;
+        
         return view('cabinet.subscription', [
             'activeRoute' => 'subscription',
-            'user' => $request->user(),
+            'user' => $user,
+            'subscription' => $subscription,
         ]);
     }
 
@@ -69,10 +74,34 @@ class CabinetController extends Controller
         ]);
     }
 
-    public function history(): View
+    public function history(Request $request): View
     {
+        $user = $request->user();
+        $orders = $user->keyOrders()
+            ->with('plan')
+            ->latest()
+            ->paginate(20);
+
+        $plans = Plan::active()->ordered()->get();
+
         return view('cabinet.history', [
             'activeRoute' => 'history',
+            'orders' => $orders,
+            'plans' => $plans,
+        ]);
+    }
+
+    public function devices(Request $request): View
+    {
+        $user = $request->user();
+        $subscription = $user->activeSubscription;
+        $devices = $subscription ? $subscription->devices()->latest()->get() : collect();
+
+        return view('cabinet.devices', [
+            'activeRoute' => 'devices',
+            'user' => $user,
+            'subscription' => $subscription,
+            'devices' => $devices,
         ]);
     }
 }

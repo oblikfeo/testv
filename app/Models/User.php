@@ -65,6 +65,19 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(TrialKey::class);
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function activeSubscription()
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->latest('expires_at');
+    }
+
     public function canUseTrial(): bool
     {
         return $this->hasVerifiedEmail() && !$this->trial_used;
