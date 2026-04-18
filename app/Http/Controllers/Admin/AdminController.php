@@ -96,7 +96,11 @@ class AdminController extends Controller
         }
 
         $emails = collect($clients)->pluck('email')->filter()->unique()->values()->all();
-        $trialByEmail = TrialKey::query()->whereIn('email', $emails)->get()->keyBy('email');
+        $trialByEmail = TrialKey::query()
+            ->whereIn('email', $emails)
+            ->with('user:id,email')
+            ->get()
+            ->keyBy('email');
 
         return view('admin.test-keys', compact('clients', 'error', 'testPanel', 'trialByEmail'));
     }
@@ -160,7 +164,7 @@ class AdminController extends Controller
                 $request->integer('max_devices')
             );
 
-            return back()->with('success', 'Спонсорская подписка создана. URL: '.url('/sub/'.$saleKey->sub_id));
+            return back()->with('success', 'Подписка (2 сервера) создана. Happ: '.url('/sub/'.$saleKey->sub_id));
         } catch (\Throwable $e) {
             return back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
@@ -195,7 +199,7 @@ class AdminController extends Controller
                 $request->integer('max_devices')
             );
 
-            return back()->with('success', 'Админская подписка создана. Happ: '.url('/sub/'.$saleKey->sub_id));
+            return back()->with('success', 'Подписка «полный доступ» создана. Happ: '.url('/sub/'.$saleKey->sub_id));
         } catch (\Throwable $e) {
             return back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
@@ -211,7 +215,7 @@ class AdminController extends Controller
         try {
             $saleKeyService->revokeAdminFriendsBundle($key);
 
-            return back()->with('success', 'Админская подписка отозвана, клиенты удалены с панелей');
+            return back()->with('success', 'Подписка отозвана, клиенты удалены с панелей');
         } catch (\Throwable $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }

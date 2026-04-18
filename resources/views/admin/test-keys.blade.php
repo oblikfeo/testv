@@ -109,9 +109,9 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="text-white font-mono text-sm">{{ $client['email'] }}</span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            <td class="px-6 py-4 text-sm text-gray-300 max-w-xs">
                                 @if(isset($trialByEmail[$client['email']]))
-                                    #{{ $trialByEmail[$client['email']]->user_id }}
+                                    <span class="text-white break-all">{{ $trialByEmail[$client['email']]->user?->email ?? '—' }}</span>
                                 @else
                                     <span class="text-gray-500">—</span>
                                 @endif

@@ -71,4 +71,40 @@ class TrialKey extends Model
         if ($this->total_bytes === 0) return 0;
         return min(100, (int) round($this->used_bytes / $this->total_bytes * 100));
     }
+
+    /**
+     * Оставшееся время до истечения: «N часов M минут» (русские окончания).
+     */
+    public function getRemainingTimeRu(): string
+    {
+        if ($this->isExpired()) {
+            return 'истёк';
+        }
+
+        $totalSeconds = max(0, $this->expires_at->getTimestamp() - now()->getTimestamp());
+        $h = intdiv($totalSeconds, 3600);
+        $m = intdiv($totalSeconds % 3600, 60);
+
+        $hWord = $this->ruPlural($h, 'час', 'часа', 'часов');
+        $mWord = $this->ruPlural($m, 'минута', 'минуты', 'минут');
+
+        return $h.' '.$hWord.' '.$m.' '.$mWord;
+    }
+
+    protected function ruPlural(int $n, string $one, string $few, string $many): string
+    {
+        $n = abs($n) % 100;
+        $n1 = $n % 10;
+        if ($n > 10 && $n < 20) {
+            return $many;
+        }
+        if ($n1 > 1 && $n1 < 5) {
+            return $few;
+        }
+        if ($n1 === 1) {
+            return $one;
+        }
+
+        return $many;
+    }
 }

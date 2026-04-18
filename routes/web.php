@@ -21,15 +21,18 @@ Route::get('/dashboard', function () {
     return redirect()->route('cabinet.subscription');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/cabinet', [CabinetController::class, 'subscription'])->name('cabinet.subscription');
     Route::get('/cabinet/devices', [CabinetController::class, 'devices'])->name('cabinet.devices');
-    Route::delete('/cabinet/devices/{device}', [DeviceController::class, 'destroy'])->name('cabinet.devices.destroy');
     Route::get('/cabinet/trial', [CabinetController::class, 'trial'])->name('cabinet.trial');
-    Route::post('/cabinet/trial', [CabinetController::class, 'createTrial'])->name('cabinet.trial.create');
     Route::get('/cabinet/profile', [CabinetController::class, 'profile'])->name('cabinet.profile');
     Route::get('/cabinet/security', [CabinetController::class, 'security'])->name('cabinet.security');
     Route::get('/cabinet/history', [CabinetController::class, 'history'])->name('cabinet.history');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::delete('/cabinet/devices/{device}', [DeviceController::class, 'destroy'])->name('cabinet.devices.destroy');
+    Route::post('/cabinet/trial', [CabinetController::class, 'createTrial'])->name('cabinet.trial.create');
 
     Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
     Route::get('/payment/status', [PaymentController::class, 'checkStatus'])->name('payment.status');

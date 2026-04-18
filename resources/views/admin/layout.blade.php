@@ -33,11 +33,11 @@
                             </a>
                             <a href="{{ route('admin.sponsor') }}" 
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.sponsor') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                Спонсор
+                                2 сервера
                             </a>
                             <a href="{{ route('admin.admin-friends') }}" 
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.admin-friends') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                Команда
+                                Все серверы
                             </a>
                         </div>
                     </div>

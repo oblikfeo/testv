@@ -77,8 +77,11 @@ class DeviceService
 
     public function extractHwidFromRequest(\Illuminate\Http\Request $request): ?string
     {
-        $hwid = $request->header('X-Device-ID')
+        $hwid = $request->input('hwid')
+            ?? $request->input('device_id')
+            ?? $request->header('X-Device-ID')
             ?? $request->header('X-HWID')
+            ?? $request->header('X-Hwid')
             ?? $request->query('hwid')
             ?? $request->query('device_id');
 

@@ -1,11 +1,11 @@
 @extends('admin.layout')
 
-@section('title', 'Спонсорские подписки')
+@section('title', 'Два сервера (одна подписка)')
 
 @section('content')
 <div class="mb-8">
-    <h1 class="text-2xl font-bold text-white">Спонсорские подписки</h1>
-    <p class="text-gray-400 mt-1">Два соединения (NL + FR) в одной подписке Happ. Осталось слотов: <strong class="text-white">{{ $remaining }}</strong> / 10</p>
+    <h1 class="text-2xl font-bold text-white">Два сервера в одной подписке</h1>
+    <p class="text-gray-400 mt-1">Две VLESS-строки (первая и вторая связка из настроек) в одном URL Happ. Осталось слотов: <strong class="text-white">{{ $remaining }}</strong> / 10</p>
 </div>
 
 @if (session('success'))

@@ -18,8 +18,13 @@ class DeviceApiController extends Controller
     {
         $data = $request->validate([
             'sub_id' => 'required|string|max:64',
-            'hwid' => 'required|string|max:512',
+            'hwid' => 'nullable|string|max:512',
         ]);
+
+        $hwid = $data['hwid'] ?? $this->deviceService->extractHwidFromRequest($request);
+        if (! is_string($hwid) || $hwid === '') {
+            return response()->json(['ok' => false, 'message' => 'Укажите hwid (тело запроса или заголовок X-HWID / X-Device-ID)'], 422);
+        }
 
         $saleKey = SaleKey::query()->where('sub_id', $data['sub_id'])->first();
         if (! $saleKey) {
@@ -33,7 +38,7 @@ class DeviceApiController extends Controller
 
         $device = $this->deviceService->registerDevice(
             $subscription,
-            $data['hwid'],
+            $hwid,
             $request->userAgent(),
             $request->ip()
         );
@@ -52,8 +57,13 @@ class DeviceApiController extends Controller
     {
         $data = $request->validate([
             'sub_id' => 'required|string|max:64',
-            'hwid' => 'required|string|max:512',
+            'hwid' => 'nullable|string|max:512',
         ]);
+
+        $hwid = $data['hwid'] ?? $this->deviceService->extractHwidFromRequest($request);
+        if (! is_string($hwid) || $hwid === '') {
+            return response()->json(['ok' => false, 'message' => 'Укажите hwid'], 422);
+        }
 
         $saleKey = SaleKey::query()->where('sub_id', $data['sub_id'])->first();
         if (! $saleKey) {
@@ -65,7 +75,7 @@ class DeviceApiController extends Controller
             return response()->json(['ok' => false], 404);
         }
 
-        $ok = $this->deviceService->validateDevice($subscription, $data['hwid']);
+        $ok = $this->deviceService->validateDevice($subscription, $hwid);
 
         return response()->json(['ok' => $ok]);
     }

@@ -224,7 +224,7 @@
                         @if ($trialKey->isExpired())
                             Истёк
                         @else
-                            {{ $trialKey->expires_at->diffForHumans(null, true) }}
+                            {{ $trialKey->getRemainingTimeRu() }}
                         @endif
                     </div>
                     <div class="trial-stat-label">Осталось времени</div>
@@ -248,7 +248,7 @@
             </div>
 
             <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0;">
-                Действует до: <strong style="color: var(--text-primary);">{{ $trialKey->expires_at->format('d.m.Y H:i') }}</strong>
+                Действует до: <strong style="color: var(--text-primary);">{{ $trialKey->expires_at->format('d.m.Y') }}</strong>
             </p>
 
             <div class="sub-link-box">

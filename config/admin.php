@@ -28,4 +28,15 @@ return [
             'server_ip' => '158.160.249.138',
         ],
     ],
+
+    /**
+     * Доп. строки в конце тела подписки (Clash-подобный формат для Happ и др.).
+     * Прямой доступ к банкам/CDN без VPN.
+     */
+    'happ_routing_rules' => [
+        'DOMAIN-SUFFIX,tbank.ru,DIRECT',
+        'DOMAIN-SUFFIX,tinkoff.ru,DIRECT',
+        'DOMAIN-SUFFIX,cloudfront.net,DIRECT',
+        'DOMAIN-SUFFIX,amazonaws.com,DIRECT',
+    ],
 ];

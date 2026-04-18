@@ -49,7 +49,9 @@ class SubscriptionController extends Controller
                 ->header('subscription-userinfo', $userInfo)
                 ->header('profile-title', 'base64:'.base64_encode($profileTitle))
                 ->header('profile-update-interval', '1')
-                ->header('support-url', config('app.url'));
+                ->header('support-url', config('app.url'))
+                ->header('X-Device-Register-Url', url('/api/device/register'))
+                ->header('X-Device-Validate-Url', url('/api/device/validate'));
         }
 
         return response($body)

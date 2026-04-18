@@ -1,13 +1,13 @@
 @extends('admin.layout')
 
-@section('title', 'Подписка команды')
+@section('title', 'Полный доступ')
 
 @section('content')
 <div class="mb-8">
-    <h1 class="text-2xl font-bold text-white">Одна подписка для команды и друзей</h1>
+    <h1 class="text-2xl font-bold text-white">Полный доступ (все серверы продаж)</h1>
     <p class="text-gray-400 mt-1 max-w-2xl">
-        Все связки из <code class="text-gray-300">sale_panels</code> + тестовая панель (<code class="text-gray-300">test_panel</code>).
-        Одна ссылка Happ, внутри — все VLESS. Глобально может быть только <strong class="text-white">одна</strong> такая подписка.
+        Все связки из <code class="text-gray-300">sale_panels</code> — одна ссылка Happ, внутри отдельная VLESS на каждую связку.
+        Глобально может быть только <strong class="text-white">одна</strong> такая подписка.
     </p>
 </div>
 

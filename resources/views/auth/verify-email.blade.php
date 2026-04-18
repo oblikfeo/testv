@@ -21,6 +21,7 @@
                     @csrf
                     <button type="submit" class="btn btn-primary">Отправить ссылку ещё раз</button>
                 </form>
+                <a href="{{ route('cabinet.subscription') }}" class="btn btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Личный кабинет</a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-secondary">Выйти</button>
@@ -29,6 +30,10 @@
             <div class="auth-links">
                 <a href="{{ route('home') }}">Главная</a>
             </div>
+
+            <p class="text-center" style="margin-top: 20px; font-size: 0.88rem; color: #dc2626; line-height: 1.5;">
+                Пока почта не подтверждена, часть функций недоступна. Проверьте входящие и папку «Спам», затем перейдите по ссылке из письма.
+            </p>
         </div>
     </div>
 </x-guest-layout>

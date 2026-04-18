@@ -46,7 +46,7 @@ class SubscriptionFeedBuilder
         );
 
         return [
-            'body' => $line,
+            'body' => $this->appendHappRoutingRules($line),
             'user_info' => $userInfo,
             'profile_title' => 'AVA тестовый период',
         ];
@@ -76,11 +76,12 @@ class SubscriptionFeedBuilder
         }
 
         $lines = [];
+        $label1 = $this->happLineTitleForPanel((int) $saleKey->panel_index);
         $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
             $inbound,
             $saleKey->uuid,
             $panel['server_ip'],
-            '🇷🇺 AVA '.($saleKey->is_sponsor ? 'Спонсор NL' : 'VPN')
+            $label1
         );
 
         if ($saleKey->is_sponsor && $saleKey->secondary_uuid && $saleKey->secondary_panel_index !== null) {
@@ -90,16 +91,17 @@ class SubscriptionFeedBuilder
                 (int) $saleKey->secondary_inbound_id
             );
             if ($inbound2) {
+                $label2 = $this->happLineTitleForPanel((int) $saleKey->secondary_panel_index);
                 $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
                     $inbound2,
                     (string) $saleKey->secondary_uuid,
                     $p2['server_ip'],
-                    '🇪🇺 AVA Спонсор FR'
+                    $label2
                 );
             }
         }
 
-        $body = implode("\n", $lines);
+        $body = $this->appendHappRoutingRules(implode("\n", $lines));
 
         $total = $saleKey->total_bytes > 0 ? (int) $saleKey->total_bytes : 0;
         $userInfo = HappSubscriptionFormatter::buildUserInfo(
@@ -112,8 +114,18 @@ class SubscriptionFeedBuilder
         return [
             'body' => $body,
             'user_info' => $userInfo,
-            'profile_title' => $saleKey->is_sponsor ? 'AVA Спонсор' : 'AVA VPN',
+            'profile_title' => 'AVA VPN',
         ];
+    }
+
+    /**
+     * Короткое имя сервера в подписке: «AVA · Связка 1 (NL)» из config admin.sale_panels.
+     */
+    protected function happLineTitleForPanel(int $panelIndex): string
+    {
+        $name = config('admin.sale_panels')[$panelIndex]['name'] ?? ('Сервер '.($panelIndex + 1));
+
+        return 'AVA · '.$name;
     }
 
     /**
@@ -133,7 +145,7 @@ class SubscriptionFeedBuilder
                 $inbound,
                 $saleKey->uuid,
                 $tp['server_ip'],
-                '🧪 AVA Тест'
+                'AVA · Тестовый сервер'
             );
         } else {
             $panel = $this->saleKeyService->getSalePanelConfig($saleKey->panel_index);
@@ -141,12 +153,11 @@ class SubscriptionFeedBuilder
             if (! $inbound) {
                 return ['error' => 'Ошибка получения настроек', 'code' => 500];
             }
-            $saleName = config('admin.sale_panels')[$saleKey->panel_index]['name'] ?? 'VPN';
             $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
                 $inbound,
                 $saleKey->uuid,
                 $panel['server_ip'],
-                '🇷🇺 AVA '.$saleName
+                $this->happLineTitleForPanel((int) $saleKey->panel_index)
             );
         }
 
@@ -161,7 +172,7 @@ class SubscriptionFeedBuilder
                     $inbound,
                     (string) ($ep['uuid'] ?? ''),
                     $tp['server_ip'],
-                    '🧪 AVA Тест'
+                    'AVA · Тестовый сервер'
                 );
             } else {
                 $idx = (int) ($ep['i'] ?? 0);
@@ -170,17 +181,16 @@ class SubscriptionFeedBuilder
                 if (! $inbound) {
                     continue;
                 }
-                $saleName = config('admin.sale_panels')[$idx]['name'] ?? 'VPN';
                 $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
                     $inbound,
                     (string) ($ep['uuid'] ?? ''),
                     $panel['server_ip'],
-                    '🇷🇺 AVA '.$saleName
+                    $this->happLineTitleForPanel($idx)
                 );
             }
         }
 
-        $body = implode("\n", $lines);
+        $body = $this->appendHappRoutingRules(implode("\n", $lines));
         $total = $saleKey->total_bytes > 0 ? (int) $saleKey->total_bytes : 0;
         $userInfo = HappSubscriptionFormatter::buildUserInfo(
             0,
@@ -192,7 +202,26 @@ class SubscriptionFeedBuilder
         return [
             'body' => $body,
             'user_info' => $userInfo,
-            'profile_title' => 'AVA Команда',
+            'profile_title' => 'AVA VPN',
         ];
+    }
+
+    /**
+     * Дописывает правила маршрутизации в конец подписки (см. config('admin.happ_routing_rules')).
+     */
+    protected function appendHappRoutingRules(string $body): string
+    {
+        $rules = config('admin.happ_routing_rules', []);
+        if (! is_array($rules) || $rules === []) {
+            return $body;
+        }
+
+        $lines = array_values(array_filter(array_map('strval', $rules), fn (string $l) => $l !== ''));
+
+        if ($lines === []) {
+            return $body;
+        }
+
+        return rtrim($body, "\n")."\n\n".implode("\n", $lines);
     }
 }

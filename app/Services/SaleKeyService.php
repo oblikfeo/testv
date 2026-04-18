@@ -336,7 +336,6 @@ class SaleKeyService
         foreach (array_keys(config('admin.sale_panels', [])) as $idx) {
             $targets[] = ['t' => 'sale', 'i' => (int) $idx];
         }
-        $targets[] = ['t' => 'test', 'i' => null];
 
         if ($targets === []) {
             throw new \RuntimeException('Нет панелей в config admin');
@@ -351,7 +350,7 @@ class SaleKeyService
                 ? $this->getSalePanelConfig((int) $target['i'])
                 : $this->getTestPanelConfig();
 
-            $email = 'admin-fr-'.$user->id.'-'.$pos.'-'.time();
+            $email = 'bundle-'.$user->id.'-'.$pos.'-'.time();
             $uuid = Str::uuid()->toString();
 
             $inbounds = $this->xuiApi->getInbounds($panel['url'], $panel['username'], $panel['password']);
@@ -385,7 +384,6 @@ class SaleKeyService
 
             if ($saleKey === null) {
                 $panelIndex = $target['t'] === 'sale' ? (int) $target['i'] : 0;
-                $primaryIsTest = $target['t'] === 'test';
 
                 $saleKey = SaleKey::create([
                     'user_id' => $user->id,
@@ -402,7 +400,7 @@ class SaleKeyService
                     'activated_at' => now(),
                     'is_sponsor' => false,
                     'is_admin_bundle' => true,
-                    'admin_primary_is_test' => $primaryIsTest,
+                    'admin_primary_is_test' => $target['t'] === 'test',
                     'secondary_panel_index' => null,
                     'secondary_uuid' => null,
                     'secondary_email' => null,
