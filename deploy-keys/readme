@@ -1,0 +1,38 @@
+Deploy / Laravel (production)
+
+1) Сервер Yandex (приложение avavpn.ru)
+- Публичный IP: 158.160.251.105
+- Домен: avavpn.ru (A-запись на IP выше)
+- SSH user: ubuntu
+- Приватный ключ: ssh-key-1775825109453
+- Публичный ключ: ssh-key-1775825109453.pub
+
+SSH (из этой папки):
+    ssh -i "./ssh-key-1775825109453" ubuntu@158.160.251.105
+    ssh -i "./ssh-key-1775825109453" ubuntu@avavpn.ru
+
+Каталог приложения на сервере:
+    /var/www/testv
+
+2) Деплой после push в GitHub (main)
+
+На сервере:
+    cd /var/www/testv
+    git pull origin main
+    composer install --no-dev --optimize-autoloader --no-interaction
+    php artisan migrate --force
+    php artisan route:clear
+    php artisan view:clear
+    php artisan config:cache
+
+Важно: если когда-то включали `php artisan route:cache`, без `route:clear` после деплоя может остаться старый список маршрутов (в т.ч. 500 в админке).
+
+3) Проверка версии на сервере
+    cd /var/www/testv && git log -1 --oneline
+
+Должен совпадать с последним коммитом в origin/main.
+
+4) Прочее
+- Подробные шаги также в deploy.txt в этой папке.
+- ip.txt — кратко IP и пользователь.
+- Ключи не выкладывать в публичные репозитории; при утече — сменить ключ на ВМ.

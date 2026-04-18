@@ -1,0 +1,4 @@
+158.160.251.105
+avavpn.ru
+ubuntu
+/var/www/testv

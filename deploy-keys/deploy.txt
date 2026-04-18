@@ -1,0 +1,27 @@
+Схема деплоя (всегда так)
+
+1) Локально: коммит и push в origin (main или ваш рабочий branch).
+2) На сервере: подтянуть изменения из репозитория.
+
+Полное описание (IP, домен, проверка коммита): см. readme в этой папке.
+
+SSH (ключ рядом в этой папке):
+  ssh -i "./ssh-key-1775825109453" ubuntu@avavpn.ru
+  ssh -i "./ssh-key-1775825109453" ubuntu@158.160.251.105
+
+Каталог приложения на сервере:
+  /var/www/testv
+
+На сервере после входа:
+  cd /var/www/testv
+  git pull origin main
+  composer install --no-dev --optimize-autoloader --no-interaction
+  php artisan migrate --force
+  php artisan route:clear
+  php artisan view:clear
+  php artisan config:cache
+
+  (Если когда-то делали php artisan route:cache — без route:clear после деплоя
+  останется старый список маршрутов и админка может дать 500.)
+
+Публичный IP и домен: см. ip.txt

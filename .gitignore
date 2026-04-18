@@ -12,7 +12,11 @@
 /.vscode
 /.zed
 /auth.json
-/deploy-keys
+# deploy-keys: в репозитории только инструкции; ключи — локально
+/deploy-keys/*
+!/deploy-keys/readme
+!/deploy-keys/deploy.txt
+!/deploy-keys/ip.txt
 # SSH-ключи и секреты (не в репозиторий)
 /Верстка/доступы/
 /доступы/
