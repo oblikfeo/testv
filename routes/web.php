@@ -69,6 +69,9 @@ Route::prefix('admin')->group(function () {
         Route::post('/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
         Route::get('/sponsor', [AdminController::class, 'sponsorKeys'])->name('admin.sponsor');
         Route::post('/sponsor', [AdminController::class, 'createSponsor'])->name('admin.sponsor.create');
+        Route::get('/admin-friends', [AdminController::class, 'adminFriends'])->name('admin.admin-friends');
+        Route::post('/admin-friends', [AdminController::class, 'createAdminFriends'])->name('admin.admin-friends.create');
+        Route::post('/admin-friends/revoke', [AdminController::class, 'revokeAdminFriends'])->name('admin.admin-friends.revoke');
     });
 });
 

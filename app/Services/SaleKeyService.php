@@ -15,6 +15,8 @@ class SaleKeyService
 {
     public const SPONSOR_PLAN_SLUG = 'sponsor-bundle';
 
+    public const ADMIN_FRIENDS_PLAN_SLUG = 'admin-friends-bundle';
+
     public const MAX_SPONSOR_KEYS = 10;
 
     public function __construct(
@@ -63,6 +65,7 @@ class SaleKeyService
         $existing = SaleKey::query()
             ->where('subscription_id', $subscription->id)
             ->where('is_sponsor', false)
+            ->where('is_admin_bundle', false)
             ->first();
 
         if ($existing) {
@@ -89,6 +92,12 @@ class SaleKeyService
             'total_bytes' => $totalBytes > 0 ? $totalBytes : $saleKey->total_bytes,
             'status' => 'active',
         ]);
+
+        if ($saleKey->is_admin_bundle) {
+            $this->extendAdminBundleEndpoints($saleKey, $subscription, $plan, $totalBytes, $expiryMs);
+
+            return;
+        }
 
         $panel = $this->getSalePanelConfig($saleKey->panel_index);
         $clientPayload = $this->buildClientPayload(
@@ -297,6 +306,254 @@ class SaleKeyService
         );
     }
 
+    /**
+     * Одна глобальная подписка: все связки продаж + тестовая панель, один URL Happ.
+     */
+    public function createAdminFriendsBundle(User $user, int $days, int $trafficGb, int $maxDevices = 10): SaleKey
+    {
+        if (SaleKey::query()->where('is_admin_bundle', true)->exists()) {
+            throw new \RuntimeException('Админская подписка уже выдана. Сначала отзовите её.');
+        }
+
+        $plan = Plan::query()->where('slug', self::ADMIN_FRIENDS_PLAN_SLUG)->firstOrFail();
+
+        $subscription = Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'status' => 'active',
+            'max_devices' => $maxDevices,
+            'starts_at' => now(),
+            'expires_at' => now()->addDays($days),
+        ]);
+
+        $planOverride = clone $plan;
+        $planOverride->traffic_gb = $trafficGb;
+
+        $expiryMs = (int) round($subscription->expires_at->timestamp * 1000);
+        $totalBytes = $this->totalBytesFromPlan($planOverride);
+
+        $targets = [];
+        foreach (array_keys(config('admin.sale_panels', [])) as $idx) {
+            $targets[] = ['t' => 'sale', 'i' => (int) $idx];
+        }
+        $targets[] = ['t' => 'test', 'i' => null];
+
+        if ($targets === []) {
+            throw new \RuntimeException('Нет панелей в config admin');
+        }
+
+        $sharedSubId = Str::random(16);
+        $extras = [];
+        $saleKey = null;
+
+        foreach ($targets as $pos => $target) {
+            $panel = $target['t'] === 'sale'
+                ? $this->getSalePanelConfig((int) $target['i'])
+                : $this->getTestPanelConfig();
+
+            $email = 'admin-fr-'.$user->id.'-'.$pos.'-'.time();
+            $uuid = Str::uuid()->toString();
+
+            $inbounds = $this->xuiApi->getInbounds($panel['url'], $panel['username'], $panel['password']);
+            if (empty($inbounds['obj'][0])) {
+                throw new \RuntimeException('Нет inbound на панели '.$target['t']);
+            }
+
+            $inboundId = (int) $inbounds['obj'][0]['id'];
+
+            $payload = $this->buildClientPayload(
+                $subscription,
+                $planOverride,
+                $email,
+                $uuid,
+                $sharedSubId,
+                $expiryMs,
+                $totalBytes
+            );
+
+            $result = $this->xuiApi->addClient(
+                $panel['url'],
+                $panel['username'],
+                $panel['password'],
+                $inboundId,
+                $payload
+            );
+
+            if (empty($result['success'])) {
+                throw new \RuntimeException($result['msg'] ?? 'Ошибка addClient: '.$target['t']);
+            }
+
+            if ($saleKey === null) {
+                $panelIndex = $target['t'] === 'sale' ? (int) $target['i'] : 0;
+                $primaryIsTest = $target['t'] === 'test';
+
+                $saleKey = SaleKey::create([
+                    'user_id' => $user->id,
+                    'subscription_id' => $subscription->id,
+                    'key_order_id' => null,
+                    'panel_index' => $panelIndex,
+                    'uuid' => $uuid,
+                    'email' => $email,
+                    'sub_id' => $sharedSubId,
+                    'inbound_id' => $inboundId,
+                    'total_bytes' => $totalBytes,
+                    'used_bytes' => 0,
+                    'expires_at' => $subscription->expires_at,
+                    'activated_at' => now(),
+                    'is_sponsor' => false,
+                    'is_admin_bundle' => true,
+                    'admin_primary_is_test' => $primaryIsTest,
+                    'secondary_panel_index' => null,
+                    'secondary_uuid' => null,
+                    'secondary_email' => null,
+                    'secondary_sub_id' => null,
+                    'secondary_inbound_id' => null,
+                    'bundle_endpoints' => [],
+                    'status' => 'active',
+                ]);
+            } else {
+                $extras[] = [
+                    't' => $target['t'],
+                    'i' => $target['i'],
+                    'uuid' => $uuid,
+                    'email' => $email,
+                    'inbound_id' => $inboundId,
+                ];
+            }
+        }
+
+        $saleKey->update(['bundle_endpoints' => $extras]);
+
+        return $saleKey->fresh();
+    }
+
+    public function revokeAdminFriendsBundle(SaleKey $saleKey): void
+    {
+        if (! $saleKey->is_admin_bundle) {
+            throw new \InvalidArgumentException('Не админская подписка');
+        }
+
+        $primaryPanel = $saleKey->admin_primary_is_test
+            ? $this->getTestPanelConfig()
+            : $this->getSalePanelConfig($saleKey->panel_index);
+
+        $this->xuiApi->deleteClient(
+            $primaryPanel['url'],
+            $primaryPanel['username'],
+            $primaryPanel['password'],
+            (int) $saleKey->inbound_id,
+            $saleKey->uuid
+        );
+
+        foreach ($saleKey->bundle_endpoints ?? [] as $ep) {
+            $p = ($ep['t'] ?? '') === 'test'
+                ? $this->getTestPanelConfig()
+                : $this->getSalePanelConfig((int) ($ep['i'] ?? 0));
+
+            $this->xuiApi->deleteClient(
+                $p['url'],
+                $p['username'],
+                $p['password'],
+                (int) ($ep['inbound_id'] ?? 0),
+                (string) ($ep['uuid'] ?? '')
+            );
+        }
+
+        $subscription = $saleKey->subscription;
+        $saleKey->delete();
+        $subscription?->delete();
+    }
+
+    /**
+     * @return array{url: string, username: string, password: string, server_ip: string}
+     */
+    public function getTestPanelConfig(): array
+    {
+        $t = config('admin.test_panel', []);
+        if (empty($t['url'])) {
+            throw new \RuntimeException('Не задан admin.test_panel');
+        }
+
+        return $t;
+    }
+
+    protected function extendAdminBundleEndpoints(
+        SaleKey $saleKey,
+        Subscription $subscription,
+        Plan $plan,
+        int $totalBytes,
+        int $expiryMs
+    ): void {
+        $primaryPanel = $saleKey->admin_primary_is_test
+            ? $this->getTestPanelConfig()
+            : $this->getSalePanelConfig($saleKey->panel_index);
+
+        $payload = $this->buildClientPayload(
+            $subscription,
+            $plan,
+            $saleKey->email,
+            $saleKey->uuid,
+            $saleKey->sub_id,
+            $expiryMs,
+            $totalBytes
+        );
+
+        $r = $this->xuiApi->updateClient(
+            $primaryPanel['url'],
+            $primaryPanel['username'],
+            $primaryPanel['password'],
+            (int) $saleKey->inbound_id,
+            $payload
+        );
+        if (empty($r['success'])) {
+            Log::error('Admin bundle primary extend failed', ['id' => $saleKey->id, 'msg' => $r['msg'] ?? null]);
+        }
+
+        foreach ($saleKey->bundle_endpoints ?? [] as $ep) {
+            $p = ($ep['t'] ?? '') === 'test'
+                ? $this->getTestPanelConfig()
+                : $this->getSalePanelConfig((int) ($ep['i'] ?? 0));
+
+            $payloadEp = $this->buildClientPayload(
+                $subscription,
+                $plan,
+                (string) ($ep['email'] ?? ''),
+                (string) ($ep['uuid'] ?? ''),
+                $saleKey->sub_id,
+                $expiryMs,
+                $totalBytes
+            );
+
+            $r2 = $this->xuiApi->updateClient(
+                $p['url'],
+                $p['username'],
+                $p['password'],
+                (int) ($ep['inbound_id'] ?? 0),
+                $payloadEp
+            );
+            if (empty($r2['success'])) {
+                Log::error('Admin bundle endpoint extend failed', ['sale_key_id' => $saleKey->id, 'msg' => $r2['msg'] ?? null]);
+            }
+        }
+    }
+
+    public function getInboundForTestPanel(?int $inboundIdFilter = null): ?array
+    {
+        $panel = $this->getTestPanelConfig();
+        $inbounds = $this->xuiApi->getInbounds($panel['url'], $panel['username'], $panel['password']);
+        if (empty($inbounds['obj'])) {
+            return null;
+        }
+
+        foreach ($inbounds['obj'] as $inbound) {
+            if ($inboundIdFilter === null || (int) $inbound['id'] === $inboundIdFilter) {
+                return $inbound;
+            }
+        }
+
+        return $inbounds['obj'][0] ?? null;
+    }
+
     protected function buildClientPayload(
         Subscription $subscription,
         Plan $plan,
@@ -306,7 +563,7 @@ class SaleKeyService
         int $expiryTimeMs,
         int $totalBytes
     ): array {
-        $limitIp = max(1, (int) $plan->devices);
+        $limitIp = max(1, (int) ($subscription->max_devices ?? $plan->devices));
 
         return [
             'id' => $uuid,
@@ -325,7 +582,11 @@ class SaleKeyService
     public function syncTrafficFromPanel(SaleKey $saleKey): void
     {
         try {
-            $panel = $this->getSalePanelConfig($saleKey->panel_index);
+            if ($saleKey->is_admin_bundle && $saleKey->admin_primary_is_test) {
+                $panel = $this->getTestPanelConfig();
+            } else {
+                $panel = $this->getSalePanelConfig($saleKey->panel_index);
+            }
             $this->applyTrafficForEmail($panel, $saleKey->email, $saleKey);
         } catch (\Throwable $e) {
             Log::warning('SaleKey syncTraffic', ['id' => $saleKey->id, 'e' => $e->getMessage()]);

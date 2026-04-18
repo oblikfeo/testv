@@ -10,7 +10,9 @@
         <div class="cab-card" style="margin-bottom: 24px;">
             <div class="cab-card-header">
                 <span class="cab-card-title">Подписка Happ (оплаченный тариф)</span>
-                @if($saleKey->is_sponsor)
+                @if($saleKey->is_admin_bundle)
+                    <span class="cab-badge gray">Все связки + тест</span>
+                @elseif($saleKey->is_sponsor)
                     <span class="cab-badge gray">2 соединения</span>
                 @endif
             </div>

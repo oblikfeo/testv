@@ -52,7 +52,9 @@
                 </div>
                 <div style="margin-top: 8px;">
                     <button type="button" class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.querySelector('.happ-sub-url').innerText)">Копировать ссылку</button>
-                    @if($saleKey->is_sponsor)
+                    @if($saleKey->is_admin_bundle)
+                        <span class="cab-badge gray" style="margin-left:8px;">Команда · все связки</span>
+                    @elseif($saleKey->is_sponsor)
                         <span class="cab-badge gray" style="margin-left:8px;">Спонсор · 2 соединения</span>
                     @endif
                 </div>

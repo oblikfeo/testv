@@ -166,6 +166,57 @@ class AdminController extends Controller
         }
     }
 
+    public function adminFriends()
+    {
+        $adminKey = SaleKey::query()
+            ->where('is_admin_bundle', true)
+            ->with('user')
+            ->first();
+
+        return view('admin.admin-friends', compact('adminKey'));
+    }
+
+    public function createAdminFriends(Request $request, SaleKeyService $saleKeyService)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'days' => 'required|integer|min:1|max:3650',
+            'traffic_gb' => 'required|integer|min:0|max:100000',
+            'max_devices' => 'required|integer|min:1|max:50',
+        ]);
+
+        $user = User::query()->where('email', $request->input('email'))->firstOrFail();
+
+        try {
+            $saleKey = $saleKeyService->createAdminFriendsBundle(
+                $user,
+                $request->integer('days'),
+                $request->integer('traffic_gb'),
+                $request->integer('max_devices')
+            );
+
+            return back()->with('success', 'Админская подписка создана. Happ: '.url('/sub/'.$saleKey->sub_id));
+        } catch (\Throwable $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
+    }
+
+    public function revokeAdminFriends(SaleKeyService $saleKeyService)
+    {
+        $key = SaleKey::query()->where('is_admin_bundle', true)->first();
+        if (! $key) {
+            return back()->withErrors(['error' => 'Активной админской подписки нет']);
+        }
+
+        try {
+            $saleKeyService->revokeAdminFriendsBundle($key);
+
+            return back()->with('success', 'Админская подписка отозвана, клиенты удалены с панелей');
+        } catch (\Throwable $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
     public function createTestKey(Request $request)
     {
         $request->validate([

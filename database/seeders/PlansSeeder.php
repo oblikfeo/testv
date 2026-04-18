@@ -102,5 +102,20 @@ class PlansSeeder extends Seeder
                 'traffic_gb' => 0,
             ]
         );
+
+        Plan::updateOrCreate(
+            ['slug' => 'admin-friends-bundle'],
+            [
+                'name' => 'Админ / друзья (все связки)',
+                'devices' => 10,
+                'days' => 365,
+                'price' => 0,
+                'discount' => 0,
+                'is_popular' => false,
+                'is_active' => false,
+                'sort_order' => 998,
+                'traffic_gb' => 0,
+            ]
+        );
     }
 }

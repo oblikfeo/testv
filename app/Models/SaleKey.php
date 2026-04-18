@@ -26,6 +26,9 @@ class SaleKey extends Model
         'secondary_email',
         'secondary_sub_id',
         'secondary_inbound_id',
+        'is_admin_bundle',
+        'admin_primary_is_test',
+        'bundle_endpoints',
         'status',
     ];
 
@@ -35,6 +38,9 @@ class SaleKey extends Model
             'expires_at' => 'datetime',
             'activated_at' => 'datetime',
             'is_sponsor' => 'boolean',
+            'is_admin_bundle' => 'boolean',
+            'admin_primary_is_test' => 'boolean',
+            'bundle_endpoints' => 'array',
             'total_bytes' => 'integer',
             'used_bytes' => 'integer',
         ];
