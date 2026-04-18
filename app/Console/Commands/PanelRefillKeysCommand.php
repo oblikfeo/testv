@@ -25,7 +25,7 @@ class PanelRefillKeysCommand extends Command
 
         $pair = Pair::query()->find($pairId);
         if ($pair === null) {
-            $this->error('Связка не найдена.');
+            $this->error('Панель не найдена.');
 
             return self::FAILURE;
         }

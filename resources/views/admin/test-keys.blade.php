@@ -5,7 +5,7 @@
 @section('content')
 <div class="mb-8">
     <h1 class="text-2xl font-bold text-white">Тестовые ключи</h1>
-    <p class="text-gray-400 mt-1">Связка 3: {{ $testPanel['url'] }} (2 GB RAM, слабый сервер)</p>
+    <p class="text-gray-400 mt-1">Тестовая панель: {{ $testPanel['url'] }} (2 GB RAM)</p>
 </div>
 
 @if (session('success'))

@@ -6,7 +6,7 @@
 <div class="mb-8">
     <h1 class="text-2xl font-bold text-white">Полный доступ (все серверы продаж)</h1>
     <p class="text-gray-400 mt-1 max-w-2xl">
-        Все связки из <code class="text-gray-300">sale_panels</code> — одна ссылка Happ, внутри отдельная VLESS на каждую связку.
+        Все серверы из <code class="text-gray-300">sale_panels</code> — одна ссылка Happ, внутри отдельная VLESS на каждую страну.
         Глобально может быть только <strong class="text-white">одна</strong> такая подписка.
     </p>
 </div>
@@ -68,7 +68,7 @@
                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" @disabled($adminKey)>
         </div>
         <button type="submit" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition" @disabled($adminKey)>
-            Создать подписку «все связки»
+            Создать подписку «все серверы»
         </button>
     </form>
 </div>

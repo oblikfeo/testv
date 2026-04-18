@@ -1,11 +1,11 @@
 @extends('admin.layout')
 
-@section('title', 'Связки продаж')
+@section('title', 'Панели продаж')
 
 @section('content')
 <div class="mb-8">
-    <h1 class="text-2xl font-bold text-white">Активная связка для платных подписок</h1>
-    <p class="text-gray-400 mt-1">Новые ключи после оплаты создаются на выбранной связке.</p>
+    <h1 class="text-2xl font-bold text-white">Активный сервер для платных подписок</h1>
+    <p class="text-gray-400 mt-1">Новые ключи после оплаты создаются на выбранной панели.</p>
 </div>
 
 @if (session('success'))
@@ -22,7 +22,7 @@
                 <label class="flex items-start gap-3 p-4 rounded-lg border cursor-pointer {{ (int)$active === (int)$idx ? 'border-red-500 bg-red-500/10' : 'border-gray-600 hover:border-gray-500' }}">
                     <input type="radio" name="active_sale_panel" value="{{ $idx }}" class="mt-1" @checked((int)$active === (int)$idx)>
                     <div>
-                        <div class="text-white font-medium">{{ $panel['name'] ?? 'Связка '.$idx }}</div>
+                        <div class="text-white font-medium">{{ \App\Support\HappSubscriptionFormatter::happNodeLabel((string) ($panel['happ_label'] ?? $panel['name'] ?? 'Сервер '.$idx)) }}</div>
                         <div class="text-gray-400 text-sm">{{ $panel['server_ip'] ?? '' }} — {{ $panel['url'] ?? '' }}</div>
                         <div class="text-xs mt-1 {{ ($health[$idx] ?? '') === 'ok' ? 'text-green-400' : 'text-yellow-400' }}">
                             Панель: {{ ($health[$idx] ?? '') === 'ok' ? 'доступна' : ($health[$idx] ?? 'не проверено') }}

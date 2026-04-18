@@ -22,7 +22,7 @@
     <div class="bg-gray-800 rounded-xl p-6">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-lg font-semibold text-white">Связка 1 (NL)</h3>
+                <h3 class="text-lg font-semibold text-white">🇳🇱 Нидерланды</h3>
                 <p class="text-gray-400 text-sm mt-1">158.160.229.195</p>
                 <p class="text-green-400 text-xs mt-2">● Для продажи</p>
             </div>
@@ -37,7 +37,7 @@
     <div class="bg-gray-800 rounded-xl p-6">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-lg font-semibold text-white">Связка 2 (FR)</h3>
+                <h3 class="text-lg font-semibold text-white">🇫🇷 Франция</h3>
                 <p class="text-gray-400 text-sm mt-1">158.160.249.138</p>
                 <p class="text-green-400 text-xs mt-2">● Для продажи</p>
             </div>
@@ -53,9 +53,9 @@
 <div class="bg-gray-800 rounded-xl p-6">
     <h2 class="text-xl font-bold text-white mb-4">Архитектура VPN Hub</h2>
     <div class="text-gray-400 space-y-2 text-sm">
-        <p><strong class="text-white">Связка 1:</strong> Yandex 158.160.229.195 → NL 82.23.162.45 (6 GB RAM, 118 GB диск)</p>
-        <p><strong class="text-white">Связка 2:</strong> Yandex 158.160.249.138 → FR 82.22.50.114 (6 GB RAM, 118 GB диск)</p>
-        <p><strong class="text-yellow-400">Связка 3 (тестовая):</strong> Yandex 158.160.253.217 → NL 82.23.163.202 (2 GB RAM, 58 GB диск)</p>
+        <p><strong class="text-white">🇳🇱 Нидерланды:</strong> Yandex 158.160.229.195 → NL 82.23.162.45 (6 GB RAM, 118 GB диск)</p>
+        <p><strong class="text-white">🇫🇷 Франция:</strong> Yandex 158.160.249.138 → FR 82.22.50.114 (6 GB RAM, 118 GB диск)</p>
+        <p><strong class="text-yellow-400">🇷🇺 Тест:</strong> Yandex 158.160.253.217 → NL 82.23.163.202 (2 GB RAM, 58 GB диск)</p>
     </div>
 </div>
 @endsection

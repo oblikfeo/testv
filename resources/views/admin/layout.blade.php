@@ -29,7 +29,7 @@
                             </a>
                             <a href="{{ route('admin.settings') }}" 
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.settings') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                Связки
+                                Панели
                             </a>
                             <a href="{{ route('admin.sponsor') }}" 
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.sponsor') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">

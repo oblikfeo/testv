@@ -9,6 +9,7 @@ use App\Models\TrialKey;
 use App\Models\User;
 use App\Services\SaleKeyService;
 use App\Services\XuiApiService;
+use App\Support\HappSubscriptionFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -135,7 +136,7 @@ class AdminController extends Controller
 
         Setting::set('active_sale_panel', (string) $request->integer('active_sale_panel'));
 
-        return back()->with('success', 'Активная связка сохранена');
+        return back()->with('success', 'Активная панель сохранена');
     }
 
     public function sponsorKeys()
@@ -264,7 +265,7 @@ class AdminController extends Controller
             );
 
             if ($result['success']) {
-                $vlessLink = $this->generateVlessLink($inbounds['obj'][0], $uuid, $email);
+                $vlessLink = $this->generateVlessLink($inbounds['obj'][0], $uuid);
                 
                 return back()->with('success', "Тестовый ключ создан: $email")
                     ->with('vless_link', $vlessLink);
@@ -306,30 +307,24 @@ class AdminController extends Controller
         }
     }
 
-    protected function generateVlessLink(array $inbound, string $uuid, string $email): string
+    protected function generateVlessLink(array $inbound, string $uuid): string
     {
-        $streamSettings = json_decode($inbound['streamSettings'], true);
-        $realitySettings = $streamSettings['realitySettings'] ?? [];
-        
-        $serverNames = $realitySettings['serverNames'] ?? ['www.cloudflare.com'];
-        $publicKey = $realitySettings['settings']['publicKey'] ?? '';
-        $shortIds = $realitySettings['shortIds'] ?? [''];
-        
-        $port = $inbound['port'];
-        
-        $settings = json_decode($inbound['settings'], true);
         $ip = config('admin.test_panel.server_ip');
+        $label = HappSubscriptionFormatter::happNodeLabel(
+            (string) (config('admin.test_panel.happ_label') ?? '🇷🇺 Тест')
+        );
 
-        $params = http_build_query([
-            'type' => 'tcp',
-            'security' => 'reality',
-            'encryption' => 'none',
-            'fp' => 'chrome',
-            'pbk' => $publicKey,
-            'sid' => $shortIds[0] ?? '',
-            'sni' => $serverNames[0] ?? 'www.cloudflare.com',
-        ]);
+        [$line, $err] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
+            $inbound,
+            $uuid,
+            (string) $ip,
+            $label
+        );
 
-        return "vless://{$uuid}@{$ip}:{$port}?{$params}#{$email}";
+        if ($err !== null) {
+            return 'Ошибка: '.$err;
+        }
+
+        return $line;
     }
 }

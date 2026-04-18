@@ -342,6 +342,12 @@ class SaleKeyService
             throw new \RuntimeException('Нет панелей в config admin');
         }
 
+        if (count($targets) < 2) {
+            throw new \RuntimeException(
+                'Подписка «все серверы» требует минимум две панели в admin.sale_panels (NL + FR и т.д.).'
+            );
+        }
+
         $sharedSubId = Str::random(16);
         $extras = [];
         $saleKey = null;
@@ -419,6 +425,16 @@ class SaleKeyService
                     'inbound_id' => $inboundId,
                 ];
             }
+        }
+
+        if ($saleKey === null) {
+            throw new \RuntimeException('Не создана запись ключа (первая панель недоступна?).');
+        }
+
+        if (count($extras) !== count($targets) - 1) {
+            throw new \RuntimeException(
+                'Созданы не все клиенты на панелях: ожидалось '.count($targets).' точек, доп. записей '.count($extras).'.'
+            );
         }
 
         $saleKey->update(['bundle_endpoints' => $extras]);

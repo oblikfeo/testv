@@ -31,12 +31,19 @@ class SubscriptionFeedBuilder
         }
 
         $serverIp = config('admin.test_panel.server_ip');
-        $line = HappSubscriptionFormatter::vlessLineFromInbound(
+        $label = HappSubscriptionFormatter::happNodeLabel(
+            (string) (config('admin.test_panel.happ_label') ?? '🇷🇺 Тест')
+        );
+
+        [$line, $err] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
             $inbound,
             $trialKey->uuid,
             $serverIp,
-            '🇷🇺 AVA тестовый период'
+            $label
         );
+        if ($err !== null) {
+            return ['error' => $err, 'code' => 500];
+        }
 
         $userInfo = HappSubscriptionFormatter::buildUserInfo(
             0,
@@ -76,13 +83,17 @@ class SubscriptionFeedBuilder
         }
 
         $lines = [];
-        $label1 = $this->happLineTitleForPanel((int) $saleKey->panel_index);
-        $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
+        $label1 = $this->happLabelForPanel((int) $saleKey->panel_index);
+        [$line1, $err1] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
             $inbound,
             $saleKey->uuid,
             $panel['server_ip'],
             $label1
         );
+        if ($err1 !== null) {
+            return ['error' => $err1, 'code' => 500];
+        }
+        $lines[] = $line1;
 
         if ($saleKey->is_sponsor && $saleKey->secondary_uuid && $saleKey->secondary_panel_index !== null) {
             $p2 = $this->saleKeyService->getSalePanelConfig((int) $saleKey->secondary_panel_index);
@@ -91,13 +102,17 @@ class SubscriptionFeedBuilder
                 (int) $saleKey->secondary_inbound_id
             );
             if ($inbound2) {
-                $label2 = $this->happLineTitleForPanel((int) $saleKey->secondary_panel_index);
-                $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
+                $label2 = $this->happLabelForPanel((int) $saleKey->secondary_panel_index);
+                [$line2, $err2] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
                     $inbound2,
                     (string) $saleKey->secondary_uuid,
                     $p2['server_ip'],
                     $label2
                 );
+                if ($err2 !== null) {
+                    return ['error' => $err2, 'code' => 500];
+                }
+                $lines[] = $line2;
             }
         }
 
@@ -119,13 +134,14 @@ class SubscriptionFeedBuilder
     }
 
     /**
-     * Короткое имя сервера в подписке: «AVA · Связка 1 (NL)» из config admin.sale_panels.
+     * Подпись узла в Happ: AVA + флаг + страна (admin.happ_brand + sale_panels.*.happ_label).
      */
-    protected function happLineTitleForPanel(int $panelIndex): string
+    protected function happLabelForPanel(int $panelIndex): string
     {
-        $name = config('admin.sale_panels')[$panelIndex]['name'] ?? ('Сервер '.($panelIndex + 1));
+        $panels = config('admin.sale_panels', []);
+        $base = (string) ($panels[$panelIndex]['happ_label'] ?? ('🌐 '.($panelIndex + 1)));
 
-        return 'AVA · '.$name;
+        return HappSubscriptionFormatter::happNodeLabel($base);
     }
 
     /**
@@ -133,36 +149,41 @@ class SubscriptionFeedBuilder
      */
     protected function buildAdminBundleBody(SaleKey $saleKey): array
     {
-        /**
-         * Подписка «все серверы» — только продажные связки (config sale_panels).
-         * Тестовая панель изолирована (только trial / отдельный URL); в старых записях в bundle_endpoints
-         * мог остаться test — не включаем в тело подписки.
-         */
         $lines = [];
         $seenPanelIndex = [];
 
-        $appendSaleLine = function (int $panelIndex, string $uuid, int $inboundId) use (&$lines, &$seenPanelIndex): void {
+        $appendSaleLine = function (int $panelIndex, string $uuid, int $inboundId) use (&$lines, &$seenPanelIndex): ?string {
             if (isset($seenPanelIndex[$panelIndex])) {
-                return;
+                return null;
             }
             $seenPanelIndex[$panelIndex] = true;
 
             $panel = $this->saleKeyService->getSalePanelConfig($panelIndex);
             $inbound = $this->saleKeyService->getInboundForPanel($panelIndex, $inboundId);
             if (! $inbound) {
-                return;
+                return 'Нет inbound на панели '.$panelIndex;
             }
 
-            $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
+            $label = $this->happLabelForPanel($panelIndex);
+            [$line, $err] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
                 $inbound,
                 $uuid,
                 $panel['server_ip'],
-                $this->happLineTitleForPanel($panelIndex)
+                $label
             );
+            if ($err !== null) {
+                return $err;
+            }
+            $lines[] = $line;
+
+            return null;
         };
 
         if (! $saleKey->admin_primary_is_test) {
-            $appendSaleLine((int) $saleKey->panel_index, (string) $saleKey->uuid, (int) $saleKey->inbound_id);
+            $e = $appendSaleLine((int) $saleKey->panel_index, (string) $saleKey->uuid, (int) $saleKey->inbound_id);
+            if ($e !== null) {
+                return ['error' => $e, 'code' => 500];
+            }
         }
 
         foreach ($saleKey->bundle_endpoints ?? [] as $ep) {
@@ -174,15 +195,18 @@ class SubscriptionFeedBuilder
                 continue;
             }
 
-            $appendSaleLine(
+            $e = $appendSaleLine(
                 (int) ($ep['i'] ?? 0),
                 (string) ($ep['uuid'] ?? ''),
                 (int) ($ep['inbound_id'] ?? 0)
             );
+            if ($e !== null) {
+                return ['error' => $e, 'code' => 500];
+            }
         }
 
         if ($lines === []) {
-            return ['error' => 'Ошибка: в подписке нет ни одной продажной связки (проверьте ключ на панелях или перевыдайте подписку)', 'code' => 500];
+            return ['error' => 'Ошибка: в подписке нет ни одного сервера продаж (проверьте ключи на панелях или перевыдайте подписку)', 'code' => 500];
         }
 
         $body = $this->appendHappRoutingRules(implode("\n", $lines));
