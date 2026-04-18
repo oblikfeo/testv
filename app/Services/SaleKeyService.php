@@ -307,7 +307,7 @@ class SaleKeyService
     }
 
     /**
-     * Одна глобальная подписка: все связки продаж + тестовая панель, один URL Happ.
+     * Одна глобальная подписка: только связки продаж (sale_panels), без тестовой панели. Один URL Happ.
      */
     public function createAdminFriendsBundle(User $user, int $days, int $trafficGb, int $maxDevices = 10): SaleKey
     {

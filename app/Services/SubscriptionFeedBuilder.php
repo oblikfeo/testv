@@ -133,61 +133,56 @@ class SubscriptionFeedBuilder
      */
     protected function buildAdminBundleBody(SaleKey $saleKey): array
     {
+        /**
+         * Подписка «все серверы» — только продажные связки (config sale_panels).
+         * Тестовая панель изолирована (только trial / отдельный URL); в старых записях в bundle_endpoints
+         * мог остаться test — не включаем в тело подписки.
+         */
         $lines = [];
+        $seenPanelIndex = [];
 
-        if ($saleKey->admin_primary_is_test) {
-            $tp = $this->saleKeyService->getTestPanelConfig();
-            $inbound = $this->saleKeyService->getInboundForTestPanel((int) $saleKey->inbound_id);
-            if (! $inbound) {
-                return ['error' => 'Ошибка получения настроек (тест)', 'code' => 500];
+        $appendSaleLine = function (int $panelIndex, string $uuid, int $inboundId) use (&$lines, &$seenPanelIndex): void {
+            if (isset($seenPanelIndex[$panelIndex])) {
+                return;
             }
+            $seenPanelIndex[$panelIndex] = true;
+
+            $panel = $this->saleKeyService->getSalePanelConfig($panelIndex);
+            $inbound = $this->saleKeyService->getInboundForPanel($panelIndex, $inboundId);
+            if (! $inbound) {
+                return;
+            }
+
             $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
                 $inbound,
-                $saleKey->uuid,
-                $tp['server_ip'],
-                'AVA · Тестовый сервер'
-            );
-        } else {
-            $panel = $this->saleKeyService->getSalePanelConfig($saleKey->panel_index);
-            $inbound = $this->saleKeyService->getInboundForPanel($saleKey->panel_index, (int) $saleKey->inbound_id);
-            if (! $inbound) {
-                return ['error' => 'Ошибка получения настроек', 'code' => 500];
-            }
-            $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
-                $inbound,
-                $saleKey->uuid,
+                $uuid,
                 $panel['server_ip'],
-                $this->happLineTitleForPanel((int) $saleKey->panel_index)
+                $this->happLineTitleForPanel($panelIndex)
             );
+        };
+
+        if (! $saleKey->admin_primary_is_test) {
+            $appendSaleLine((int) $saleKey->panel_index, (string) $saleKey->uuid, (int) $saleKey->inbound_id);
         }
 
         foreach ($saleKey->bundle_endpoints ?? [] as $ep) {
-            if (($ep['t'] ?? '') === 'test') {
-                $tp = $this->saleKeyService->getTestPanelConfig();
-                $inbound = $this->saleKeyService->getInboundForTestPanel((int) ($ep['inbound_id'] ?? 0));
-                if (! $inbound) {
-                    continue;
-                }
-                $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
-                    $inbound,
-                    (string) ($ep['uuid'] ?? ''),
-                    $tp['server_ip'],
-                    'AVA · Тестовый сервер'
-                );
-            } else {
-                $idx = (int) ($ep['i'] ?? 0);
-                $panel = $this->saleKeyService->getSalePanelConfig($idx);
-                $inbound = $this->saleKeyService->getInboundForPanel($idx, (int) ($ep['inbound_id'] ?? 0));
-                if (! $inbound) {
-                    continue;
-                }
-                $lines[] = HappSubscriptionFormatter::vlessLineFromInbound(
-                    $inbound,
-                    (string) ($ep['uuid'] ?? ''),
-                    $panel['server_ip'],
-                    $this->happLineTitleForPanel($idx)
-                );
+            $type = $ep['t'] ?? 'sale';
+            if ($type === 'test') {
+                continue;
             }
+            if ($type !== 'sale') {
+                continue;
+            }
+
+            $appendSaleLine(
+                (int) ($ep['i'] ?? 0),
+                (string) ($ep['uuid'] ?? ''),
+                (int) ($ep['inbound_id'] ?? 0)
+            );
+        }
+
+        if ($lines === []) {
+            return ['error' => 'Ошибка: в подписке нет ни одной продажной связки (проверьте ключ на панелях или перевыдайте подписку)', 'code' => 500];
         }
 
         $body = $this->appendHappRoutingRules(implode("\n", $lines));
