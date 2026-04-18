@@ -137,7 +137,7 @@ class SaleKeyService
                     $plan,
                     (string) $saleKey->secondary_email,
                     (string) $saleKey->secondary_uuid,
-                    (string) $saleKey->secondary_sub_id,
+                    (string) $saleKey->sub_id,
                     $expiryMs,
                     $totalBytes
                 )
@@ -205,7 +205,8 @@ class SaleKeyService
             $panel2 = $this->getSalePanelConfig($secondaryPanelIndex);
             $email2 = 'sale-'.$user->id.'-'.time().'-s-'.Str::random(4);
             $secondaryUuid = Str::uuid()->toString();
-            $secondarySubId = Str::random(16);
+            // Один и тот же subId на обеих панелях — одна подписка Happ по URL, два UUID (как в 3x-ui для одной группы).
+            $secondarySubId = $subId;
 
             $inbounds2 = $this->xuiApi->getInbounds($panel2['url'], $panel2['username'], $panel2['password']);
             if (empty($inbounds2['obj'][0])) {
@@ -423,6 +424,40 @@ class SaleKeyService
         $saleKey->update(['bundle_endpoints' => $extras]);
 
         return $saleKey->fresh();
+    }
+
+    /**
+     * Снять спонсорскую подписку: удалить клиентов с обеих панелей и запись в БД.
+     */
+    public function revokeSponsorBundle(SaleKey $saleKey): void
+    {
+        if (! $saleKey->is_sponsor) {
+            throw new \InvalidArgumentException('Не спонсорская подписка');
+        }
+
+        $panel = $this->getSalePanelConfig($saleKey->panel_index);
+        $this->xuiApi->deleteClient(
+            $panel['url'],
+            $panel['username'],
+            $panel['password'],
+            (int) $saleKey->inbound_id,
+            $saleKey->uuid
+        );
+
+        if ($saleKey->secondary_uuid && $saleKey->secondary_panel_index !== null) {
+            $p2 = $this->getSalePanelConfig((int) $saleKey->secondary_panel_index);
+            $this->xuiApi->deleteClient(
+                $p2['url'],
+                $p2['username'],
+                $p2['password'],
+                (int) $saleKey->secondary_inbound_id,
+                (string) $saleKey->secondary_uuid
+            );
+        }
+
+        $subscription = $saleKey->subscription;
+        $saleKey->delete();
+        $subscription?->delete();
     }
 
     public function revokeAdminFriendsBundle(SaleKey $saleKey): void
