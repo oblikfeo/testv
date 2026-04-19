@@ -44,7 +44,10 @@ class SubscriptionController extends Controller
         $userAgent = $request->header('User-Agent', '');
 
         if ($this->isHappClient($userAgent)) {
-            return response($body)
+            $routing = \App\Support\HappSubscriptionFormatter::happRoutingDeeplinkFromConfig();
+            $bodyWithRouting = $routing ? ($routing."\n".$body) : $body;
+
+            $resp = response($bodyWithRouting)
                 ->header('Content-Type', 'text/plain; charset=utf-8')
                 ->header('subscription-userinfo', $userInfo)
                 ->header('profile-title', 'base64:'.base64_encode($profileTitle))
@@ -52,6 +55,12 @@ class SubscriptionController extends Controller
                 ->header('support-url', config('app.url'))
                 ->header('X-Device-Register-Url', url('/api/device/register'))
                 ->header('X-Device-Validate-Url', url('/api/device/validate'));
+
+            if ($routing) {
+                $resp->header('routing', $routing);
+            }
+
+            return $resp;
         }
 
         return response($body)

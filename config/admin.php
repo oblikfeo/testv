@@ -37,26 +37,36 @@ return [
     ],
 
     /**
-     * Доп. строки в конце тела подписки (Clash-подобный формат для Happ и др.).
-     * Прямой доступ к банкам/CDN без VPN.
+     * Happ routing profile (happ://routing/onadd/{base64-json}).
+     * Geo-источник: runetfreedom/russia-v2ray-rules-dat (обновляется часто).
      */
-    'happ_routing_rules' => [
-        /**
-         * Россия: списки заблокированных доменов/подсетей (ru-blocked) из runetfreedom/russia-v2ray-rules-dat.
-         * Категории: GEOIP ru-blocked, GEOSITE ru-blocked.
-         */
-        'GEOSITE,ru-blocked,PROXY',
-        'GEOIP,ru-blocked,PROXY',
-        /**
-         * Россия: обычные РФ-ресурсы должны ходить мимо VPN.
-         * Важно: эти правила идут НИЖЕ ru-blocked, чтобы блокировки всё равно обходились через PROXY.
-         */
-        'GEOSITE,ru-available-only-inside,DIRECT',
-        'GEOSITE,category-ru,DIRECT',
-        'GEOIP,RU,DIRECT',
-        'DOMAIN-SUFFIX,tbank.ru,DIRECT',
-        'DOMAIN-SUFFIX,tinkoff.ru,DIRECT',
-        'DOMAIN-SUFFIX,cloudfront.net,DIRECT',
-        'DOMAIN-SUFFIX,amazonaws.com,DIRECT',
+    'happ_routing' => [
+        'enabled' => env('HAPP_ROUTING_ENABLED', true),
+        'name' => env('HAPP_ROUTING_NAME', 'AVA · RU DIRECT + ru-blocked PROXY'),
+        'geoip_url' => env('HAPP_GEOIP_URL', 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat'),
+        'geosite_url' => env('HAPP_GEOSITE_URL', 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat'),
+        // Вся Россия напрямую (мимо VPN)
+        'direct_sites' => [
+            'geosite:ru-available-only-inside',
+            'geosite:category-ru',
+            'domain:tbank.ru',
+            'domain:tinkoff.ru',
+        ],
+        'direct_ip' => [
+            'geoip:ru',
+            '10.0.0.0/8',
+            '172.16.0.0/12',
+            '192.168.0.0/16',
+            '169.254.0.0/16',
+            '224.0.0.0/4',
+            '255.255.255.255',
+        ],
+        // Заблокированное в РФ — через VPN
+        'proxy_sites' => [
+            'geosite:ru-blocked',
+        ],
+        'proxy_ip' => [
+            'geoip:ru-blocked',
+        ],
     ],
 ];
