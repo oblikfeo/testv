@@ -41,6 +41,12 @@ return [
      * Прямой доступ к банкам/CDN без VPN.
      */
     'happ_routing_rules' => [
+        /**
+         * Россия: списки заблокированных доменов/подсетей (ru-blocked) из runetfreedom/russia-v2ray-rules-dat.
+         * Категории: GEOIP ru-blocked, GEOSITE ru-blocked.
+         */
+        'GEOSITE,ru-blocked,PROXY',
+        'GEOIP,ru-blocked,PROXY',
         'DOMAIN-SUFFIX,tbank.ru,DIRECT',
         'DOMAIN-SUFFIX,tinkoff.ru,DIRECT',
         'DOMAIN-SUFFIX,cloudfront.net,DIRECT',
