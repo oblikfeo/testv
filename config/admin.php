@@ -47,6 +47,13 @@ return [
          */
         'GEOSITE,ru-blocked,PROXY',
         'GEOIP,ru-blocked,PROXY',
+        /**
+         * Россия: обычные РФ-ресурсы должны ходить мимо VPN.
+         * Важно: эти правила идут НИЖЕ ru-blocked, чтобы блокировки всё равно обходились через PROXY.
+         */
+        'GEOSITE,ru-available-only-inside,DIRECT',
+        'GEOSITE,category-ru,DIRECT',
+        'GEOIP,RU,DIRECT',
         'DOMAIN-SUFFIX,tbank.ru,DIRECT',
         'DOMAIN-SUFFIX,tinkoff.ru,DIRECT',
         'DOMAIN-SUFFIX,cloudfront.net,DIRECT',
