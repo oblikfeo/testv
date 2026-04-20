@@ -38,13 +38,14 @@ return [
 
     /**
      * Happ routing profile (happ://routing/onadd/{base64-json}).
-     * Geo-источник: runetfreedom/russia-v2ray-rules-dat (обновляется часто).
+     * Важно: geo-файлы должны быть небольшими, иначе Happ/Xray может ругаться на лимит скачивания (50MB).
      */
     'happ_routing' => [
         'enabled' => env('HAPP_ROUTING_ENABLED', true),
-        'name' => env('HAPP_ROUTING_NAME', 'AVA · RU DIRECT + ru-blocked PROXY'),
-        'geoip_url' => env('HAPP_GEOIP_URL', 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat'),
-        'geosite_url' => env('HAPP_GEOSITE_URL', 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat'),
+        'name' => env('HAPP_ROUTING_NAME', 'AVA · RU DIRECT'),
+        // Базовые компактные geo-файлы
+        'geoip_url' => env('HAPP_GEOIP_URL', 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat'),
+        'geosite_url' => env('HAPP_GEOSITE_URL', 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat'),
         // Вся Россия напрямую (мимо VPN)
         'direct_sites' => [
             'geosite:ru-available-only-inside',
@@ -61,12 +62,8 @@ return [
             '224.0.0.0/4',
             '255.255.255.255',
         ],
-        // Заблокированное в РФ — через VPN
-        'proxy_sites' => [
-            'geosite:ru-blocked',
-        ],
-        'proxy_ip' => [
-            'geoip:ru-blocked',
-        ],
+        // Остальное будет идти через VPN (GlobalProxy=true в профиле)
+        'proxy_sites' => [],
+        'proxy_ip' => [],
     ],
 ];
