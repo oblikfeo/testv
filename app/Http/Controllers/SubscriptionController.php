@@ -34,7 +34,10 @@ class SubscriptionController extends Controller
             return response('Подписка не найдена', 404);
         }
 
-        $this->registerTrialDeviceOnAccess($trialKey, $request);
+        $deviceCheck = $this->checkAndRegisterTrialDevice($trialKey, $request);
+        if ($deviceCheck !== null) {
+            return $deviceCheck;
+        }
 
         $data = $this->feedBuilder->buildForTrial($trialKey);
         if (isset($data['error'])) {
@@ -44,15 +47,15 @@ class SubscriptionController extends Controller
         return $this->respondHapp($request, $data['body'], $data['user_info'], $data['profile_title']);
     }
 
-    protected function registerTrialDeviceOnAccess(TrialKey $trialKey, Request $request): void
+    protected function checkAndRegisterTrialDevice(TrialKey $trialKey, Request $request): ?Response
     {
         if (! $trialKey->isActive()) {
-            return;
+            return null;
         }
 
         $hwid = $this->extractHwid($request);
         if (! $hwid) {
-            return;
+            return null;
         }
 
         $existingDevice = TrialDevice::where('trial_key_id', $trialKey->id)
@@ -61,12 +64,16 @@ class SubscriptionController extends Controller
 
         if ($existingDevice) {
             $existingDevice->updateActivity($request->ip());
-            return;
+            return null;
         }
 
         $currentDevices = TrialDevice::where('trial_key_id', $trialKey->id)->count();
         if ($currentDevices >= self::TRIAL_MAX_DEVICES) {
-            return;
+            return response(
+                "Лимит устройств для тестового периода исчерпан ({$currentDevices}/" . self::TRIAL_MAX_DEVICES . "). " .
+                "Удалите устройство в личном кабинете: " . url('/cabinet/trial'),
+                403
+            );
         }
 
         TrialDevice::create([
@@ -76,6 +83,8 @@ class SubscriptionController extends Controller
             'ip_address' => $request->ip(),
             'last_active_at' => now(),
         ]);
+
+        return null;
     }
 
     protected function extractHwid(Request $request): ?string
