@@ -155,6 +155,110 @@
         color: var(--text-secondary);
         margin-bottom: 16px;
     }
+
+    .devices-section {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .devices-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    .devices-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+    .devices-count {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        background: rgba(255,255,255,0.05);
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+    .devices-empty {
+        text-align: center;
+        padding: 24px;
+        color: var(--text-secondary);
+    }
+    .devices-empty svg {
+        margin-bottom: 12px;
+    }
+    .devices-empty p {
+        margin: 0 0 4px;
+        font-size: 0.9rem;
+    }
+    .devices-empty small {
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+    .devices-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .device-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+    .device-item:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.12);
+    }
+    .device-info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .device-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(139, 92, 246, 0.15);
+        border-radius: 10px;
+        color: #8b5cf6;
+    }
+    .device-details {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .device-name {
+        font-weight: 500;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+    .device-meta {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+    .device-delete-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .device-delete-btn:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
 </style>
 @endpush
 
@@ -279,6 +383,83 @@
                     Как подключиться?
                 </div>
                 <p>Скопируйте ссылку и добавьте её в приложение как «Подписку». Рекомендуем <a href="https://apps.apple.com/app/happ/id6504287215" target="_blank">Happ</a> для iOS или <a href="https://play.google.com/store/apps/details?id=app.hiddify.com" target="_blank">Hiddify</a> для Android.</p>
+            </div>
+
+            {{-- Список привязанных устройств --}}
+            <div class="devices-section">
+                <div class="devices-header">
+                    <span class="devices-title">Привязанные устройства</span>
+                    <span class="devices-count">{{ $trialDevices->count() }} / 1</span>
+                </div>
+
+                @if($trialDevices->isEmpty())
+                    <div class="devices-empty">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                            <line x1="12" y1="18" x2="12.01" y2="18"/>
+                        </svg>
+                        <p>Пока нет подключённых устройств</p>
+                        <small>Устройство появится после первого подключения через VPN-приложение</small>
+                    </div>
+                @else
+                    <div class="devices-list">
+                        @foreach($trialDevices as $device)
+                            <div class="device-item">
+                                <div class="device-info">
+                                    <div class="device-icon">
+                                        @if(str_contains($device->display_name, 'iPhone') || str_contains($device->display_name, 'iPad'))
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                                                <line x1="12" y1="18" x2="12.01" y2="18"/>
+                                            </svg>
+                                        @elseif(str_contains($device->display_name, 'Android'))
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                                                <line x1="12" y1="18" x2="12.01" y2="18"/>
+                                            </svg>
+                                        @elseif(str_contains($device->display_name, 'Windows') || str_contains($device->display_name, 'Mac') || str_contains($device->display_name, 'Linux'))
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                                <line x1="12" y1="17" x2="12" y2="21"/>
+                                            </svg>
+                                        @else
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                                                <line x1="12" y1="18" x2="12.01" y2="18"/>
+                                            </svg>
+                                        @endif
+                                    </div>
+                                    <div class="device-details">
+                                        <span class="device-name">{{ $device->display_name }}</span>
+                                        <span class="device-meta">
+                                            @if($device->last_active_at)
+                                                Активность: {{ $device->last_active_at->diffForHumans() }}
+                                            @else
+                                                Добавлено: {{ $device->created_at->diffForHumans() }}
+                                            @endif
+                                            @if($device->ip_address)
+                                                · IP: {{ $device->ip_address }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                                <form method="POST" action="{{ route('cabinet.trial.devices.destroy', $device->id) }}" onsubmit="return confirm('Удалить это устройство?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="device-delete-btn" title="Удалить устройство">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                            <line x1="10" y1="11" x2="10" y2="17"/>
+                                            <line x1="14" y1="11" x2="14" y2="17"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
         @elseif ($canUseTrial)

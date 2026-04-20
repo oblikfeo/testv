@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/cabinet/devices/{device}', [DeviceController::class, 'destroy'])->name('cabinet.devices.destroy');
     Route::post('/cabinet/trial', [CabinetController::class, 'createTrial'])->name('cabinet.trial.create');
+    Route::delete('/cabinet/trial/devices/{device}', [CabinetController::class, 'deleteTrialDevice'])->name('cabinet.trial.devices.destroy');
 
     Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
     Route::get('/payment/status', [PaymentController::class, 'checkStatus'])->name('payment.status');

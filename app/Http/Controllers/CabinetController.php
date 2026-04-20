@@ -37,18 +37,40 @@ class CabinetController extends Controller
     {
         $user = $request->user();
         $trialKey = $user->trialKey;
+        $trialDevices = collect();
 
         if ($trialKey) {
             $this->trialKeyService->syncTrafficFromPanel($trialKey);
             $trialKey->refresh();
+            $trialDevices = $trialKey->devices()->latest()->get();
         }
 
         return view('cabinet.trial', [
             'activeRoute' => 'trial',
             'user' => $user,
             'trialKey' => $trialKey,
+            'trialDevices' => $trialDevices,
             'canUseTrial' => $user->canUseTrial(),
         ]);
+    }
+
+    public function deleteTrialDevice(Request $request, int $deviceId)
+    {
+        $user = $request->user();
+        $trialKey = $user->trialKey;
+
+        if (! $trialKey) {
+            return back()->withErrors(['device' => 'Тестовый ключ не найден']);
+        }
+
+        $device = $trialKey->devices()->find($deviceId);
+        if (! $device) {
+            return back()->withErrors(['device' => 'Устройство не найдено']);
+        }
+
+        $device->delete();
+
+        return back()->with('success', 'Устройство удалено');
     }
 
     public function createTrial(Request $request)
