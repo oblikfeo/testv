@@ -48,11 +48,17 @@ return [
         'geoip_url' => env('HAPP_GEOIP_URL', 'https://github.com/v2fly/geoip/releases/latest/download/geoip.dat'),
         'geosite_url' => env('HAPP_GEOSITE_URL', 'https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat'),
         // Вся Россия напрямую (мимо VPN)
+        // Только категории, которые есть в v2fly/dlc.dat
         'direct_sites' => [
-            'geosite:ru-available-only-inside',
-            'geosite:category-ru',
+            'geosite:category-gov-ru',
+            'geosite:yandex',
+            'geosite:mailru',
+            'geosite:vk',
             'domain:tbank.ru',
             'domain:tinkoff.ru',
+            'domain:gosuslugi.ru',
+            'domain:nalog.gov.ru',
+            'domain:mos.ru',
         ],
         'direct_ip' => [
             'geoip:ru',
