@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SaleKey;
+use App\Models\TrialDevice;
 use App\Models\TrialKey;
 use App\Services\SubscriptionFeedBuilder;
 use Illuminate\Http\Request;
@@ -10,6 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SubscriptionController extends Controller
 {
+    protected const TRIAL_MAX_DEVICES = 1;
+
     public function __construct(
         protected SubscriptionFeedBuilder $feedBuilder
     ) {}
@@ -31,12 +34,70 @@ class SubscriptionController extends Controller
             return response('Подписка не найдена', 404);
         }
 
+        $this->registerTrialDeviceOnAccess($trialKey, $request);
+
         $data = $this->feedBuilder->buildForTrial($trialKey);
         if (isset($data['error'])) {
             return response($data['error'], $data['code'] ?? 500);
         }
 
         return $this->respondHapp($request, $data['body'], $data['user_info'], $data['profile_title']);
+    }
+
+    protected function registerTrialDeviceOnAccess(TrialKey $trialKey, Request $request): void
+    {
+        if (! $trialKey->isActive()) {
+            return;
+        }
+
+        $hwid = $this->extractHwid($request);
+        if (! $hwid) {
+            return;
+        }
+
+        $existingDevice = TrialDevice::where('trial_key_id', $trialKey->id)
+            ->where('hwid', $hwid)
+            ->first();
+
+        if ($existingDevice) {
+            $existingDevice->updateActivity($request->ip());
+            return;
+        }
+
+        $currentDevices = TrialDevice::where('trial_key_id', $trialKey->id)->count();
+        if ($currentDevices >= self::TRIAL_MAX_DEVICES) {
+            return;
+        }
+
+        TrialDevice::create([
+            'trial_key_id' => $trialKey->id,
+            'hwid' => $hwid,
+            'user_agent' => $request->userAgent(),
+            'ip_address' => $request->ip(),
+            'last_active_at' => now(),
+        ]);
+    }
+
+    protected function extractHwid(Request $request): ?string
+    {
+        $hwid = $request->header('X-Device-ID')
+            ?? $request->header('X-HWID')
+            ?? $request->header('X-Hwid')
+            ?? $request->query('hwid')
+            ?? $request->query('device_id');
+
+        if ($hwid) {
+            return $hwid;
+        }
+
+        $userAgent = $request->header('User-Agent', '');
+        $ip = $request->ip();
+
+        if ($userAgent && $ip) {
+            return md5($userAgent . $ip);
+        }
+
+        return null;
     }
 
     protected function respondHapp(Request $request, string $body, string $userInfo, string $profileTitle): Response
