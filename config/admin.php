@@ -44,8 +44,9 @@ return [
         'enabled' => env('HAPP_ROUTING_ENABLED', true),
         'name' => env('HAPP_ROUTING_NAME', 'AVA · RU DIRECT'),
         // Базовые компактные geo-файлы
-        'geoip_url' => env('HAPP_GEOIP_URL', 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat'),
-        'geosite_url' => env('HAPP_GEOSITE_URL', 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat'),
+        // Как у конкурентов: geoip.dat + dlc.dat
+        'geoip_url' => env('HAPP_GEOIP_URL', 'https://github.com/v2fly/geoip/releases/latest/download/geoip.dat'),
+        'geosite_url' => env('HAPP_GEOSITE_URL', 'https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat'),
         // Вся Россия напрямую (мимо VPN)
         'direct_sites' => [
             'geosite:ru-available-only-inside',
