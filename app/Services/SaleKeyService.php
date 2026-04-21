@@ -47,6 +47,16 @@ class SaleKeyService
     {
         $gb = (int) ($plan->traffic_gb ?? 0);
         if ($gb <= 0) {
+            // Для служебных тарифов 0 = безлимит на панели. Для обычных планов 0 в БД обычно ошибка
+            // (в 3x-ui totalGB=0 тоже даёт безлимит) — подставляем лимит из config.
+            if (in_array($plan->slug, [self::SPONSOR_PLAN_SLUG, self::ADMIN_FRIENDS_PLAN_SLUG], true)) {
+                return 0;
+            }
+            $fallbackGb = (int) config('admin.default_retail_traffic_gb', 0);
+            if ($fallbackGb > 0) {
+                return $fallbackGb * 1024 * 1024 * 1024;
+            }
+
             return 0;
         }
 

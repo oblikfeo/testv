@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SaleKey;
 use App\Models\TrialDevice;
 use App\Models\TrialKey;
+use App\Services\DeviceService;
 use App\Services\SubscriptionFeedBuilder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,13 +15,22 @@ class SubscriptionController extends Controller
     protected const TRIAL_MAX_DEVICES = 1;
 
     public function __construct(
-        protected SubscriptionFeedBuilder $feedBuilder
+        protected SubscriptionFeedBuilder $feedBuilder,
+        protected DeviceService $deviceService
     ) {}
 
     public function show(string $subId, Request $request): Response
     {
-        $saleKey = SaleKey::query()->where('sub_id', $subId)->first();
+        $saleKey = SaleKey::query()
+            ->where('sub_id', $subId)
+            ->with('subscription.plan')
+            ->first();
         if ($saleKey) {
+            $deviceCheck = $this->checkAndRegisterSaleDevice($saleKey, $request);
+            if ($deviceCheck !== null) {
+                return $deviceCheck;
+            }
+
             $data = $this->feedBuilder->buildForSale($saleKey);
             if (isset($data['error'])) {
                 return response($data['error'], $data['code'] ?? 500);
@@ -45,6 +55,37 @@ class SubscriptionController extends Controller
         }
 
         return $this->respondHapp($request, $data['body'], $data['user_info'], $data['profile_title']);
+    }
+
+    protected function checkAndRegisterSaleDevice(SaleKey $saleKey, Request $request): ?Response
+    {
+        $subscription = $saleKey->subscription;
+        if (! $subscription || ! $subscription->isActive()) {
+            return null;
+        }
+
+        $hwid = $this->extractHwid($request);
+        if (! $hwid) {
+            return null;
+        }
+
+        $device = $this->deviceService->registerDevice(
+            $subscription,
+            $hwid,
+            $request->userAgent(),
+            $request->ip()
+        );
+
+        if (! $device) {
+            $max = (int) ($subscription->max_devices ?? 0);
+
+            return response(
+                "Лимит устройств исчерпан. Управление: " . url('/cabinet/devices') . " (макс. {$max})",
+                403
+            );
+        }
+
+        return null;
     }
 
     protected function checkAndRegisterTrialDevice(TrialKey $trialKey, Request $request): ?Response

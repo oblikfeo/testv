@@ -166,11 +166,17 @@ class YooKassaService
         $user = $order->user;
 
         if ($plan && $user) {
-            $existingSubscription = $user->activeSubscription;
+            // Продление только по тому же тарифу, а не «любой активной» подписке (иначе путались plan/limit).
+            $existingSubscription = $user->subscriptions()
+                ->active()
+                ->where('plan_id', $plan->id)
+                ->orderByDesc('expires_at')
+                ->first();
 
-            if ($existingSubscription && $existingSubscription->plan_id === $plan->id) {
+            if ($existingSubscription) {
                 $existingSubscription->update([
                     'expires_at' => $existingSubscription->expires_at->copy()->addDays($plan->days),
+                    'max_devices' => $plan->devices,
                 ]);
                 $subscription = $existingSubscription->fresh();
             } else {
