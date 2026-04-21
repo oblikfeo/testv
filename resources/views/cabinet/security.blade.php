@@ -33,7 +33,7 @@
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary btn-sm">Сменить пароль</button>
                 @if (session('status') === 'password-updated')
-                    <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-secondary);">{{ __('Saved.') }}</span>
+                    <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-secondary);">Сохранено.</span>
                 @endif
             </div>
         </form>

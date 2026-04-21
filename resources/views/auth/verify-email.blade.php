@@ -16,13 +16,13 @@
                 </p>
             @endif
 
-            <div class="auth-actions" style="flex-direction: row; flex-wrap: wrap; gap: 12px; justify-content: center;">
-                <form method="POST" action="{{ route('verification.send') }}">
+            <div class="auth-actions verify-actions">
+                <form method="POST" action="{{ route('verification.send') }}" class="verify-actions-item">
                     @csrf
                     <button type="submit" class="btn btn-primary">Отправить ссылку ещё раз</button>
                 </form>
-                <a href="{{ route('cabinet.subscription') }}" class="btn btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Личный кабинет</a>
-                <form method="POST" action="{{ route('logout') }}">
+                <a href="{{ route('cabinet.subscription') }}" class="btn btn-secondary verify-actions-item">Личный кабинет</a>
+                <form method="POST" action="{{ route('logout') }}" class="verify-actions-item">
                     @csrf
                     <button type="submit" class="btn btn-secondary">Выйти</button>
                 </form>

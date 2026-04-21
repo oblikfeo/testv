@@ -44,14 +44,14 @@
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
-                    {{ __('Your email address is unverified.') }}
+                    Ваш email ещё не подтверждён.
                     <button type="submit" form="send-verification" style="background: none; border: none; color: var(--red-light); cursor: pointer; text-decoration: underline; padding: 0; font: inherit;">
-                        {{ __('Click here to re-send the verification email.') }}
+                        Отправить ссылку подтверждения ещё раз.
                     </button>
                 </p>
                 @if (session('status') === 'verification-link-sent')
                     <p style="color: var(--red-light); font-size: 0.85rem; margin-bottom: 16px;">
-                        {{ __('A new verification link has been sent to your email address.') }}
+                        Новая ссылка подтверждения отправлена на ваш email.
                     </p>
                 @endif
             @endif
@@ -59,7 +59,7 @@
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
                 @if (session('status') === 'profile-updated')
-                    <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-secondary);">{{ __('Saved.') }}</span>
+                    <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-secondary);">Сохранено.</span>
                 @endif
             </div>
         </form>

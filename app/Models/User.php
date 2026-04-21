@@ -78,6 +78,14 @@ class User extends Authenticatable implements MustVerifyEmail
             ->latest('expires_at');
     }
 
+    public function activeSubscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class)
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->orderByDesc('expires_at');
+    }
+
     /**
      * @return HasMany<SaleKey, User>
      */

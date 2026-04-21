@@ -216,3 +216,26 @@
     font-size: 0.9rem;
     color: var(--text-secondary);
 }
+
+.verify-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.verify-actions-item,
+.verify-actions-item .btn {
+    width: 100%;
+}
+
+.verify-actions-item {
+    margin: 0;
+}
+
+.verify-actions > a.verify-actions-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}

@@ -16,20 +16,22 @@ class CabinetController extends Controller
     public function subscription(Request $request): View
     {
         $user = $request->user();
-        $subscription = $user->activeSubscription;
-        $saleKey = null;
-        if ($subscription) {
-            $saleKey = SaleKey::query()
-                ->where('subscription_id', $subscription->id)
+        $subscriptions = $user->activeSubscriptions()->with('plan')->get();
+
+        $saleKeys = [];
+        if ($subscriptions->isNotEmpty()) {
+            $saleKeys = SaleKey::query()
+                ->whereIn('subscription_id', $subscriptions->pluck('id'))
                 ->where('status', 'active')
-                ->first();
+                ->get()
+                ->keyBy('subscription_id');
         }
 
         return view('cabinet.subscription', [
             'activeRoute' => 'subscription',
             'user' => $user,
-            'subscription' => $subscription,
-            'saleKey' => $saleKey,
+            'subscriptions' => $subscriptions,
+            'saleKeys' => $saleKeys,
         ]);
     }
 
@@ -125,14 +127,24 @@ class CabinetController extends Controller
     public function devices(Request $request): View
     {
         $user = $request->user();
-        $subscription = $user->activeSubscription;
-        $devices = $subscription ? $subscription->devices()->latest()->get() : collect();
+        $subscriptions = $user->activeSubscriptions()->with(['plan', 'devices' => function ($query) {
+            $query->latest();
+        }])->get();
+
+        $saleKeys = [];
+        if ($subscriptions->isNotEmpty()) {
+            $saleKeys = SaleKey::query()
+                ->whereIn('subscription_id', $subscriptions->pluck('id'))
+                ->where('status', 'active')
+                ->get()
+                ->keyBy('subscription_id');
+        }
 
         return view('cabinet.devices', [
             'activeRoute' => 'devices',
             'user' => $user,
-            'subscription' => $subscription,
-            'devices' => $devices,
+            'subscriptions' => $subscriptions,
+            'saleKeys' => $saleKeys,
         ]);
     }
 }
