@@ -16,36 +16,37 @@
         @foreach($subscriptions as $subscription)
             @php($devices = $subscription->devices)
             @php($saleKey = $saleKeys[$subscription->id] ?? null)
-            <div class="sub-block {{ !$loop->first ? 'mt-24' : '' }}">
-                <div class="sub-block-header">
+            <section class="sub-block {{ !$loop->first ? 'mt-24' : '' }}">
+                <header class="sub-block-header">
                     <div class="sub-block-title">
-                        <h2>{{ $subscription->plan->name }}</h2>
                         @if($subscriptions->count() > 1)
                             <span class="sub-block-num">Подписка #{{ $loop->iteration }}</span>
                         @endif
+                        <h2>{{ $subscription->plan->name }}</h2>
                     </div>
                     <div class="sub-block-meta">
-                        <span class="sub-block-meta-item">
-                            <span class="meta-label">До</span>
+                        <div class="sub-block-meta-item">
+                            <span class="meta-label">Действует до</span>
                             <span class="meta-value">{{ $subscription->expires_at->format('d.m.Y') }}</span>
-                        </span>
-                        <span class="sub-block-meta-item">
+                        </div>
+                        <div class="sub-block-meta-divider"></div>
+                        <div class="sub-block-meta-item">
                             <span class="meta-label">Устройств</span>
                             <span class="meta-value">{{ $devices->count() }} / {{ $subscription->max_devices }}</span>
-                        </span>
+                        </div>
                         @if($subscription->isActive())
                             <span class="cab-badge green">Активна</span>
                         @else
                             <span class="cab-badge gray">Не активна</span>
                         @endif
                     </div>
-                </div>
+                </header>
 
                 <div class="manage-grid">
-                    <div class="cab-card manage-card">
+                    <article class="cab-card manage-card">
                         <div class="cab-card-header">
                             <span class="cab-card-title">Устройства</span>
-                            <span class="cab-badge {{ $devices->count() >= $subscription->max_devices ? 'red' : 'green' }}">
+                            <span class="cab-badge {{ $devices->count() >= $subscription->max_devices ? 'red' : 'gray' }}">
                                 {{ $devices->count() }} / {{ $subscription->max_devices }}
                             </span>
                         </div>
@@ -98,14 +99,15 @@
                                 @endforeach
                             </div>
                         @else
-                            <div class="cab-empty">
-                                <p>Нет привязанных устройств.</p>
-                                <p class="text-muted">Подключитесь к VPN — устройство появится здесь автоматически.</p>
+                            <div class="manage-empty">
+                                <div class="manage-empty-icon">📱</div>
+                                <p class="manage-empty-title">Нет привязанных устройств</p>
+                                <p class="manage-empty-hint">Подключитесь к VPN — устройство появится здесь автоматически.</p>
                             </div>
                         @endif
-                    </div>
+                    </article>
 
-                    <div class="cab-card manage-card">
+                    <article class="cab-card manage-card">
                         <div class="cab-card-header">
                             <span class="cab-card-title">Ключ подключения</span>
                             @if($saleKey)
@@ -130,10 +132,12 @@
                                 <button type="button"
                                         class="btn btn-primary btn-sm"
                                         onclick="avaCopyKey('{{ $keyId }}', this)">
-                                    Копировать
+                                    <span class="btn-ico">⧉</span>
+                                    <span>Копировать</span>
                                 </button>
                                 <a href="happ://add/{{ $subUrl }}" class="btn btn-secondary btn-sm">
-                                    Открыть в Happ
+                                    <span class="btn-ico">↗</span>
+                                    <span>Открыть в Happ</span>
                                 </a>
                             </div>
 
@@ -149,22 +153,16 @@
                                     </div>
                                 </div>
                             @endif
-
-                            @if($saleKey->expires_at)
-                                <div class="key-expires">
-                                    <span class="meta-label">Действует до</span>
-                                    <span class="meta-value">{{ $saleKey->expires_at->format('d.m.Y') }}</span>
-                                </div>
-                            @endif
                         @else
-                            <div class="cab-empty">
-                                <p>Ключ ещё не выпущен.</p>
-                                <p class="text-muted">Обратитесь в поддержку, если ключ не появляется.</p>
+                            <div class="manage-empty">
+                                <div class="manage-empty-icon">🔑</div>
+                                <p class="manage-empty-title">Ключ ещё не выпущен</p>
+                                <p class="manage-empty-hint">Обратитесь в поддержку, если ключ не появляется.</p>
                             </div>
                         @endif
-                    </div>
+                    </article>
                 </div>
-            </div>
+            </section>
         @endforeach
     @else
         <div class="cab-card">
@@ -196,82 +194,112 @@
     color: #22c55e;
 }
 
+.sub-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 22px 22px 20px;
+}
+
 .sub-block-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 20px;
     flex-wrap: wrap;
-    margin-bottom: 14px;
-    padding: 0 4px;
+    padding: 0 2px 18px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.sub-block-title h2 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
+.sub-block-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .sub-block-num {
-    display: inline-block;
-    margin-top: 2px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
-    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 500;
+}
+
+.sub-block-title h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
 }
 
 .sub-block-meta {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 18px;
     flex-wrap: wrap;
 }
 
 .sub-block-meta-item {
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
     align-items: flex-end;
     line-height: 1.2;
+    gap: 4px;
+}
+
+.sub-block-meta-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border-color);
 }
 
 .meta-label {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.6px;
+    font-weight: 500;
 }
 
 .meta-value {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-top: 2px;
 }
 
 .manage-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .manage-card {
-    padding: 22px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+}
+
+.manage-card .cab-card-header {
+    margin-bottom: 16px;
 }
 
 .devices-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .device-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px;
-    background: var(--bg-primary);
+    padding: 12px 14px;
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     gap: 12px;
@@ -286,9 +314,10 @@
 }
 
 .device-icon {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     line-height: 1;
     flex-shrink: 0;
+    padding-top: 2px;
 }
 
 .device-details {
@@ -298,16 +327,17 @@
 
 .device-name {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--text-primary);
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     word-break: break-word;
 }
 
 .device-meta {
-    font-size: 0.75rem;
+    font-size: 0.73rem;
     color: var(--text-muted);
-    margin-bottom: 6px;
+    margin-bottom: 5px;
+    line-height: 1.45;
 }
 
 .device-ip { margin-left: 4px; }
@@ -323,7 +353,7 @@
 .hwid-label { color: var(--text-muted); }
 
 .hwid-value {
-    background: var(--bg-card);
+    background: var(--bg-primary);
     padding: 2px 6px;
     border-radius: 4px;
     font-family: monospace;
@@ -339,10 +369,10 @@
 }
 
 .key-row {
-    background: var(--bg-primary);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 12px 14px;
+    padding: 11px 14px;
     margin: 0 0 12px;
 }
 
@@ -359,18 +389,25 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 0;
 }
 
 .key-actions .btn {
     flex: 1;
     min-width: 130px;
     text-decoration: none;
+    padding: 10px 16px;
+    font-size: 0.82rem;
+}
+
+.btn-ico {
+    font-size: 0.95rem;
+    line-height: 1;
 }
 
 .key-usage {
     margin-top: 16px;
-    padding-top: 16px;
+    padding-top: 14px;
     border-top: 1px solid var(--border-color);
 }
 
@@ -391,7 +428,7 @@
 .key-usage-bar {
     width: 100%;
     height: 6px;
-    background: var(--bg-primary);
+    background: var(--bg-card);
     border-radius: 100px;
     overflow: hidden;
 }
@@ -402,35 +439,71 @@
     transition: width 0.3s ease;
 }
 
-.key-expires {
+.manage-empty {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border-color);
-    font-size: 0.82rem;
+    justify-content: center;
+    text-align: center;
+    padding: 28px 16px;
+    flex: 1;
+    min-height: 160px;
+}
+
+.manage-empty-icon {
+    font-size: 1.8rem;
+    opacity: 0.5;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.manage-empty-title {
+    font-size: 0.92rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.manage-empty-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    max-width: 280px;
 }
 
 @media (max-width: 960px) {
     .manage-grid {
         grid-template-columns: 1fr;
     }
+
+    .sub-block-meta {
+        gap: 14px;
+    }
 }
 
 @media (max-width: 640px) {
+    .sub-block {
+        padding: 18px 16px;
+    }
+
     .sub-block-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 14px;
     }
 
     .sub-block-meta {
         width: 100%;
-        justify-content: space-between;
+        justify-content: flex-start;
+        gap: 16px;
     }
 
     .sub-block-meta-item {
         align-items: flex-start;
+    }
+
+    .sub-block-meta-divider {
+        display: none;
     }
 
     .device-item {
@@ -467,11 +540,12 @@ function avaCopyKey(elementId, btn) {
         fallback();
     }
     if (btn) {
-        var original = btn.innerText;
-        btn.innerText = 'Скопировано';
+        var original = btn.querySelector('span:last-child') ? btn.querySelector('span:last-child').innerText : btn.innerText;
+        var label = btn.querySelector('span:last-child') || btn;
+        label.innerText = 'Скопировано';
         btn.disabled = true;
         setTimeout(function () {
-            btn.innerText = original;
+            label.innerText = original;
             btn.disabled = false;
         }, 1500);
     }
