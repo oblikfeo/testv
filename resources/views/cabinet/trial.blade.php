@@ -373,18 +373,6 @@
                 </div>
             </div>
 
-            <div class="apps-hint">
-                <div class="apps-hint-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 16v-4"/>
-                        <path d="M12 8h.01"/>
-                    </svg>
-                    Как подключиться?
-                </div>
-                <p>Скопируйте ссылку и добавьте её в приложение как «Подписку». Рекомендуем <a href="https://apps.apple.com/app/happ/id6504287215" target="_blank">Happ</a> для iOS или <a href="https://play.google.com/store/apps/details?id=app.hiddify.com" target="_blank">Hiddify</a> для Android.</p>
-            </div>
-
             {{-- Список привязанных устройств --}}
             <div class="devices-section">
                 <div class="devices-header">
@@ -496,4 +484,16 @@
             <a href="{{ route('home') }}#pricing" class="btn btn-primary">Оформить подписку</a>
         @endif
     </div>
+
+    @if ($user->hasVerifiedEmail())
+        <div class="mt-24">
+            @include('partials.platform-instructions', [
+                'subUrl' => $trialKey ? url('/sub/' . $trialKey->sub_id) : null,
+                'title'  => 'Как подключиться',
+                'desc'   => $trialKey
+                    ? 'Выберите вашу платформу и следуйте трём шагам — ссылка подписки уже подставлена в кнопки ниже.'
+                    : 'Выберите вашу платформу и следуйте трём шагам. После получения тестового ключа ссылка появится автоматически.',
+            ])
+        </div>
+    @endif
 @endsection

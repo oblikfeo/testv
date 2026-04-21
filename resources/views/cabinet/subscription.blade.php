@@ -12,6 +12,11 @@
         </div>
     @endif
 
+    @php
+        $primarySaleKey = collect($saleKeys)->first();
+        $primarySubUrl  = $primarySaleKey ? url('/sub/'.$primarySaleKey->sub_id) : null;
+    @endphp
+
     @if($subscriptions->isNotEmpty())
         @foreach($subscriptions as $subscription)
             @php($saleKey = $saleKeys[$subscription->id] ?? null)
@@ -80,6 +85,16 @@
             </div>
         </div>
     @endif
+
+    <div class="mt-24">
+        @include('partials.platform-instructions', [
+            'subUrl' => $primarySubUrl,
+            'title'  => 'Как подключиться',
+            'desc'   => $primarySubUrl
+                ? 'Выберите вашу платформу и следуйте трём шагам. Ссылку подписки можно найти во вкладке «Управление».'
+                : 'Выберите вашу платформу и следуйте трём шагам. После оформления подписки ссылка для подключения появится во вкладке «Управление».',
+        ])
+    </div>
 @endsection
 
 @push('styles')
