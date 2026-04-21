@@ -42,7 +42,7 @@ class YooKassaService
                 ],
                 'confirmation' => [
                     'type' => 'redirect',
-                    'return_url' => url(config('yookassa.return_url')) . '?order_id=' . $order->id,
+                    'return_url' => $this->paymentReturnUrl($order),
                 ],
                 'capture' => true,
                 'description' => "Оплата тарифа {$plan->name} - {$plan->period_label}",
@@ -200,6 +200,34 @@ class YooKassaService
         ]);
 
         return true;
+    }
+
+    protected function paymentReturnUrl(KeyOrder $order): string
+    {
+        $configured = config('yookassa.return_url');
+        if (is_string($configured) && $configured !== '' && $this->isInvalidCabinetReturnPath($configured)) {
+            $configured = '';
+        }
+        if (is_string($configured) && $configured !== '') {
+            $base = preg_match('#^https?://#i', $configured)
+                ? rtrim($configured, '/')
+                : url($configured);
+
+            return $base . (str_contains($base, '?') ? '&' : '?') . http_build_query(['order_id' => $order->id]);
+        }
+
+        return route('cabinet.subscription', ['order_id' => $order->id], true);
+    }
+
+    private function isInvalidCabinetReturnPath(string $value): bool
+    {
+        if (str_contains($value, '://')) {
+            $path = (string) (parse_url($value, PHP_URL_PATH) ?? '');
+
+            return rtrim($path, '/') === '/cabinet/subscription';
+        }
+
+        return rtrim($value, '/') === '/cabinet/subscription';
     }
 
     public function checkPaymentStatus(KeyOrder $order): ?string
