@@ -373,6 +373,18 @@
                 </div>
             </div>
 
+            <div class="apps-hint">
+                <div class="apps-hint-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4"/>
+                        <path d="M12 8h.01"/>
+                    </svg>
+                    Как подключиться?
+                </div>
+                <p>Скопируйте ссылку и добавьте её в приложение как «Подписку». Рекомендуем <a href="https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973" target="_blank" rel="noopener noreferrer">Happ</a> для iOS или <a href="https://play.google.com/store/apps/details?id=app.hiddify.com" target="_blank" rel="noopener noreferrer">Hiddify</a> для Android.</p>
+            </div>
+
             {{-- Список привязанных устройств --}}
             <div class="devices-section">
                 <div class="devices-header">

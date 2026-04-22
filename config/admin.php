@@ -30,7 +30,7 @@ return [
             'url' => env('SALE_PANEL_1_URL', 'http://158.160.229.195'),
             'username' => env('SALE_PANEL_1_USERNAME', 'admin555'),
             'password' => env('SALE_PANEL_1_PASSWORD', 'admin666'),
-            'server_ip' => '158.160.229.195',
+            'server_ip' => env('SALE_PANEL_1_SERVER_IP', '158.160.229.195'),
         ],
         [
             'name' => '🇫🇷 Франция',
@@ -38,7 +38,7 @@ return [
             'url' => env('SALE_PANEL_2_URL', 'http://158.160.249.138'),
             'username' => env('SALE_PANEL_2_USERNAME', 'admin555'),
             'password' => env('SALE_PANEL_2_PASSWORD', 'admin666'),
-            'server_ip' => '158.160.249.138',
+            'server_ip' => env('SALE_PANEL_2_SERVER_IP', '158.160.249.138'),
         ],
     ],
 

@@ -686,6 +686,7 @@ class SaleKeyService
             }
         }
 
-        return $inbounds['obj'][0] ?? null;
+        // Не подставляем «первый попавшийся» inbound: иначе в VLESS попадут чужие Reality/port при устаревшем inbound_id в БД.
+        return null;
     }
 }

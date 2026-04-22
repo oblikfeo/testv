@@ -101,19 +101,23 @@ class SubscriptionFeedBuilder
                 (int) $saleKey->secondary_panel_index,
                 (int) $saleKey->secondary_inbound_id
             );
-            if ($inbound2) {
-                $label2 = $this->happLabelForPanel((int) $saleKey->secondary_panel_index);
-                [$line2, $err2] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
-                    $inbound2,
-                    (string) $saleKey->secondary_uuid,
-                    $p2['server_ip'],
-                    $label2
-                );
-                if ($err2 !== null) {
-                    return ['error' => $err2, 'code' => 500];
-                }
-                $lines[] = $line2;
+            if (! $inbound2) {
+                return [
+                    'error' => 'Нет inbound id='.(int) $saleKey->secondary_inbound_id.' на панели '.(int) $saleKey->secondary_panel_index.' — обновите secondary_inbound_id в БД под панель 3x-ui.',
+                    'code' => 500,
+                ];
             }
+            $label2 = $this->happLabelForPanel((int) $saleKey->secondary_panel_index);
+            [$line2, $err2] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
+                $inbound2,
+                (string) $saleKey->secondary_uuid,
+                $p2['server_ip'],
+                $label2
+            );
+            if ($err2 !== null) {
+                return ['error' => $err2, 'code' => 500];
+            }
+            $lines[] = $line2;
         }
 
         $body = $this->appendHappRoutingRules(implode("\n", $lines));
