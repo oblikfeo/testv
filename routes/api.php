@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BotApiController;
 use App\Http\Controllers\Api\DeviceApiController;
 use App\Http\Controllers\Api\SubscriptionStatusApiController;
 use App\Http\Controllers\SubscriptionController;
@@ -15,4 +16,10 @@ Route::middleware(['throttle:120,1'])->group(function (): void {
 
 Route::middleware(['api.token'])->group(function (): void {
     Route::get('/subscription/status', [SubscriptionStatusApiController::class, 'show'])->name('api.subscription.status');
+
+    Route::prefix('bot')->group(function (): void {
+        Route::post('user', [BotApiController::class, 'ensureUser'])->name('api.bot.user');
+        Route::get('subscription', [BotApiController::class, 'getSubscription'])->name('api.bot.subscription');
+        Route::post('trial', [BotApiController::class, 'issueTrial'])->name('api.bot.trial');
+    });
 });

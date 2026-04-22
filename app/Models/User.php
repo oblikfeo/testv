@@ -25,6 +25,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'trial_used',
+        'telegram_id',
+        'telegram_username',
     ];
 
     /**
@@ -96,7 +98,21 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function canUseTrial(): bool
     {
-        return $this->hasVerifiedEmail() && !$this->trial_used;
+        if ($this->trial_used) {
+            return false;
+        }
+
+        // Web-пользователь: обязателен подтверждённый email.
+        // Бот-пользователь (связан только через telegram_id): email не требуется.
+        return $this->hasVerifiedEmail() || $this->isBotOnly();
+    }
+
+    public function isBotOnly(): bool
+    {
+        return $this->telegram_id !== null
+            && is_string($this->email)
+            && str_starts_with($this->email, 'tg-')
+            && str_ends_with($this->email, '@bot.avavpn.ru');
     }
 
     public function sendEmailVerificationNotification(): void
