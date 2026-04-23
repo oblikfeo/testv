@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\BotApiController;
+use App\Http\Controllers\Api\BotLinkController;
 use App\Http\Controllers\Api\DeviceApiController;
 use App\Http\Controllers\Api\SubscriptionStatusApiController;
 use App\Http\Controllers\SubscriptionController;
@@ -22,6 +23,10 @@ Route::middleware(['api.token'])->group(function (): void {
         Route::get('subscription', [BotApiController::class, 'getSubscription'])->name('api.bot.subscription');
         Route::get('subscriptions', [BotApiController::class, 'listSubscriptions'])->name('api.bot.subscriptions');
         Route::post('trial', [BotApiController::class, 'issueTrial'])->name('api.bot.trial');
+
+        // Привязка существующего web-аккаунта (email) к Telegram через код.
+        Route::post('link/start', [BotLinkController::class, 'start'])->name('api.bot.link.start');
+        Route::post('link/confirm', [BotLinkController::class, 'confirm'])->name('api.bot.link.confirm');
 
         // Платежи из бота через YooKassa.
         Route::get('plans', [BotApiController::class, 'listPlans'])->name('api.bot.plans');

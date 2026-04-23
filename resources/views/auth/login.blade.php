@@ -34,6 +34,26 @@
                     <button type="submit" class="btn btn-primary">Войти</button>
                 </div>
             </form>
+
+            @if (config('services.telegram_bot.username') && config('services.telegram_bot.token'))
+                <div class="auth-divider" style="margin: 18px 0; text-align: center; opacity: .75;">
+                    <span>или</span>
+                </div>
+                @if ($errors->has('telegram'))
+                    <div class="auth-flash" style="margin-bottom: 12px;">
+                        {{ $errors->first('telegram') }}
+                    </div>
+                @endif
+                <div style="display:flex; justify-content:center;">
+                    <script async src="https://telegram.org/js/telegram-widget.js?22"
+                        data-telegram-login="{{ config('services.telegram_bot.username') }}"
+                        data-size="large"
+                        data-radius="10"
+                        data-request-access="write"
+                        data-auth-url="{{ route('auth.telegram.callback') }}">
+                    </script>
+                </div>
+            @endif
             <div class="auth-links">
                 @if (Route::has('register'))
                     <a href="{{ route('register') }}">Нет аккаунта? Создать</a>
