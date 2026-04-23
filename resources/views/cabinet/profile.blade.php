@@ -38,7 +38,8 @@
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" value="{{ $user->email }}" disabled>
+                    <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" placeholder="name@mail.ru" autocomplete="email">
+                    <x-input-error :messages="$errors->get('email')" class="form-error" />
                 </div>
             </div>
 
