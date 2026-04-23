@@ -2,19 +2,25 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\KeyOrder;
+use App\Models\Plan;
 use App\Models\SaleKey;
 use App\Models\TrialKey;
 use App\Models\User;
 use App\Services\TrialKeyService;
+use App\Services\YooKassaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BotApiController extends Controller
 {
     public function __construct(
         protected TrialKeyService $trialKeyService,
+        protected YooKassaService $yooKassaService,
     ) {}
 
     /**
@@ -111,6 +117,184 @@ class BotApiController extends Controller
             'user' => $this->serializeUser($user),
             'subscription' => $this->resolveSubscription($user, $trialKey),
         ]);
+    }
+
+    /**
+     * GET /api/bot/plans
+     * Актуальный прайс-лист для бота (розничные тарифы, без спонсорских/админских бандлов).
+     */
+    public function listPlans(): JsonResponse
+    {
+        $plans = Plan::query()
+            ->active()
+            ->whereNotIn('slug', [
+                \App\Services\SaleKeyService::SPONSOR_PLAN_SLUG,
+                \App\Services\SaleKeyService::ADMIN_FRIENDS_PLAN_SLUG,
+            ])
+            ->ordered()
+            ->get();
+
+        return response()->json([
+            'ok' => true,
+            'plans' => $plans->map(fn (Plan $p) => [
+                'slug' => $p->slug,
+                'name' => $p->name,
+                'devices' => (int) $p->devices,
+                'days' => (int) $p->days,
+                'price' => (int) $p->price,
+                'discount' => (int) ($p->discount ?? 0),
+                'is_popular' => (bool) $p->is_popular,
+            ])->values(),
+        ]);
+    }
+
+    /**
+     * POST /api/bot/payment
+     * Создаёт KeyOrder + YooKassa-платёж для бот-пользователя и возвращает ссылку на оплату.
+     *
+     * Тело:
+     * - telegram_id (int)          — обязательно
+     * - telegram_username (string) — опционально
+     * - plan_slug (string)         — обязательно
+     * - return_url (string)        — опционально (обычно t.me/<bot>?start=paid_<order_id>)
+     */
+    public function createPayment(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'telegram_id' => 'required|integer',
+            'telegram_username' => 'nullable|string|max:64',
+            'plan_slug' => 'required|string|max:64',
+            'return_url' => 'nullable|string|max:512',
+        ]);
+
+        $plan = Plan::query()->where('slug', $data['plan_slug'])->active()->first();
+        if (! $plan) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'plan_not_found',
+                'message' => 'Тариф не найден или неактивен.',
+            ], 404);
+        }
+
+        $user = $this->findOrCreateByTelegram(
+            (int) $data['telegram_id'],
+            $data['telegram_username'] ?? null
+        );
+
+        $order = KeyOrder::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'status' => OrderStatus::Pending,
+            'amount' => $plan->price,
+            'note' => "Бот: оплата тарифа {$plan->name} ({$plan->period_label})",
+        ]);
+
+        $returnUrl = $data['return_url'] ?? $this->defaultBotReturnUrl($order->id);
+
+        try {
+            $payment = $this->yooKassaService->createPayment($user, $plan, $order, $returnUrl);
+        } catch (\Throwable $e) {
+            Log::error('Bot: createPayment failed', [
+                'order_id' => $order->id,
+                'plan_slug' => $plan->slug,
+                'message' => $e->getMessage(),
+            ]);
+            $order->update(['status' => OrderStatus::Cancelled]);
+            return response()->json([
+                'ok' => false,
+                'error' => 'payment_create_failed',
+                'message' => 'Не удалось создать платёж.',
+            ], 500);
+        }
+
+        if (! $payment) {
+            $order->update(['status' => OrderStatus::Cancelled]);
+            return response()->json([
+                'ok' => false,
+                'error' => 'payment_create_failed',
+                'message' => 'YooKassa отклонил запрос платежа.',
+            ], 502);
+        }
+
+        $order->update([
+            'payment_id' => $payment['id'] ?? null,
+            'payment_status' => $payment['status'] ?? null,
+        ]);
+
+        $confirmationUrl = $payment['confirmation']['confirmation_url'] ?? null;
+
+        return response()->json([
+            'ok' => true,
+            'order_id' => (string) $order->id,
+            'payment_id' => $order->payment_id,
+            'amount' => (int) round(((float) $plan->price) * 100),
+            'currency' => 'RUB',
+            'status' => $this->mapYooKassaStatus($order->payment_status),
+            'confirmation_url' => $confirmationUrl,
+        ]);
+    }
+
+    /**
+     * GET /api/bot/payment/status?order_id=...
+     * Возвращает текущий статус платежа (pending|succeeded|canceled).
+     * Если backend ещё не получил webhook — дополнительно дёргает YooKassa напрямую.
+     */
+    public function paymentStatus(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'order_id' => 'required',
+        ]);
+
+        $order = KeyOrder::query()->find((int) $data['order_id']);
+        if (! $order) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'order_not_found',
+            ], 404);
+        }
+
+        // Если платёж ещё не финальный — синхронно переспросим YooKassa.
+        if ($order->payment_id && ! in_array($order->payment_status, ['succeeded', 'canceled'], true)) {
+            try {
+                $this->yooKassaService->checkPaymentStatus($order);
+                $order->refresh();
+            } catch (\Throwable $e) {
+                Log::warning('Bot: paymentStatus YooKassa check failed', [
+                    'order_id' => $order->id,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return response()->json([
+            'ok' => true,
+            'order_id' => (string) $order->id,
+            'amount' => (int) round(((float) ($order->amount ?? 0)) * 100),
+            'status' => $this->mapYooKassaStatus($order->payment_status),
+            'order_status' => $order->status?->value,
+        ]);
+    }
+
+    protected function defaultBotReturnUrl(int $orderId): string
+    {
+        $botUsername = (string) (config('services.telegram_bot.username') ?: env('TELEGRAM_BOT_USERNAME', ''));
+        $botUsername = ltrim($botUsername, '@');
+
+        if ($botUsername !== '') {
+            return 'https://t.me/'.$botUsername.'?start=paid_'.$orderId;
+        }
+
+        // Fallback: вернём на сайт, как раньше.
+        return route('cabinet.subscription', ['order_id' => $orderId], true);
+    }
+
+    protected function mapYooKassaStatus(?string $paymentStatus): string
+    {
+        return match ($paymentStatus) {
+            'succeeded' => 'succeeded',
+            'canceled' => 'canceled',
+            default => 'pending',
+        };
     }
 
     // ---------- helpers ----------

@@ -21,5 +21,10 @@ Route::middleware(['api.token'])->group(function (): void {
         Route::post('user', [BotApiController::class, 'ensureUser'])->name('api.bot.user');
         Route::get('subscription', [BotApiController::class, 'getSubscription'])->name('api.bot.subscription');
         Route::post('trial', [BotApiController::class, 'issueTrial'])->name('api.bot.trial');
+
+        // Платежи из бота через YooKassa.
+        Route::get('plans', [BotApiController::class, 'listPlans'])->name('api.bot.plans');
+        Route::post('payment', [BotApiController::class, 'createPayment'])->name('api.bot.payment.create');
+        Route::get('payment/status', [BotApiController::class, 'paymentStatus'])->name('api.bot.payment.status');
     });
 });

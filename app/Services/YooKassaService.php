@@ -20,13 +20,19 @@ class YooKassaService
     protected string $apiUrl = 'https://api.yookassa.ru/v3';
 
     public function __construct(
-        protected SaleKeyService $saleKeyService
+        protected SaleKeyService $saleKeyService,
+        protected TelegramBotNotifier $tgNotifier
     ) {
         $this->shopId = config('yookassa.shop_id');
         $this->secretKey = config('yookassa.secret_key');
     }
 
-    public function createPayment(User $user, Plan $plan, KeyOrder $order): ?array
+    /**
+     * @param  string|null  $returnUrlOverride  если передано — заменяет `yookassa.return_url`
+     *                                          для этого конкретного платежа (используется ботом,
+     *                                          чтобы после YooKassa юзера возвращало в чат Telegram).
+     */
+    public function createPayment(User $user, Plan $plan, KeyOrder $order, ?string $returnUrlOverride = null): ?array
     {
         $idempotenceKey = Str::uuid()->toString();
 
@@ -42,7 +48,9 @@ class YooKassaService
                 ],
                 'confirmation' => [
                     'type' => 'redirect',
-                    'return_url' => $this->paymentReturnUrl($order),
+                    'return_url' => $returnUrlOverride !== null && $returnUrlOverride !== ''
+                        ? $returnUrlOverride
+                        : $this->paymentReturnUrl($order),
                 ],
                 'capture' => true,
                 'description' => "Оплата тарифа {$plan->name} - {$plan->period_label}",
@@ -197,6 +205,24 @@ class YooKassaService
                     'order_id' => $order->id,
                     'message' => $e->getMessage(),
                 ]);
+            }
+
+            // Если это бот-пользователь — пушим уведомление прямо в Telegram,
+            // чтобы не ждать нажатия «Я оплатил — проверить». Ошибка не роняет вебхук.
+            if ($user->telegram_id) {
+                try {
+                    $untilHuman = $subscription->expires_at?->timezone(config('app.timezone', 'UTC'))->format('d.m.Y H:i') ?? '';
+                    $text = "✅ <b>Оплата получена!</b>\n"
+                        . "Тариф: <b>{$plan->name}</b> ({$plan->devices} устр.)\n"
+                        . "Активна до: <code>{$untilHuman}</code>\n\n"
+                        . "Нажмите «🔐 Подключиться» в меню — ссылка и QR уже готовы.";
+                    $this->tgNotifier->sendMessage((int) $user->telegram_id, $text);
+                } catch (\Throwable $e) {
+                    Log::warning('Telegram notify after payment failed', [
+                        'order_id' => $order->id,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 
