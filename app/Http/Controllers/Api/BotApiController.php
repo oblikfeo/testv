@@ -75,6 +75,36 @@ class BotApiController extends Controller
     }
 
     /**
+     * GET /api/bot/subscriptions?telegram_id=...
+     * Возвращает полный список подписок пользователя: все активные платные + пробный,
+     * каждая со своей sub_link. Используется ботом для экрана «Мои подписки».
+     */
+    public function listSubscriptions(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'telegram_id' => 'required|integer',
+        ]);
+
+        $user = User::query()
+            ->where('telegram_id', (int) $data['telegram_id'])
+            ->first();
+
+        if (! $user) {
+            return response()->json([
+                'ok' => true,
+                'user' => null,
+                'items' => [],
+            ]);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'user' => $this->serializeUser($user),
+            'items' => $this->collectSubscriptionItems($user),
+        ]);
+    }
+
+    /**
      * POST /api/bot/trial
      * Выпустить пробный ключ на 8 часов. Идемпотентно возвращает уже существующий ключ.
      */
@@ -378,6 +408,70 @@ class BotApiController extends Controller
         }
 
         return $this->emptySubscription();
+    }
+
+    /**
+     * Собрать список всех подписок пользователя для экрана «Мои подписки» в боте.
+     * Возвращает массив элементов (каждый со своей sub_link). Если у пользователя
+     * несколько активных платных подписок — все они вернутся списком.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function collectSubscriptionItems(User $user): array
+    {
+        $items = [];
+
+        $activeSubscriptions = $user->activeSubscriptions()->with('plan')->get();
+
+        $saleKeys = collect();
+        if ($activeSubscriptions->isNotEmpty()) {
+            $saleKeys = SaleKey::query()
+                ->whereIn('subscription_id', $activeSubscriptions->pluck('id'))
+                ->where('status', 'active')
+                ->get()
+                ->keyBy('subscription_id');
+        }
+
+        foreach ($activeSubscriptions as $sub) {
+            /** @var SaleKey|null $key */
+            $key = $saleKeys->get($sub->id);
+
+            $planName = trim(
+                ($sub->plan?->name ?? '')
+                .($sub->plan?->days ? ' · '.$sub->plan->days.' дн.' : '')
+            );
+
+            $items[] = [
+                'key' => 'sub_'.$sub->id,
+                'subscription_id' => $sub->id,
+                'status' => 'active',
+                'is_trial' => false,
+                'plan_slug' => $sub->plan?->slug,
+                'plan_name' => $planName !== '' ? $planName : 'Подписка',
+                'max_devices' => (int) $sub->max_devices,
+                'expires_at' => $sub->expires_at?->toIso8601String(),
+                'sub_link' => $key ? url('/sub/'.$key->sub_id) : null,
+                'sub_id' => $key?->sub_id,
+            ];
+        }
+
+        $trialKey = $user->trialKey;
+        if ($trialKey && ! $trialKey->isExpired() && ! $trialKey->isTrafficExceeded()) {
+            $items[] = [
+                'key' => 'trial',
+                'subscription_id' => null,
+                'status' => 'trial',
+                'is_trial' => true,
+                'plan_slug' => 'trial-8h',
+                'plan_name' => 'Пробный доступ',
+                'max_devices' => 1,
+                'expires_at' => $trialKey->expires_at?->toIso8601String(),
+                'sub_link' => url('/sub/'.$trialKey->sub_id),
+                'sub_id' => $trialKey->sub_id,
+            ];
+        }
+
+        return $items;
     }
 
     protected function emptySubscription(): array

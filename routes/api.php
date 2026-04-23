@@ -20,6 +20,7 @@ Route::middleware(['api.token'])->group(function (): void {
     Route::prefix('bot')->group(function (): void {
         Route::post('user', [BotApiController::class, 'ensureUser'])->name('api.bot.user');
         Route::get('subscription', [BotApiController::class, 'getSubscription'])->name('api.bot.subscription');
+        Route::get('subscriptions', [BotApiController::class, 'listSubscriptions'])->name('api.bot.subscriptions');
         Route::post('trial', [BotApiController::class, 'issueTrial'])->name('api.bot.trial');
 
         // Платежи из бота через YooKassa.
