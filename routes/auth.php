@@ -23,8 +23,8 @@ Route::middleware('guest')->group(function () {
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
-    // Telegram Login Widget callback.
-    Route::post('auth/telegram/callback', [TelegramLoginController::class, 'callback'])
+    // Telegram Login Widget callback (widget uses GET redirect; keep POST too).
+    Route::match(['GET', 'POST'], 'auth/telegram/callback', [TelegramLoginController::class, 'callback'])
         ->name('auth.telegram.callback');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
