@@ -30,9 +30,9 @@
         <p class="text-gray-300 text-sm mb-4">До: {{ $adminKey->expires_at->format('d.m.Y H:i') }}</p>
         <div class="flex flex-wrap gap-3 items-center">
             <input type="text" readonly value="{{ url('/sub/'.$adminKey->sub_id) }}" id="admin-sub-url"
-                   class="flex-1 min-w-[280px] px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono">
+                   class="flex-1 min-w-0 sm:min-w-[280px] px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono">
             <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('admin-sub-url').value)"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">Копировать</button>
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm w-full sm:w-auto">Копировать</button>
         </div>
         <form method="POST" action="{{ route('admin.admin-friends.revoke') }}" class="mt-6" onsubmit="return confirm('Удалить всех клиентов с панелей и подписку?');">
             @csrf
@@ -67,7 +67,7 @@
             <input type="number" name="max_devices" value="{{ old('max_devices', 10) }}" min="1" max="50" required
                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" @disabled($adminKey)>
         </div>
-        <button type="submit" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition" @disabled($adminKey)>
+        <button type="submit" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition w-full sm:w-auto" @disabled($adminKey)>
             Создать подписку «все серверы»
         </button>
     </form>

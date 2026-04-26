@@ -43,7 +43,7 @@
             <input type="number" name="max_devices" value="{{ old('max_devices', 5) }}" min="1" max="50" required
                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
         </div>
-        <button type="submit" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition" @if($remaining <= 0) disabled @endif>
+        <button type="submit" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition w-full sm:w-auto" @if($remaining <= 0) disabled @endif>
             Выдать спонсорскую подписку
         </button>
     </form>

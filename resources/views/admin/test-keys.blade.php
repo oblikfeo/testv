@@ -14,14 +14,14 @@
         @if (session('vless_link'))
             <div class="mt-3">
                 <label class="block text-sm text-gray-400 mb-1">VLESS ссылка:</label>
-                <div class="flex gap-2">
+                <div class="flex flex-col sm:flex-row gap-2">
                     <input type="text" 
                            value="{{ session('vless_link') }}" 
                            readonly
                            id="vless-link"
                            class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono">
                     <button onclick="navigator.clipboard.writeText(document.getElementById('vless-link').value)"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition">
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition sm:w-auto w-full">
                         Копировать
                     </button>
                 </div>
@@ -45,7 +45,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     <div class="lg:col-span-2 bg-gray-800 rounded-xl p-6">
         <h2 class="text-lg font-semibold text-white mb-4">Создать тестовый ключ</h2>
-        <form method="POST" action="{{ route('admin.test-keys.create') }}" class="flex flex-wrap gap-4 items-end">
+        <form method="POST" action="{{ route('admin.test-keys.create') }}" class="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:items-end">
             @csrf
             <div>
                 <label class="block text-sm text-gray-400 mb-1">Время жизни (часы)</label>
@@ -66,7 +66,7 @@
                        class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white w-24">
             </div>
             <button type="submit" 
-                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition w-full sm:w-auto">
                 Создать ключ
             </button>
         </form>
@@ -91,57 +91,57 @@
         </div>
     @else
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full min-w-[980px]">
                 <thead class="bg-gray-700/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Пользователь ЛК</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Статус</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Трафик</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Лимит</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Истекает</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Действия</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Пользователь ЛК</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Статус</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Трафик</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Лимит</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Истекает</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Действия</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-700">
                     @foreach ($clients as $client)
                         <tr class="hover:bg-gray-700/30">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                 <span class="text-white font-mono text-sm">{{ $client['email'] }}</span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                 @php
                                     $lkName = $trialByEmail[$client['email']]->user?->name ?? null;
                                     $displayName = $client['name'] ?? $lkName;
                                 @endphp
                                 {{ $displayName ?: '—' }}
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-300 max-w-xs">
+                            <td class="px-3 sm:px-6 py-4 text-sm text-gray-300 max-w-xs">
                                 @if(isset($trialByEmail[$client['email']]))
                                     <span class="text-white break-all">{{ $trialByEmail[$client['email']]->user?->email ?? '—' }}</span>
                                 @else
                                     <span class="text-gray-500">—</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                 @if ($client['enable'])
                                     <span class="px-2 py-1 bg-green-500/10 text-green-400 text-xs rounded-full">Активен</span>
                                 @else
                                     <span class="px-2 py-1 bg-red-500/10 text-red-400 text-xs rounded-full">Отключён</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
                                 {{ number_format(($client['up'] + $client['down']) / 1024 / 1024 / 1024, 2) }} GB
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
                                 @if ($client['total_gb'] > 0)
                                     {{ number_format($client['total_gb'] / 1024 / 1024 / 1024, 0) }} GB
                                 @else
                                     ∞
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
                                 @if ($client['expiry_time'] > 0)
                                     @php
                                         $expiry = \Carbon\Carbon::createFromTimestampMs($client['expiry_time']);
@@ -154,7 +154,7 @@
                                     Бессрочно
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                 <form method="POST" action="{{ route('admin.test-keys.delete') }}" class="inline"
                                       onsubmit="return confirm('Удалить ключ {{ $client['email'] }}?')">
                                     @csrf

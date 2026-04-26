@@ -31,7 +31,7 @@
                 </label>
             @endforeach
         </div>
-        <button type="submit" class="mt-6 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition">
+        <button type="submit" class="mt-6 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition w-full sm:w-auto">
             Сохранить
         </button>
     </form>
