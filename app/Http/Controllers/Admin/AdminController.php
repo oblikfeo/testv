@@ -80,6 +80,7 @@ class AdminController extends Controller
                             $clients[] = [
                                 'inbound_id' => $inbound['id'],
                                 'email' => $client['email'],
+                                'name' => $client['name'] ?? null,
                                 'uuid' => $client['id'],
                                 'enable' => $client['enable'],
                                 'expiry_time' => $client['expiryTime'] ?? 0,

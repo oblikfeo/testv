@@ -95,6 +95,7 @@
                 <thead class="bg-gray-700/50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Пользователь ЛК</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Статус</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Трафик</th>
@@ -108,6 +109,9 @@
                         <tr class="hover:bg-gray-700/30">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="text-white font-mono text-sm">{{ $client['email'] }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {{ $client['name'] ?? '—' }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-300 max-w-xs">
                                 @if(isset($trialByEmail[$client['email']]))
