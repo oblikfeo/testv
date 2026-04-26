@@ -100,7 +100,7 @@ class AdminController extends Controller
         $emails = collect($clients)->pluck('email')->filter()->unique()->values()->all();
         $trialByEmail = TrialKey::query()
             ->whereIn('email', $emails)
-            ->with('user:id,email')
+            ->with('user:id,email,name')
             ->get()
             ->keyBy('email');
 

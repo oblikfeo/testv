@@ -111,7 +111,11 @@
                                 <span class="text-white font-mono text-sm">{{ $client['email'] }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                {{ $client['name'] ?? '—' }}
+                                @php
+                                    $lkName = $trialByEmail[$client['email']]->user?->name ?? null;
+                                    $displayName = $client['name'] ?? $lkName;
+                                @endphp
+                                {{ $displayName ?: '—' }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-300 max-w-xs">
                                 @if(isset($trialByEmail[$client['email']]))
