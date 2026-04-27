@@ -116,10 +116,14 @@ class CabinetController extends Controller
             ->paginate(20);
 
         $plans = Plan::active()->ordered()->get();
+        $standardPlans = $plans->where('devices', 2)->sortBy('days')->values();
+        $extendedPlans = $plans->where('devices', 5)->sortBy('days')->values();
         return view('cabinet.history', [
             'activeRoute' => 'history',
             'orders' => $orders,
             'plans' => $plans,
+            'standardPlans' => $standardPlans,
+            'extendedPlans' => $extendedPlans,
         ]);
     }
 

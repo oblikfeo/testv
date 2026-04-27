@@ -55,11 +55,6 @@
             <h2 class="tariffs-title">Выберите тариф</h2>
         </div>
 
-        @php
-            $standardPlans = $plans->where('devices', 2)->sortBy('days');
-            $extendedPlans = $plans->where('devices', 5)->sortBy('days');
-        @endphp
-
         <div class="tariffs-grid">
             <div class="tariff-card">
                 <div class="tariff-card-head">
