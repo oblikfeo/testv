@@ -21,34 +21,6 @@
     @endif
 
     @php($purchaseChoice = session('purchase_choice'))
-    @if($purchaseChoice)
-        <div class="alert alert-choice">
-            <p class="choice-title">
-                Найдены подходящие подписки для тарифа
-                <strong>{{ $purchaseChoice['plan']['name'] }} ({{ $purchaseChoice['plan']['period_label'] }}, {{ $purchaseChoice['plan']['devices'] }} устр.)</strong>.
-            </p>
-            <p class="choice-subtitle">Выберите действие:</p>
-            <div class="choice-actions">
-                <form action="{{ route('payment.create') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="plan_id" value="{{ $purchaseChoice['plan']['id'] }}">
-                    <input type="hidden" name="purchase_action" value="new_purchase">
-                    <button type="submit" class="tariff-btn tariff-btn--primary">Купить новую ({{ $purchaseChoice['plan']['price'] }})</button>
-                </form>
-                @foreach($purchaseChoice['subscriptions'] as $sub)
-                    <form action="{{ route('payment.create') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="plan_id" value="{{ $purchaseChoice['plan']['id'] }}">
-                        <input type="hidden" name="purchase_action" value="renew_subscription">
-                        <input type="hidden" name="target_subscription_id" value="{{ $sub['id'] }}">
-                        <button type="submit" class="tariff-btn">
-                            Продлить #{{ $sub['id'] }} ({{ $sub['plan_name'] }}, до {{ $sub['expires_at'] ?? '—' }})
-                        </button>
-                    </form>
-                @endforeach
-            </div>
-        </div>
-    @endif
 
     <div class="tariffs-section">
         <div class="tariffs-header">
@@ -177,6 +149,38 @@
             </div>
         @endif
     </div>
+
+    @if($purchaseChoice)
+        <div id="purchase-choice-modal" class="purchase-modal is-open">
+            <div class="purchase-modal-backdrop" data-close-purchase-modal></div>
+            <div class="purchase-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="purchase-choice-title">
+                <button type="button" class="purchase-modal-close" data-close-purchase-modal aria-label="Закрыть">×</button>
+                <h3 id="purchase-choice-title" class="purchase-modal-title">Найдены подходящие подписки</h3>
+                <p class="purchase-modal-subtitle">
+                    Тариф: <strong>{{ $purchaseChoice['plan']['name'] }} ({{ $purchaseChoice['plan']['period_label'] }}, {{ $purchaseChoice['plan']['devices'] }} устр.)</strong>
+                </p>
+                <div class="choice-actions">
+                    <form action="{{ route('payment.create') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="plan_id" value="{{ $purchaseChoice['plan']['id'] }}">
+                        <input type="hidden" name="purchase_action" value="new_purchase">
+                        <button type="submit" class="tariff-btn tariff-btn--primary">Купить новую ({{ $purchaseChoice['plan']['price'] }})</button>
+                    </form>
+                    @foreach($purchaseChoice['subscriptions'] as $sub)
+                        <form action="{{ route('payment.create') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="plan_id" value="{{ $purchaseChoice['plan']['id'] }}">
+                            <input type="hidden" name="purchase_action" value="renew_subscription">
+                            <input type="hidden" name="target_subscription_id" value="{{ $sub['id'] }}">
+                            <button type="submit" class="tariff-btn">
+                                Продлить #{{ $sub['id'] }} ({{ $sub['plan_name'] }}, до {{ $sub['expires_at'] ?? '—' }})
+                            </button>
+                        </form>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @push('styles')
@@ -276,9 +280,9 @@
 }
 
 .tariff-option {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 190px;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 12px 20px;
     transition: background var(--transition);
     gap: 12px;
@@ -292,8 +296,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    min-width: 0;
-    flex-wrap: wrap;
+    flex: 1 1 auto;
 }
 
 .tariff-period {
@@ -337,37 +340,89 @@
 }
 
 .tariff-actions .tariff-btn {
-    width: 100%;
+    min-width: 120px;
 }
 
 @media (max-width: 900px) {
     .tariff-option {
-        grid-template-columns: 1fr;
-        align-items: stretch;
+        flex-direction: column;
+        align-items: flex-start;
     }
-}
 
-.alert-choice {
-    background: rgba(59, 130, 246, 0.08);
-    border: 1px solid rgba(59, 130, 246, 0.25);
-    color: var(--text-secondary);
-}
+    .tariff-actions {
+        width: 100%;
+    }
 
-.choice-title {
-    color: var(--text-primary);
-    margin-bottom: 6px;
-}
-
-.choice-subtitle {
-    color: var(--text-muted);
-    margin-bottom: 12px;
-    font-size: 0.85rem;
+    .tariff-actions .tariff-btn {
+        width: 100%;
+    }
 }
 
 .choice-actions {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+.purchase-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: none;
+}
+
+.purchase-modal.is-open {
+    display: block;
+}
+
+.purchase-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.72);
+    backdrop-filter: blur(2px);
+}
+
+.purchase-modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(680px, calc(100vw - 24px));
+    margin: 10vh auto 0;
+    background: var(--bg-card);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: var(--radius-lg);
+    padding: 18px 18px 16px;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+.purchase-modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 24px 8px 0;
+}
+
+.purchase-modal-subtitle {
+    color: var(--text-secondary);
+    margin: 0 0 14px;
+    font-size: 0.9rem;
+}
+
+.purchase-modal-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.choice-actions .tariff-btn {
+    width: 100%;
+    text-align: left;
 }
 
 .tariff-btn--primary {
@@ -402,4 +457,20 @@
     border-top: 1px solid var(--border-color);
 }
 </style>
+@endpush
+
+@push('scripts')
+@if($purchaseChoice)
+<script>
+(() => {
+    const modal = document.getElementById('purchase-choice-modal');
+    if (!modal) return;
+
+    const close = () => modal.classList.remove('is-open');
+    modal.querySelectorAll('[data-close-purchase-modal]').forEach((el) => {
+        el.addEventListener('click', close);
+    });
+})();
+</script>
+@endif
 @endpush
