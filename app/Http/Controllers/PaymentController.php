@@ -19,14 +19,45 @@ class PaymentController extends Controller
     {
         $data = $request->validate([
             'plan_id' => 'required|exists:plans,id',
-            'purchase_action' => 'required|string|in:new_purchase,renew_subscription',
+            'purchase_action' => 'nullable|string|in:new_purchase,renew_subscription',
             'target_subscription_id' => 'nullable|integer|exists:subscriptions,id',
         ]);
 
         $user = $request->user();
         $plan = Plan::findOrFail($data['plan_id']);
-        $purchaseAction = $data['purchase_action'];
+        $purchaseAction = $data['purchase_action'] ?? null;
         $targetSubscriptionId = null;
+
+        if ($purchaseAction === null) {
+            $compatibleSubscriptions = $user->subscriptions()
+                ->with('plan')
+                ->where('max_devices', $plan->devices)
+                ->orderByDesc('expires_at')
+                ->get();
+
+            if ($compatibleSubscriptions->isNotEmpty()) {
+                $choicePayload = [
+                    'plan' => [
+                        'id' => $plan->id,
+                        'name' => $plan->name,
+                        'period_label' => $plan->period_label,
+                        'price' => $plan->formatted_price,
+                        'devices' => (int) $plan->devices,
+                    ],
+                    'subscriptions' => $compatibleSubscriptions->map(fn (Subscription $sub) => [
+                        'id' => $sub->id,
+                        'plan_name' => $sub->plan?->name ?? 'Без тарифа',
+                        'expires_at' => optional($sub->expires_at)->format('d.m.Y'),
+                        'status' => $sub->status,
+                        'max_devices' => (int) $sub->max_devices,
+                    ])->values()->all(),
+                ];
+
+                return back()->with('purchase_choice', $choicePayload);
+            }
+
+            $purchaseAction = 'new_purchase';
+        }
 
         if ($purchaseAction === 'renew_subscription') {
             $targetSubscriptionId = (int) ($data['target_subscription_id'] ?? 0);
@@ -41,6 +72,10 @@ class PaymentController extends Controller
 
             if (! $targetSubscription) {
                 return back()->withErrors(['payment' => 'Подписка для продления не найдена.']);
+            }
+
+            if ((int) $targetSubscription->max_devices !== (int) $plan->devices) {
+                return back()->withErrors(['payment' => 'Продление возможно только для подписок с тем же количеством устройств.']);
             }
         }
 

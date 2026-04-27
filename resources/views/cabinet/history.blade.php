@@ -20,6 +20,36 @@
         </div>
     @endif
 
+    @php($purchaseChoice = session('purchase_choice'))
+    @if($purchaseChoice)
+        <div class="alert alert-choice">
+            <p class="choice-title">
+                Найдены подходящие подписки для тарифа
+                <strong>{{ $purchaseChoice['plan']['name'] }} ({{ $purchaseChoice['plan']['period_label'] }}, {{ $purchaseChoice['plan']['devices'] }} устр.)</strong>.
+            </p>
+            <p class="choice-subtitle">Выберите действие:</p>
+            <div class="choice-actions">
+                <form action="{{ route('payment.create') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="plan_id" value="{{ $purchaseChoice['plan']['id'] }}">
+                    <input type="hidden" name="purchase_action" value="new_purchase">
+                    <button type="submit" class="tariff-btn tariff-btn--primary">Купить новую ({{ $purchaseChoice['plan']['price'] }})</button>
+                </form>
+                @foreach($purchaseChoice['subscriptions'] as $sub)
+                    <form action="{{ route('payment.create') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="plan_id" value="{{ $purchaseChoice['plan']['id'] }}">
+                        <input type="hidden" name="purchase_action" value="renew_subscription">
+                        <input type="hidden" name="target_subscription_id" value="{{ $sub['id'] }}">
+                        <button type="submit" class="tariff-btn">
+                            Продлить #{{ $sub['id'] }} ({{ $sub['plan_name'] }}, до {{ $sub['expires_at'] ?? '—' }})
+                        </button>
+                    </form>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <div class="tariffs-section">
         <div class="tariffs-header">
             <h2 class="tariffs-title">Выберите тариф</h2>
@@ -50,22 +80,7 @@
                                 <form action="{{ route('payment.create') }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                    <input type="hidden" name="purchase_action" value="new_purchase">
-                                    <button type="submit" class="tariff-btn">Купить новую</button>
-                                </form>
-                                <form action="{{ route('payment.create') }}" method="POST" class="renew-form">
-                                    @csrf
-                                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                    <input type="hidden" name="purchase_action" value="renew_subscription">
-                                    <select name="target_subscription_id" class="renew-select" {{ $renewableSubscriptions->isEmpty() ? 'disabled' : '' }}>
-                                        <option value="">Продлить подписку...</option>
-                                        @foreach($renewableSubscriptions as $subscription)
-                                            <option value="{{ $subscription->id }}">
-                                                #{{ $subscription->id }} · {{ $subscription->plan?->name ?? 'Без тарифа' }} · до {{ optional($subscription->expires_at)->format('d.m.Y') ?? '—' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit" class="tariff-btn" {{ $renewableSubscriptions->isEmpty() ? 'disabled' : '' }}>Продлить</button>
+                                    <button type="submit" class="tariff-btn">Купить</button>
                                 </form>
                             </div>
                         </div>
@@ -93,22 +108,7 @@
                                 <form action="{{ route('payment.create') }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                    <input type="hidden" name="purchase_action" value="new_purchase">
-                                    <button type="submit" class="tariff-btn tariff-btn--primary">Купить новую</button>
-                                </form>
-                                <form action="{{ route('payment.create') }}" method="POST" class="renew-form">
-                                    @csrf
-                                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                    <input type="hidden" name="purchase_action" value="renew_subscription">
-                                    <select name="target_subscription_id" class="renew-select" {{ $renewableSubscriptions->isEmpty() ? 'disabled' : '' }}>
-                                        <option value="">Продлить подписку...</option>
-                                        @foreach($renewableSubscriptions as $subscription)
-                                            <option value="{{ $subscription->id }}">
-                                                #{{ $subscription->id }} · {{ $subscription->plan?->name ?? 'Без тарифа' }} · до {{ optional($subscription->expires_at)->format('d.m.Y') ?? '—' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit" class="tariff-btn" {{ $renewableSubscriptions->isEmpty() ? 'disabled' : '' }}>Продлить</button>
+                                    <button type="submit" class="tariff-btn tariff-btn--primary">Купить</button>
                                 </form>
                             </div>
                         </div>
@@ -341,35 +341,6 @@
     color: var(--text-primary);
 }
 
-.tariff-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-}
-
-.tariff-actions form {
-    width: 100%;
-}
-
-.renew-form {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.renew-select {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    border-radius: var(--radius-sm);
-    font-size: 0.75rem;
-    padding: 7px 10px;
-    width: 100%;
-    min-width: 0;
-}
-
 .tariff-actions .tariff-btn {
     width: 100%;
 }
@@ -379,6 +350,29 @@
         grid-template-columns: 1fr;
         align-items: stretch;
     }
+}
+
+.alert-choice {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    color: var(--text-secondary);
+}
+
+.choice-title {
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.choice-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+}
+
+.choice-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .tariff-btn--primary {
