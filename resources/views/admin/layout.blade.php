@@ -25,7 +25,7 @@
                             </a>
                             <a href="{{ route('admin.test-keys') }}" 
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.test-keys') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                Тестовые ключи
+                                Подписки
                             </a>
                             <a href="{{ route('admin.settings') }}" 
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.settings') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
@@ -59,7 +59,7 @@
                     </a>
                     <a href="{{ route('admin.test-keys') }}"
                        class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.test-keys') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
-                        Тестовые ключи
+                        Подписки
                     </a>
                     <a href="{{ route('admin.settings') }}"
                        class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.settings') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">

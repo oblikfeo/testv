@@ -62,6 +62,7 @@ class AdminController extends Controller
     public function testKeys()
     {
         $testPanel = config('admin.test_panel');
+        $activeTab = request()->query('tab', 'test');
 
         $clients = [];
         $error = null;
@@ -100,11 +101,23 @@ class AdminController extends Controller
         $emails = collect($clients)->pluck('email')->filter()->unique()->values()->all();
         $trialByEmail = TrialKey::query()
             ->whereIn('email', $emails)
-            ->with('user:id,email,name')
+            ->with('user:id,email,name,telegram_username')
             ->get()
             ->keyBy('email');
 
-        return view('admin.test-keys', compact('clients', 'error', 'testPanel', 'trialByEmail'));
+        $paidKeys = SaleKey::query()
+            ->where('is_sponsor', false)
+            ->where('is_admin_bundle', false)
+            ->with([
+                'user:id,email,name,telegram_username',
+                'subscription:id,user_id,plan_id,status,expires_at,purchase_source',
+                'subscription.plan:id,name,slug',
+                'keyOrder:id,purchase_source',
+            ])
+            ->orderByDesc('expires_at')
+            ->get();
+
+        return view('admin.test-keys', compact('clients', 'error', 'testPanel', 'trialByEmail', 'paidKeys', 'activeTab'));
     }
 
     public function settings()
@@ -304,6 +317,51 @@ class AdminController extends Controller
             return back()->withErrors(['error' => $result['msg'] ?? 'Ошибка удаления ключа']);
 
         } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function deletePaidKey(Request $request)
+    {
+        $request->validate([
+            'sale_key_id' => 'required|integer|exists:sale_keys,id',
+        ]);
+
+        $saleKey = SaleKey::query()
+            ->with('subscription')
+            ->findOrFail($request->integer('sale_key_id'));
+
+        $panels = config('admin.sale_panels', []);
+        $panel = $panels[$saleKey->panel_index] ?? null;
+
+        if (! is_array($panel)) {
+            return back()->withErrors(['error' => 'Не найдена конфигурация панели для выбранного ключа']);
+        }
+
+        try {
+            $result = $this->xuiApi->deleteClient(
+                $panel['url'],
+                $panel['username'],
+                $panel['password'],
+                (int) $saleKey->inbound_id,
+                $saleKey->uuid
+            );
+
+            if (! ($result['success'] ?? false)) {
+                return back()->withErrors(['error' => $result['msg'] ?? 'Ошибка удаления оплаченного ключа на панели']);
+            }
+
+            $saleKey->status = 'revoked';
+            $saleKey->save();
+
+            if ($saleKey->subscription) {
+                $saleKey->subscription->status = 'expired';
+                $saleKey->subscription->expires_at = now();
+                $saleKey->subscription->save();
+            }
+
+            return back()->with('success', 'Оплаченный ключ удалён');
+        } catch (\Throwable $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
