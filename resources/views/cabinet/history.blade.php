@@ -46,11 +46,28 @@
                                     <span class="tariff-discount">−{{ $plan->discount }}%</span>
                                 @endif
                             </div>
-                            <form action="{{ route('payment.create') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                <button type="submit" class="tariff-btn">Купить</button>
-                            </form>
+                            <div class="tariff-actions">
+                                <form action="{{ route('payment.create') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                    <input type="hidden" name="purchase_action" value="new_purchase">
+                                    <button type="submit" class="tariff-btn">Купить новую</button>
+                                </form>
+                                <form action="{{ route('payment.create') }}" method="POST" class="renew-form">
+                                    @csrf
+                                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                    <input type="hidden" name="purchase_action" value="renew_subscription">
+                                    <select name="target_subscription_id" class="renew-select" {{ $renewableSubscriptions->isEmpty() ? 'disabled' : '' }}>
+                                        <option value="">Продлить подписку...</option>
+                                        @foreach($renewableSubscriptions as $subscription)
+                                            <option value="{{ $subscription->id }}">
+                                                #{{ $subscription->id }} · {{ $subscription->plan?->name ?? 'Без тарифа' }} · до {{ optional($subscription->expires_at)->format('d.m.Y') ?? '—' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="tariff-btn" {{ $renewableSubscriptions->isEmpty() ? 'disabled' : '' }}>Продлить</button>
+                                </form>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -72,11 +89,28 @@
                                     <span class="tariff-discount">−{{ $plan->discount }}%</span>
                                 @endif
                             </div>
-                            <form action="{{ route('payment.create') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                <button type="submit" class="tariff-btn tariff-btn--primary">Купить</button>
-                            </form>
+                            <div class="tariff-actions">
+                                <form action="{{ route('payment.create') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                    <input type="hidden" name="purchase_action" value="new_purchase">
+                                    <button type="submit" class="tariff-btn tariff-btn--primary">Купить новую</button>
+                                </form>
+                                <form action="{{ route('payment.create') }}" method="POST" class="renew-form">
+                                    @csrf
+                                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                    <input type="hidden" name="purchase_action" value="renew_subscription">
+                                    <select name="target_subscription_id" class="renew-select" {{ $renewableSubscriptions->isEmpty() ? 'disabled' : '' }}>
+                                        <option value="">Продлить подписку...</option>
+                                        @foreach($renewableSubscriptions as $subscription)
+                                            <option value="{{ $subscription->id }}">
+                                                #{{ $subscription->id }} · {{ $subscription->plan?->name ?? 'Без тарифа' }} · до {{ optional($subscription->expires_at)->format('d.m.Y') ?? '—' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="tariff-btn" {{ $renewableSubscriptions->isEmpty() ? 'disabled' : '' }}>Продлить</button>
+                                </form>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -248,10 +282,11 @@
 
 .tariff-option {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     padding: 12px 20px;
     transition: background var(--transition);
+    gap: 10px;
 }
 
 .tariff-option:hover {
@@ -302,6 +337,28 @@
 .tariff-btn:hover {
     border-color: var(--text-muted);
     color: var(--text-primary);
+}
+
+.tariff-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 250px;
+}
+
+.renew-form {
+    display: flex;
+    gap: 8px;
+}
+
+.renew-select {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    padding: 7px 10px;
+    min-width: 175px;
 }
 
 .tariff-btn--primary {

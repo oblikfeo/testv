@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\OrderStatus;
 use App\Models\KeyOrder;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Services\YooKassaService;
 use Illuminate\Http\Request;
 
@@ -16,20 +17,44 @@ class PaymentController extends Controller
 
     public function createPayment(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'plan_id' => 'required|exists:plans,id',
+            'purchase_action' => 'required|string|in:new_purchase,renew_subscription',
+            'target_subscription_id' => 'nullable|integer|exists:subscriptions,id',
         ]);
 
         $user = $request->user();
-        $plan = Plan::findOrFail($request->plan_id);
+        $plan = Plan::findOrFail($data['plan_id']);
+        $purchaseAction = $data['purchase_action'];
+        $targetSubscriptionId = null;
+
+        if ($purchaseAction === 'renew_subscription') {
+            $targetSubscriptionId = (int) ($data['target_subscription_id'] ?? 0);
+            if ($targetSubscriptionId <= 0) {
+                return back()->withErrors(['payment' => 'Для продления выберите подписку.']);
+            }
+
+            $targetSubscription = Subscription::query()
+                ->where('id', $targetSubscriptionId)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (! $targetSubscription) {
+                return back()->withErrors(['payment' => 'Подписка для продления не найдена.']);
+            }
+        }
 
         $order = KeyOrder::create([
             'user_id' => $user->id,
             'plan_id' => $plan->id,
             'status' => OrderStatus::Pending,
             'purchase_source' => 'web',
+            'purchase_action' => $purchaseAction,
+            'target_subscription_id' => $targetSubscriptionId,
             'amount' => $plan->price,
-            'note' => "Оплата тарифа {$plan->name}",
+            'note' => $purchaseAction === 'renew_subscription'
+                ? "Продление подписки #{$targetSubscriptionId} ({$plan->name})"
+                : "Покупка новой подписки {$plan->name}",
         ]);
 
         $payment = $this->yooKassaService->createPayment($user, $plan, $order);

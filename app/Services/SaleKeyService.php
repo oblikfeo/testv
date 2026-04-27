@@ -72,18 +72,19 @@ class SaleKeyService
             return;
         }
 
-        $existing = SaleKey::query()
-            ->where('subscription_id', $subscription->id)
-            ->where('is_sponsor', false)
-            ->where('is_admin_bundle', false)
-            ->first();
+        if ($order->purchase_action === 'renew_subscription') {
+            $existing = SaleKey::query()
+                ->where('subscription_id', $subscription->id)
+                ->where('is_sponsor', false)
+                ->where('is_admin_bundle', false)
+                ->first();
 
-        if ($existing) {
-            $this->extendSaleKey($existing, $subscription, $plan);
+            if ($existing) {
+                $this->extendSaleKey($existing, $subscription, $plan);
+                $order->update(['sale_key_id' => $existing->id]);
 
-            $order->update(['sale_key_id' => $existing->id]);
-
-            return;
+                return;
+            }
         }
 
         $panelIndex = $this->getActiveSalePanelIndex();

@@ -14,9 +14,11 @@ class KeyOrder extends Model
         'user_id',
         'status',
         'purchase_source',
+        'purchase_action',
         'subscription_key_id',
         'sale_key_id',
         'plan_id',
+        'target_subscription_id',
         'payment_id',
         'payment_status',
         'amount',
@@ -51,5 +53,10 @@ class KeyOrder extends Model
     public function saleKey(): BelongsTo
     {
         return $this->belongsTo(SaleKey::class);
+    }
+
+    public function targetSubscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class, 'target_subscription_id');
     }
 }

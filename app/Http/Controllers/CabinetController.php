@@ -116,11 +116,16 @@ class CabinetController extends Controller
             ->paginate(20);
 
         $plans = Plan::active()->ordered()->get();
+        $renewableSubscriptions = $user->subscriptions()
+            ->with('plan')
+            ->orderByDesc('expires_at')
+            ->get();
 
         return view('cabinet.history', [
             'activeRoute' => 'history',
             'orders' => $orders,
             'plans' => $plans,
+            'renewableSubscriptions' => $renewableSubscriptions,
         ]);
     }
 

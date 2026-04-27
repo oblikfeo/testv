@@ -174,20 +174,32 @@ class YooKassaService
         $user = $order->user;
 
         if ($plan && $user) {
-            // Продление только по тому же тарифу, а не «любой активной» подписке (иначе путались plan/limit).
-            $existingSubscription = $user->subscriptions()
-                ->active()
-                ->where('plan_id', $plan->id)
-                ->orderByDesc('expires_at')
-                ->first();
+            if ($order->purchase_action === 'renew_subscription' && $order->target_subscription_id) {
+                $targetSubscription = $user->subscriptions()
+                    ->where('id', $order->target_subscription_id)
+                    ->first();
 
-            if ($existingSubscription) {
-                $existingSubscription->update([
-                    'expires_at' => $existingSubscription->expires_at->copy()->addDays($plan->days),
+                if (! $targetSubscription) {
+                    Log::error('Renew target subscription not found', [
+                        'order_id' => $order->id,
+                        'target_subscription_id' => $order->target_subscription_id,
+                    ]);
+
+                    return false;
+                }
+
+                $baseDate = $targetSubscription->expires_at && $targetSubscription->expires_at->isFuture()
+                    ? $targetSubscription->expires_at->copy()
+                    : now();
+
+                $targetSubscription->update([
+                    'plan_id' => $plan->id,
+                    'status' => 'active',
+                    'expires_at' => $baseDate->addDays($plan->days),
                     'max_devices' => $plan->devices,
                     'purchase_source' => $order->purchase_source ?? 'unknown',
                 ]);
-                $subscription = $existingSubscription->fresh();
+                $subscription = $targetSubscription->fresh();
             } else {
                 $subscription = Subscription::create([
                     'user_id' => $user->id,

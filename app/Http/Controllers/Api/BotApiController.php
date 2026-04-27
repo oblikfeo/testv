@@ -196,6 +196,8 @@ class BotApiController extends Controller
             'plan_slug' => 'required|string|max:64',
             'return_url' => 'nullable|string|max:512',
             'source' => 'nullable|string|in:bot,web,unknown',
+            'purchase_action' => 'required|string|in:new_purchase,renew_subscription',
+            'target_subscription_id' => 'nullable|integer|exists:subscriptions,id',
         ]);
 
         $plan = Plan::query()->where('slug', $data['plan_slug'])->active()->first();
@@ -212,13 +214,41 @@ class BotApiController extends Controller
             $data['telegram_username'] ?? null
         );
 
+        $purchaseAction = $data['purchase_action'];
+        $targetSubscriptionId = null;
+        if ($purchaseAction === 'renew_subscription') {
+            $targetSubscriptionId = (int) ($data['target_subscription_id'] ?? 0);
+            if ($targetSubscriptionId <= 0) {
+                return response()->json([
+                    'ok' => false,
+                    'error' => 'target_subscription_required',
+                    'message' => 'Для продления нужно выбрать подписку.',
+                ], 422);
+            }
+
+            $targetSubscription = $user->subscriptions()
+                ->where('id', $targetSubscriptionId)
+                ->first();
+            if (! $targetSubscription) {
+                return response()->json([
+                    'ok' => false,
+                    'error' => 'target_subscription_not_found',
+                    'message' => 'Подписка для продления не найдена.',
+                ], 404);
+            }
+        }
+
         $order = KeyOrder::create([
             'user_id' => $user->id,
             'plan_id' => $plan->id,
             'status' => OrderStatus::Pending,
             'purchase_source' => $data['source'] ?? 'bot',
+            'purchase_action' => $purchaseAction,
+            'target_subscription_id' => $targetSubscriptionId,
             'amount' => $plan->price,
-            'note' => "Бот: оплата тарифа {$plan->name} ({$plan->period_label})",
+            'note' => $purchaseAction === 'renew_subscription'
+                ? "Бот: продление подписки #{$targetSubscriptionId} ({$plan->name}, {$plan->period_label})"
+                : "Бот: покупка новой подписки {$plan->name} ({$plan->period_label})",
         ]);
 
         $returnUrl = $data['return_url'] ?? $this->defaultBotReturnUrl($order->id);
