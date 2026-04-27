@@ -281,12 +281,12 @@
 }
 
 .tariff-option {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    align-items: center;
     padding: 12px 20px;
     transition: background var(--transition);
-    gap: 10px;
+    gap: 12px;
 }
 
 .tariff-option:hover {
@@ -297,6 +297,8 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
+    flex-wrap: wrap;
 }
 
 .tariff-period {
@@ -343,12 +345,18 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    min-width: 250px;
+    width: 100%;
+    min-width: 0;
+}
+
+.tariff-actions form {
+    width: 100%;
 }
 
 .renew-form {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .renew-select {
@@ -358,7 +366,19 @@
     border-radius: var(--radius-sm);
     font-size: 0.75rem;
     padding: 7px 10px;
-    min-width: 175px;
+    width: 100%;
+    min-width: 0;
+}
+
+.tariff-actions .tariff-btn {
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .tariff-option {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
 }
 
 .tariff-btn--primary {
