@@ -187,12 +187,11 @@
             </div>
         @else
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[1300px]">
+            <table class="w-full min-w-[1180px]">
                 <thead class="bg-gray-700/50">
                     <tr>
                         <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">TG ник</th>
                         <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
-                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Тариф</th>
                         <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Источник</th>
                         <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Статус</th>
                         <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Трафик</th>
@@ -207,7 +206,6 @@
                             @php
                                 $tgUsername = $saleKey->user?->telegram_username ? '@'.$saleKey->user->telegram_username : '—';
                                 $emailValue = $saleKey->user?->email ?: ($saleKey->email ?: '—');
-                                $planLabel = $saleKey->subscription?->plan?->name ?: '—';
                                 $source = $saleKey->subscription?->purchase_source ?: ($saleKey->keyOrder?->purchase_source ?: 'unknown');
                                 $isExpired = $saleKey->expires_at?->isPast() ?? false;
                                 $isLimitExceeded = $saleKey->total_bytes > 0 && $saleKey->used_bytes >= $saleKey->total_bytes;
@@ -218,9 +216,6 @@
                             </td>
                             <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                 {{ $emailValue }}
-                            </td>
-                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                {{ $planLabel }}
                             </td>
                             <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                 @if ($source === 'bot')
