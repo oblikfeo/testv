@@ -185,6 +185,7 @@ class YooKassaService
                 $existingSubscription->update([
                     'expires_at' => $existingSubscription->expires_at->copy()->addDays($plan->days),
                     'max_devices' => $plan->devices,
+                    'purchase_source' => $order->purchase_source ?? 'unknown',
                 ]);
                 $subscription = $existingSubscription->fresh();
             } else {
@@ -192,6 +193,7 @@ class YooKassaService
                     'user_id' => $user->id,
                     'plan_id' => $plan->id,
                     'status' => 'active',
+                    'purchase_source' => $order->purchase_source ?? 'unknown',
                     'max_devices' => $plan->devices,
                     'starts_at' => now(),
                     'expires_at' => now()->addDays($plan->days),

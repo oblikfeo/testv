@@ -195,6 +195,7 @@ class BotApiController extends Controller
             'telegram_username' => 'nullable|string|max:64',
             'plan_slug' => 'required|string|max:64',
             'return_url' => 'nullable|string|max:512',
+            'source' => 'nullable|string|in:bot,web,unknown',
         ]);
 
         $plan = Plan::query()->where('slug', $data['plan_slug'])->active()->first();
@@ -215,6 +216,7 @@ class BotApiController extends Controller
             'user_id' => $user->id,
             'plan_id' => $plan->id,
             'status' => OrderStatus::Pending,
+            'purchase_source' => $data['source'] ?? 'bot',
             'amount' => $plan->price,
             'note' => "Бот: оплата тарифа {$plan->name} ({$plan->period_label})",
         ]);

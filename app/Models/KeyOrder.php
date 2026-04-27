@@ -13,6 +13,7 @@ class KeyOrder extends Model
     protected $fillable = [
         'user_id',
         'status',
+        'purchase_source',
         'subscription_key_id',
         'sale_key_id',
         'plan_id',

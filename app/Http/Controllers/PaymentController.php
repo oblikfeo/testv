@@ -27,6 +27,7 @@ class PaymentController extends Controller
             'user_id' => $user->id,
             'plan_id' => $plan->id,
             'status' => OrderStatus::Pending,
+            'purchase_source' => 'web',
             'amount' => $plan->price,
             'note' => "Оплата тарифа {$plan->name}",
         ]);

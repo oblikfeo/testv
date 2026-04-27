@@ -13,6 +13,7 @@ class Subscription extends Model
         'user_id',
         'plan_id',
         'status',
+        'purchase_source',
         'max_devices',
         'starts_at',
         'expires_at',
