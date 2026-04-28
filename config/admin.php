@@ -11,7 +11,7 @@ return [
      * Если у активного розничного тарифа в БД traffic_gb = 0, на панель уходит totalGB=0 (безлимит).
      * Подставка ГБ для панели (sponsor / admin-friends с 0 не трогаем). 0 = не подставлять.
      */
-    'default_retail_traffic_gb' => (int) env('DEFAULT_RETAIL_TRAFFIC_GB', 500),
+    'default_retail_traffic_gb' => (int) env('DEFAULT_RETAIL_TRAFFIC_GB', 100),
 
     'test_panel' => [
         'url' => env('TEST_PANEL_URL', 'http://158.160.253.217'),
