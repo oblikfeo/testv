@@ -40,7 +40,7 @@
     <link rel="preconnect" href="https://t.me" crossorigin>
 
     {{-- Stylesheets --}}
-    <link rel="stylesheet" href="{{ asset('css/common.css') }}">
+    <link rel="stylesheet" href="@v('css/common.css')">
     @stack('styles')
 
     {{-- JSON-LD schemas --}}

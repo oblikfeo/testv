@@ -1,7 +1,7 @@
 @extends('layouts.landing')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
+    <link rel="stylesheet" href="@v('css/landing.css')">
 @endpush
 
 @section('title', 'AVA VPN — быстрый и приватный VPN для России | Бесплатный тест 8 часов')
@@ -561,5 +561,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/landing.js') }}" defer></script>
+    <script src="@v('js/landing.js')" defer></script>
 @endpush
