@@ -12,18 +12,18 @@
 @push('jsonld')
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "Product",
+        "@@context": "https://schema.org",
+        "@@type": "Product",
         "name": "AVA VPN",
         "description": "VPN-сервис для России с высокой скоростью, защитой от блокировок и поддержкой всех устройств. Подключение по протоколу VLESS, шифрование трафика, тестовый доступ бесплатно.",
         "brand": {
-            "@type": "Brand",
+            "@@type": "Brand",
             "name": "AVA VPN"
         },
         "image": "{{ asset('assets/logo.png') }}",
         "offers": [
             {
-                "@type": "Offer",
+                "@@type": "Offer",
                 "name": "Стандартный — 30 дней",
                 "description": "VPN-подписка на 30 дней, до 2 устройств",
                 "price": "250",
@@ -32,7 +32,7 @@
                 "url": "{{ url('/#pricing') }}"
             },
             {
-                "@type": "Offer",
+                "@@type": "Offer",
                 "name": "Расширенный — 30 дней",
                 "description": "VPN-подписка на 30 дней, до 5 устройств",
                 "price": "550",
@@ -41,7 +41,7 @@
                 "url": "{{ url('/#pricing') }}"
             },
             {
-                "@type": "Offer",
+                "@@type": "Offer",
                 "name": "Стандартный — 180 дней",
                 "description": "VPN-подписка на 180 дней, до 2 устройств",
                 "price": "990",
@@ -50,7 +50,7 @@
                 "url": "{{ url('/#pricing') }}"
             },
             {
-                "@type": "Offer",
+                "@@type": "Offer",
                 "name": "Расширенный — 180 дней",
                 "description": "VPN-подписка на 180 дней, до 5 устройств",
                 "price": "2400",
@@ -63,70 +63,70 @@
     </script>
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
+        "@@context": "https://schema.org",
+        "@@type": "FAQPage",
         "mainEntity": [
             {
-                "@type": "Question",
+                "@@type": "Question",
                 "name": "Что такое VPN и зачем он нужен?",
                 "acceptedAnswer": {
-                    "@type": "Answer",
+                    "@@type": "Answer",
                     "text": "VPN (Virtual Private Network) — это технология, которая шифрует ваш интернет-трафик и направляет его через защищённый сервер. Это позволяет обходить блокировки сайтов, скрывать реальный IP-адрес и защищать данные при работе через публичные Wi-Fi сети."
                 }
             },
             {
-                "@type": "Question",
+                "@@type": "Question",
                 "name": "Будет ли AVA VPN работать в России?",
                 "acceptedAnswer": {
-                    "@type": "Answer",
+                    "@@type": "Answer",
                     "text": "Да. Мы используем современный протокол VLESS с маскировкой трафика, который стабильно работает на территории России и обходит DPI-блокировки. Серверы расположены в Нидерландах и Финляндии для минимальных задержек."
                 }
             },
             {
-                "@type": "Question",
+                "@@type": "Question",
                 "name": "Какие устройства поддерживаются?",
                 "acceptedAnswer": {
-                    "@type": "Answer",
+                    "@@type": "Answer",
                     "text": "AVA VPN работает на всех популярных платформах: Android, iOS (iPhone и iPad), Windows, macOS, Linux, а также на роутерах с поддержкой XRay/VLESS. Достаточно установить любое совместимое приложение и импортировать конфигурацию."
                 }
             },
             {
-                "@type": "Question",
+                "@@type": "Question",
                 "name": "Можно ли попробовать бесплатно перед оплатой?",
                 "acceptedAnswer": {
-                    "@type": "Answer",
+                    "@@type": "Answer",
                     "text": "Да, при регистрации мы выдаём тестовый доступ на 8 часов абсолютно бесплатно. Банковская карта не требуется — нужен только email."
                 }
             },
             {
-                "@type": "Question",
+                "@@type": "Question",
                 "name": "Сколько устройств можно подключить одновременно?",
                 "acceptedAnswer": {
-                    "@type": "Answer",
+                    "@@type": "Answer",
                     "text": "Тариф «Стандартный» поддерживает до 2 устройств, тариф «Расширенный» — до 5 устройств одновременно. Вы можете подключить телефон, ноутбук, планшет и роутер в рамках одной подписки."
                 }
             },
             {
-                "@type": "Question",
+                "@@type": "Question",
                 "name": "Сохраняете ли вы логи?",
                 "acceptedAnswer": {
-                    "@type": "Answer",
+                    "@@type": "Answer",
                     "text": "Мы не ведём журналы посещаемых сайтов и не отслеживаем активность пользователей. Сохраняется только техническая информация, необходимая для биллинга и работы сервиса."
                 }
             },
             {
-                "@type": "Question",
+                "@@type": "Question",
                 "name": "Как оплатить подписку?",
                 "acceptedAnswer": {
-                    "@type": "Answer",
+                    "@@type": "Answer",
                     "text": "Оплата проходит через ЮKassa: банковской картой Visa, MasterCard, МИР, через СБП или СберPay. После оплаты подписка активируется автоматически в течение нескольких секунд."
                 }
             },
             {
-                "@type": "Question",
+                "@@type": "Question",
                 "name": "Что делать, если возникли проблемы с подключением?",
                 "acceptedAnswer": {
-                    "@type": "Answer",
+                    "@@type": "Answer",
                     "text": "Напишите в наш Telegram-чат поддержки — мы отвечаем быстро и помогаем с настройкой на любом устройстве. Ссылка на чат указана в шапке сайта."
                 }
             }
@@ -135,11 +135,11 @@
     </script>
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
+        "@@context": "https://schema.org",
+        "@@type": "BreadcrumbList",
         "itemListElement": [
             {
-                "@type": "ListItem",
+                "@@type": "ListItem",
                 "position": 1,
                 "name": "Главная",
                 "item": "{{ url('/') }}"

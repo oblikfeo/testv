@@ -46,8 +46,8 @@
     {{-- JSON-LD schemas --}}
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "Organization",
+        "@@context": "https://schema.org",
+        "@@type": "Organization",
         "name": "AVA VPN",
         "url": "{{ url('/') }}",
         "logo": "{{ asset('assets/logo.png') }}",
@@ -55,7 +55,7 @@
             "{{ config('app.telegram_support_url') }}"
         ],
         "contactPoint": {
-            "@type": "ContactPoint",
+            "@@type": "ContactPoint",
             "contactType": "customer support",
             "url": "{{ config('app.telegram_support_url') }}",
             "availableLanguage": ["Russian", "English"]
@@ -64,8 +64,8 @@
     </script>
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
+        "@@context": "https://schema.org",
+        "@@type": "WebSite",
         "name": "AVA VPN",
         "url": "{{ url('/') }}",
         "inLanguage": "ru-RU"
