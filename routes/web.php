@@ -7,6 +7,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionKeyController;
+use App\Services\IndexNowService;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -16,6 +17,73 @@ Route::get('/', function () {
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/offer', 'offer')->name('offer');
 Route::view('/personal-data', 'personal-data')->name('personal-data');
+
+// ---- SEO: robots.txt, sitemap.xml, IndexNow ключ-файл ----
+
+Route::get('/robots.txt', function () {
+    $sitemap = route('sitemap');
+    $body = <<<TXT
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /cabinet
+Disallow: /cabinet/
+Disallow: /keys
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /sub/
+Disallow: /payment/
+
+User-agent: Yandex
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /cabinet
+Disallow: /cabinet/
+Disallow: /keys
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /sub/
+Disallow: /payment/
+Clean-param: utm_source&utm_medium&utm_campaign&utm_term&utm_content&fbclid&gclid /
+
+Sitemap: {$sitemap}
+TXT;
+    return response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+})->name('robots');
+
+Route::get('/sitemap.xml', function () {
+    $urls = [
+        ['loc' => route('home'),          'priority' => '1.0', 'changefreq' => 'weekly'],
+        ['loc' => route('privacy'),       'priority' => '0.3', 'changefreq' => 'yearly'],
+        ['loc' => route('offer'),         'priority' => '0.3', 'changefreq' => 'yearly'],
+        ['loc' => route('personal-data'), 'priority' => '0.3', 'changefreq' => 'yearly'],
+    ];
+
+    $today = now()->toDateString();
+    $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    foreach ($urls as $u) {
+        $xml .= "    <url>\n";
+        $xml .= '        <loc>' . htmlspecialchars($u['loc'], ENT_XML1) . "</loc>\n";
+        $xml .= '        <lastmod>' . $today . "</lastmod>\n";
+        $xml .= '        <changefreq>' . $u['changefreq'] . "</changefreq>\n";
+        $xml .= '        <priority>' . $u['priority'] . "</priority>\n";
+        $xml .= "    </url>\n";
+    }
+    $xml .= '</urlset>';
+
+    return response($xml, 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
+})->name('sitemap');
+
+// IndexNow подтверждение владения сайтом: файл /<key>.txt с тем же ключом внутри.
+Route::get('/{key}.txt', function (string $key, IndexNowService $indexNow) {
+    if (! hash_equals($indexNow->key(), $key)) {
+        abort(404);
+    }
+    return response($key, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+})->where('key', '[A-Za-z0-9\-]{8,128}')->name('indexnow.key');
 
 Route::get('/dashboard', function () {
     return redirect()->route('cabinet.subscription');

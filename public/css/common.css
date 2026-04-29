@@ -72,10 +72,16 @@ ul, ol {
     right: 0;
     z-index: 100;
     padding: 16px 0;
-    background: rgba(10, 10, 10, 0.85);
+    background: rgba(10, 10, 10, 0.7);
     backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border-color);
-    transition: background var(--transition);
+    border-bottom: 1px solid transparent;
+    transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.navbar.is-scrolled {
+    background: rgba(10, 10, 10, 0.92);
+    border-bottom-color: var(--border-color);
+    box-shadow: 0 8px 30px -20px rgba(0, 0, 0, 0.8);
 }
 
 .navbar .container {
