@@ -9,6 +9,11 @@
         'empty' => __('landing_traffic.modal_empty'),
         'close' => __('landing_traffic.modal_close'),
     ];
+    $trafficModalConfig = [
+        'statsUrl' => route('landing.traffic-stats'),
+        'modalUrl' => route('landing.traffic-modal'),
+        'i18n' => $trafficUi,
+    ];
 @endphp
 <div id="traffic-insights-root" class="traffic-modal-root" hidden aria-hidden="true">
     <div class="traffic-modal-backdrop" data-traffic-close tabindex="-1"></div>
@@ -24,10 +29,4 @@
         </div>
     </div>
 </div>
-<script type="application/json" id="traffic-modal-config">
-@json([
-    'statsUrl' => route('landing.traffic-stats'),
-    'modalUrl' => route('landing.traffic-modal'),
-    'i18n' => $trafficUi,
-])
-</script>
+<script type="application/json" id="traffic-modal-config">@json($trafficModalConfig)</script>
