@@ -3,31 +3,30 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\LandingTrafficController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionKeyController;
+use App\Http\Middleware\AdminAuth;
 use App\Services\IndexNowService;
-use Illuminate\Support\Facades\DB;
+use App\Services\LandingTrafficService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    // Cache driver "database" не поддерживает atomic increment — там будет false → на странице 0.
-    $visitorCount = (int) DB::transaction(function () {
-        $row = DB::table('site_counters')->where('key', 'landing_hits')->lockForUpdate()->first();
-        if ($row === null) {
-            DB::table('site_counters')->insert(['key' => 'landing_hits', 'value' => 1]);
+Route::get('/', function (Request $request, LandingTrafficService $traffic) {
+    $visitorCount = $traffic->recordHomeVisit($request);
 
-            return 1;
-        }
-        $next = (int) $row->value + 1;
-        DB::table('site_counters')->where('key', 'landing_hits')->update(['value' => $next]);
-
-        return $next;
-    });
-
-    return view('welcome', ['visitorCount' => $visitorCount]);
+    return view('welcome', compact('visitorCount'));
 })->name('home');
+
+Route::get('/landing/traffic-stats', [LandingTrafficController::class, 'stats'])
+    ->middleware('throttle:120,1')
+    ->name('landing.traffic-stats');
+
+Route::post('/landing/traffic-modal', [LandingTrafficController::class, 'recordModalOpen'])
+    ->middleware('throttle:60,1')
+    ->name('landing.traffic-modal');
 
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/offer', 'offer')->name('offer');
@@ -65,6 +64,7 @@ Clean-param: utm_source&utm_medium&utm_campaign&utm_term&utm_content&fbclid&gcli
 
 Sitemap: {$sitemap}
 TXT;
+
     return response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
 })->name('robots');
 
@@ -77,14 +77,14 @@ Route::get('/sitemap.xml', function () {
     ];
 
     $today = now()->toDateString();
-    $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
     foreach ($urls as $u) {
         $xml .= "    <url>\n";
-        $xml .= '        <loc>' . htmlspecialchars($u['loc'], ENT_XML1) . "</loc>\n";
-        $xml .= '        <lastmod>' . $today . "</lastmod>\n";
-        $xml .= '        <changefreq>' . $u['changefreq'] . "</changefreq>\n";
-        $xml .= '        <priority>' . $u['priority'] . "</priority>\n";
+        $xml .= '        <loc>'.htmlspecialchars($u['loc'], ENT_XML1)."</loc>\n";
+        $xml .= '        <lastmod>'.$today."</lastmod>\n";
+        $xml .= '        <changefreq>'.$u['changefreq']."</changefreq>\n";
+        $xml .= '        <priority>'.$u['priority']."</priority>\n";
         $xml .= "    </url>\n";
     }
     $xml .= '</urlset>';
@@ -97,6 +97,7 @@ Route::get('/{key}.txt', function (string $key, IndexNowService $indexNow) {
     if (! hash_equals($indexNow->key(), $key)) {
         abort(404);
     }
+
     return response($key, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
 })->where('key', '[A-Za-z0-9\-]{8,128}')->name('indexnow.key');
 
@@ -150,7 +151,7 @@ Route::prefix('admin')->group(function () {
     Route::post('/login', [AdminController::class, 'authenticate'])->name('admin.authenticate');
     Route::post('/logout', [AdminController::class, 'logout'])->name('admin.logout');
 
-    Route::middleware(\App\Http\Middleware\AdminAuth::class)->group(function () {
+    Route::middleware(AdminAuth::class)->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/test-keys', [AdminController::class, 'testKeys'])->name('admin.test-keys');
         Route::post('/test-keys/create', [AdminController::class, 'createTestKey'])->name('admin.test-keys.create');

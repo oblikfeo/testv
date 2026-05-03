@@ -559,7 +559,3 @@
         * Instagram&nbsp;— проект Meta, признан в&nbsp;РФ экстремистским и&nbsp;запрещён.
     </p>
 @endsection
-
-@push('scripts')
-    <script src="@v('js/landing.js')" defer></script>
-@endpush

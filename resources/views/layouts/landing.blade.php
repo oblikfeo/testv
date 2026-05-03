@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#0a0a0a">
     <meta name="format-detection" content="telephone=no">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     {{-- Title & description --}}
     <title>@yield('title', 'AVA VPN — быстрый и приватный VPN для России | Бесплатный тест')</title>
     <meta name="description" content="@yield('meta_description', 'AVA VPN — быстрый и стабильный VPN-сервис для России. Подключение в один клик, защита от блокировок, поддержка всех устройств. Бесплатный тестовый доступ на 8 часов без карты.')">
@@ -86,6 +88,9 @@
         @include('partials.landing-footer')
     @endif
 
+    @include('partials.landing-traffic-modal')
+
     @stack('scripts')
+    <script src="@v('js/landing.js')" defer></script>
 </body>
 </html>
