@@ -37,8 +37,12 @@ class AdminController extends Controller
             'password' => 'required|string',
         ]);
 
-        $envLogin = config('admin.login');
-        $envPassword = config('admin.password');
+        $envLogin = (string) config('admin.login');
+        $envPassword = (string) config('admin.password');
+
+        if ($envLogin === '' || $envPassword === '') {
+            return back()->withErrors(['login' => 'Задайте ADMIN_LOGIN и ADMIN_PASSWORD в .env']);
+        }
 
         if ($request->login === $envLogin && $request->password === $envPassword) {
             session(['admin_authenticated' => true]);

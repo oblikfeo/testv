@@ -8,10 +8,13 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionKeyController;
 use App\Services\IndexNowService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    $visitorCount = Cache::increment('landing_visitor_hits');
+
+    return view('welcome', ['visitorCount' => $visitorCount]);
 })->name('home');
 
 Route::view('/privacy', 'privacy')->name('privacy');

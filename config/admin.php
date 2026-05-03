@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'login' => env('ADMIN_LOGIN', 'admin'),
-    'password' => env('ADMIN_PASSWORD', 'secret'),
+    'login' => env('ADMIN_LOGIN', ''),
+    'password' => env('ADMIN_PASSWORD', ''),
 
     /** Префикс имени узла в Happ: «AVA 🇳🇱 Нидерланды» */
     'happ_brand' => env('HAPP_BRAND', 'AVA'),
@@ -14,10 +14,10 @@ return [
     'default_retail_traffic_gb' => (int) env('DEFAULT_RETAIL_TRAFFIC_GB', 100),
 
     'test_panel' => [
-        'url' => env('TEST_PANEL_URL', 'http://158.160.253.217'),
-        'username' => env('TEST_PANEL_USERNAME', 'admin555'),
-        'password' => env('TEST_PANEL_PASSWORD', 'admin666'),
-        'server_ip' => env('TEST_PANEL_SERVER_IP', '158.160.253.217'),
+        'url' => env('TEST_PANEL_URL', ''),
+        'username' => env('TEST_PANEL_USERNAME', ''),
+        'password' => env('TEST_PANEL_PASSWORD', ''),
+        'server_ip' => env('TEST_PANEL_SERVER_IP', ''),
         'inbound_id' => env('TEST_PANEL_INBOUND_ID', 1),
         /** Подпись в Happ (флаг + страна / зона) */
         'happ_label' => env('TEST_PANEL_HAPP_LABEL', '🇷🇺 Тест'),
@@ -27,18 +27,18 @@ return [
         [
             'name' => '🇳🇱 Нидерланды',
             'happ_label' => env('SALE_PANEL_1_HAPP_LABEL', '🇳🇱 Нидерланды'),
-            'url' => env('SALE_PANEL_1_URL', 'http://158.160.229.195'),
-            'username' => env('SALE_PANEL_1_USERNAME', 'admin555'),
-            'password' => env('SALE_PANEL_1_PASSWORD', 'admin666'),
-            'server_ip' => env('SALE_PANEL_1_SERVER_IP', '158.160.229.195'),
+            'url' => env('SALE_PANEL_1_URL', ''),
+            'username' => env('SALE_PANEL_1_USERNAME', ''),
+            'password' => env('SALE_PANEL_1_PASSWORD', ''),
+            'server_ip' => env('SALE_PANEL_1_SERVER_IP', ''),
         ],
         [
             'name' => '🇫🇷 Франция',
             'happ_label' => env('SALE_PANEL_2_HAPP_LABEL', '🇫🇷 Франция'),
-            'url' => env('SALE_PANEL_2_URL', 'http://158.160.249.138'),
-            'username' => env('SALE_PANEL_2_USERNAME', 'admin555'),
-            'password' => env('SALE_PANEL_2_PASSWORD', 'admin666'),
-            'server_ip' => env('SALE_PANEL_2_SERVER_IP', '158.160.249.138'),
+            'url' => env('SALE_PANEL_2_URL', ''),
+            'username' => env('SALE_PANEL_2_USERNAME', ''),
+            'password' => env('SALE_PANEL_2_PASSWORD', ''),
+            'server_ip' => env('SALE_PANEL_2_SERVER_IP', ''),
         ],
     ],
 
