@@ -39,6 +39,18 @@
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.admin-friends') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                                 Все серверы
                             </a>
+                            @php
+                                $supportPending = \App\Models\SupportTicket::query()
+                                    ->whereIn('status', ['open', 'pending_user'])
+                                    ->count();
+                            @endphp
+                            <a href="{{ route('admin.support.index') }}"
+                               class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.support.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                                Поддержка
+                                @if($supportPending > 0)
+                                    <span class="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs bg-red-600 text-white">{{ $supportPending }}</span>
+                                @endif
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -70,8 +82,15 @@
                         2 сервера
                     </a>
                     <a href="{{ route('admin.admin-friends') }}"
-                       class="col-span-2 px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.admin-friends') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
+                       class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.admin-friends') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
                         Все серверы
+                    </a>
+                    <a href="{{ route('admin.support.index') }}"
+                       class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.support.*') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
+                        Поддержка
+                        @if(($supportPending ?? 0) > 0)
+                            <span class="ml-1 inline-flex items-center justify-center px-1.5 rounded-full text-xs bg-red-600 text-white">{{ $supportPending }}</span>
+                        @endif
                     </a>
                 </div>
             </div>

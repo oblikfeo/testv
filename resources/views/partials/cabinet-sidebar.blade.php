@@ -28,6 +28,10 @@
             <span class="cab-nav-icon">◑</span>
             <span>Безопасность</span>
         </a>
+        <a href="{{ route('cabinet.support.index') }}" class="{{ $active === 'support' ? 'active' : '' }}">
+            <span class="cab-nav-icon">?</span>
+            <span>Поддержка</span>
+        </a>
     </nav>
     <div class="cab-nav-bottom">
         <form method="POST" action="{{ route('logout') }}">

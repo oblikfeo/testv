@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminSupportController;
 use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\LandingTrafficController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionKeyController;
+use App\Http\Controllers\SupportController;
 use App\Http\Middleware\AdminAuth;
 use App\Services\IndexNowService;
 use App\Services\LandingTrafficService;
@@ -141,6 +143,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('keys.activate');
 });
 
+Route::middleware(['auth'])->prefix('cabinet/support')->name('cabinet.support.')->group(function () {
+    Route::get('/', [SupportController::class, 'index'])->name('index');
+    Route::post('/', [SupportController::class, 'store'])->name('store');
+    Route::get('/{ticket}', [SupportController::class, 'show'])->name('show');
+    Route::post('/{ticket}/reply', [SupportController::class, 'reply'])->name('reply');
+    Route::post('/{ticket}/close', [SupportController::class, 'close'])->name('close');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
@@ -164,6 +174,12 @@ Route::prefix('admin')->group(function () {
         Route::get('/admin-friends', [AdminController::class, 'adminFriends'])->name('admin.admin-friends');
         Route::post('/admin-friends', [AdminController::class, 'createAdminFriends'])->name('admin.admin-friends.create');
         Route::post('/admin-friends/revoke', [AdminController::class, 'revokeAdminFriends'])->name('admin.admin-friends.revoke');
+
+        Route::get('/support', [AdminSupportController::class, 'index'])->name('admin.support.index');
+        Route::get('/support/{ticket}', [AdminSupportController::class, 'show'])->name('admin.support.show');
+        Route::post('/support/{ticket}/reply', [AdminSupportController::class, 'reply'])->name('admin.support.reply');
+        Route::post('/support/{ticket}/close', [AdminSupportController::class, 'close'])->name('admin.support.close');
+        Route::post('/support/{ticket}/reopen', [AdminSupportController::class, 'reopen'])->name('admin.support.reopen');
     });
 });
 

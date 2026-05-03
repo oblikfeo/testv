@@ -157,7 +157,7 @@
                             <div class="manage-empty">
                                 <div class="manage-empty-icon">🔑</div>
                                 <p class="manage-empty-title">Ключ ещё не выпущен</p>
-                                <p class="manage-empty-hint">Обратитесь в поддержку, если ключ не появляется.</p>
+                                <p class="manage-empty-hint">Если ключ не появляется — <a href="{{ route('cabinet.support.index') }}">обратитесь в поддержку</a>.</p>
                             </div>
                         @endif
                     </article>
