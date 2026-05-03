@@ -137,8 +137,6 @@ ul, ol {
 }
 
 .visitor-counter-btn {
-    position: relative;
-    z-index: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -148,42 +146,16 @@ ul, ol {
     background: transparent;
     font: inherit;
     cursor: pointer;
-    transition: transform var(--transition), filter var(--transition);
 }
 
-.visitor-counter-btn .visitor-counter {
-    position: relative;
-    z-index: 1;
-}
-
-.visitor-counter-btn:hover {
-    transform: scale(1.05);
-    filter: brightness(1.12);
+.visitor-counter-btn:hover .visitor-counter td {
+    border-color: var(--red-light);
 }
 
 .visitor-counter-btn:focus-visible {
     outline: 2px solid var(--red-primary);
     outline-offset: 3px;
     border-radius: 6px;
-}
-
-.visitor-counter-pulse {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 140%;
-    height: 220%;
-    transform: translate(-50%, -50%);
-    border-radius: 10px;
-    background: radial-gradient(ellipse at center, rgba(220, 38, 38, 0.35) 0%, transparent 68%);
-    animation: visitor-counter-pulse 2.6s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 0;
-}
-
-@keyframes visitor-counter-pulse {
-    0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(0.92); }
-    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
 }
 
 .container {

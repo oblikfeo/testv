@@ -7,7 +7,6 @@
         <div class="navbar-actions">
             @isset($visitorCount)
                 <button type="button" class="visitor-counter-btn" id="visitor-counter-trigger" aria-label="{{ __('landing_traffic.counter_aria') }}" title="{{ __('landing_traffic.counter_hint') }}">
-                    <span class="visitor-counter-pulse" aria-hidden="true"></span>
                     <table class="visitor-counter"><tr><td>{{ number_format((int) $visitorCount, 0, '.', ' ') }}</td></tr></table>
                 </button>
             @endisset
