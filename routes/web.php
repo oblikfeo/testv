@@ -8,11 +8,23 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionKeyController;
 use App\Services\IndexNowService;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    $visitorCount = Cache::increment('landing_visitor_hits');
+    // Cache driver "database" не поддерживает atomic increment — там будет false → на странице 0.
+    $visitorCount = (int) DB::transaction(function () {
+        $row = DB::table('site_counters')->where('key', 'landing_hits')->lockForUpdate()->first();
+        if ($row === null) {
+            DB::table('site_counters')->insert(['key' => 'landing_hits', 'value' => 1]);
+
+            return 1;
+        }
+        $next = (int) $row->value + 1;
+        DB::table('site_counters')->where('key', 'landing_hits')->update(['value' => $next]);
+
+        return $next;
+    });
 
     return view('welcome', ['visitorCount' => $visitorCount]);
 })->name('home');
