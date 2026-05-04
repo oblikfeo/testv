@@ -32,11 +32,15 @@ class BotApiController extends Controller
         $data = $request->validate([
             'telegram_id' => 'required|integer',
             'telegram_username' => 'nullable|string|max:64',
+            'telegram_first_name' => 'nullable|string|max:64',
+            'telegram_last_name' => 'nullable|string|max:64',
         ]);
 
         $user = $this->findOrCreateByTelegram(
             (int) $data['telegram_id'],
-            $data['telegram_username'] ?? null
+            $data['telegram_username'] ?? null,
+            $data['telegram_first_name'] ?? null,
+            $data['telegram_last_name'] ?? null,
         );
 
         return response()->json([
@@ -113,11 +117,15 @@ class BotApiController extends Controller
         $data = $request->validate([
             'telegram_id' => 'required|integer',
             'telegram_username' => 'nullable|string|max:64',
+            'telegram_first_name' => 'nullable|string|max:64',
+            'telegram_last_name' => 'nullable|string|max:64',
         ]);
 
         $user = $this->findOrCreateByTelegram(
             (int) $data['telegram_id'],
-            $data['telegram_username'] ?? null
+            $data['telegram_username'] ?? null,
+            $data['telegram_first_name'] ?? null,
+            $data['telegram_last_name'] ?? null,
         );
 
         if ($user->trial_used) {
@@ -193,6 +201,8 @@ class BotApiController extends Controller
         $data = $request->validate([
             'telegram_id' => 'required|integer',
             'telegram_username' => 'nullable|string|max:64',
+            'telegram_first_name' => 'nullable|string|max:64',
+            'telegram_last_name' => 'nullable|string|max:64',
             'plan_slug' => 'required|string|max:64',
             'return_url' => 'nullable|string|max:512',
             'source' => 'nullable|string|in:bot,web,unknown',
@@ -211,7 +221,9 @@ class BotApiController extends Controller
 
         $user = $this->findOrCreateByTelegram(
             (int) $data['telegram_id'],
-            $data['telegram_username'] ?? null
+            $data['telegram_username'] ?? null,
+            $data['telegram_first_name'] ?? null,
+            $data['telegram_last_name'] ?? null,
         );
 
         $purchaseAction = $data['purchase_action'];
@@ -361,33 +373,85 @@ class BotApiController extends Controller
 
     // ---------- helpers ----------
 
-    protected function findOrCreateByTelegram(int $tgId, ?string $tgUsername): User
-    {
-        return DB::transaction(function () use ($tgId, $tgUsername): User {
+    /**
+     * Найти пользователя по telegram_id или создать нового. При каждом вызове из бота
+     * подтягиваем актуальные username/first_name/last_name (юзер мог установить @username
+     * после первой регистрации, или поменять имя). Поле `users.name` — отображаемое
+     * имя в админке/письмах: предпочитаем «Имя Фамилия», fallback на @username, потом TG #id.
+     */
+    protected function findOrCreateByTelegram(
+        int $tgId,
+        ?string $tgUsername,
+        ?string $tgFirstName = null,
+        ?string $tgLastName = null,
+    ): User {
+        $tgUsername = $tgUsername !== null ? trim($tgUsername) ?: null : null;
+        $tgFirstName = $tgFirstName !== null ? trim($tgFirstName) ?: null : null;
+        $tgLastName = $tgLastName !== null ? trim($tgLastName) ?: null : null;
+
+        return DB::transaction(function () use ($tgId, $tgUsername, $tgFirstName, $tgLastName): User {
             $user = User::query()->where('telegram_id', $tgId)->lockForUpdate()->first();
 
             if ($user) {
-                if ($tgUsername && $user->telegram_username !== $tgUsername) {
+                $dirty = false;
+                if ($tgUsername !== null && $user->telegram_username !== $tgUsername) {
                     $user->telegram_username = $tgUsername;
+                    $dirty = true;
+                }
+                if ($tgFirstName !== null && $user->telegram_first_name !== $tgFirstName) {
+                    $user->telegram_first_name = $tgFirstName;
+                    $dirty = true;
+                }
+                if ($tgLastName !== null && $user->telegram_last_name !== $tgLastName) {
+                    $user->telegram_last_name = $tgLastName;
+                    $dirty = true;
+                }
+                // Синхронизируем `name` для бот-юзеров (сайт-юзеров не трогаем — они
+                // сами выбрали имя при регистрации). Если имя в БД ещё было placeholder-ом
+                // вида «TG 123» / «@username» — сейчас перезапишем на актуальное.
+                if ($dirty && $user->isBotOnly()) {
+                    $user->name = $this->buildBotUserName($tgId, $tgUsername, $tgFirstName, $tgLastName);
+                }
+                if ($dirty) {
                     $user->save();
                 }
                 return $user;
             }
 
             $placeholderEmail = 'tg-'.$tgId.'@bot.avavpn.ru';
-            $name = $tgUsername ? '@'.$tgUsername : ('TG '.$tgId);
 
             $user = User::create([
-                'name' => $name,
+                'name' => $this->buildBotUserName($tgId, $tgUsername, $tgFirstName, $tgLastName),
                 'email' => $placeholderEmail,
                 // Случайный «непригодный» пароль: бот-пользователь не может войти по email.
                 'password' => \Illuminate\Support\Str::random(40),
                 'telegram_id' => $tgId,
                 'telegram_username' => $tgUsername,
+                'telegram_first_name' => $tgFirstName,
+                'telegram_last_name' => $tgLastName,
             ]);
 
             return $user;
         });
+    }
+
+    /**
+     * Подпись для `users.name` бот-пользователя. Приоритет:
+     * 1) «Имя Фамилия» (Telegram first_name + last_name) — самое осмысленное;
+     * 2) @username;
+     * 3) TG #id (когда юзер скрыл и username, и имена — редкий, но возможен).
+     */
+    protected function buildBotUserName(int $tgId, ?string $username, ?string $first, ?string $last): string
+    {
+        $full = trim((string) $first.' '.(string) $last);
+        if ($full !== '') {
+            return $full;
+        }
+        if ($username) {
+            return '@'.$username;
+        }
+
+        return 'TG '.$tgId;
     }
 
     protected function serializeUser(User $user): array
@@ -396,6 +460,8 @@ class BotApiController extends Controller
             'id' => $user->id,
             'telegram_id' => $user->telegram_id,
             'telegram_username' => $user->telegram_username,
+            'telegram_first_name' => $user->telegram_first_name,
+            'telegram_last_name' => $user->telegram_last_name,
             'email' => $user->isBotOnly() ? null : $user->email,
             'trial_used' => (bool) $user->trial_used,
         ];

@@ -24,6 +24,8 @@ class BotLinkController extends Controller
         $data = $request->validate([
             'telegram_id' => 'required|integer',
             'telegram_username' => 'nullable|string|max:64',
+            'telegram_first_name' => 'nullable|string|max:64',
+            'telegram_last_name' => 'nullable|string|max:64',
             'email' => 'required|string|email|max:255',
         ]);
 
@@ -55,6 +57,8 @@ class BotLinkController extends Controller
             'email' => $email,
             'telegram_id' => $tgId,
             'telegram_username' => $data['telegram_username'] ?? null,
+            'telegram_first_name' => $data['telegram_first_name'] ?? null,
+            'telegram_last_name' => $data['telegram_last_name'] ?? null,
         ], now()->addMinutes($this->ttlMinutes));
 
         Mail::to($email)->send(new TelegramLinkCodeMail($code, $this->ttlMinutes));
@@ -70,6 +74,8 @@ class BotLinkController extends Controller
         $data = $request->validate([
             'telegram_id' => 'required|integer',
             'telegram_username' => 'nullable|string|max:64',
+            'telegram_first_name' => 'nullable|string|max:64',
+            'telegram_last_name' => 'nullable|string|max:64',
             'email' => 'required|string|email|max:255',
             'code' => 'required|string|min:6|max:6',
         ]);
@@ -89,9 +95,11 @@ class BotLinkController extends Controller
         }
 
         $tgUsername = $data['telegram_username'] ?? ($payload['telegram_username'] ?? null);
+        $tgFirstName = $data['telegram_first_name'] ?? ($payload['telegram_first_name'] ?? null);
+        $tgLastName = $data['telegram_last_name'] ?? ($payload['telegram_last_name'] ?? null);
 
         try {
-            $resultUser = DB::transaction(function () use ($tgId, $tgUsername, $email): User {
+            $resultUser = DB::transaction(function () use ($tgId, $tgUsername, $tgFirstName, $tgLastName, $email): User {
                 /** @var User $webUser */
                 $webUser = User::query()->where('email', $email)->lockForUpdate()->firstOrFail();
 
@@ -109,6 +117,12 @@ class BotLinkController extends Controller
 
                 $webUser->telegram_id = $tgId;
                 $webUser->telegram_username = is_string($tgUsername) ? $tgUsername : null;
+                if (is_string($tgFirstName)) {
+                    $webUser->telegram_first_name = $tgFirstName;
+                }
+                if (is_string($tgLastName)) {
+                    $webUser->telegram_last_name = $tgLastName;
+                }
                 $webUser->save();
 
                 return $webUser;
@@ -132,6 +146,8 @@ class BotLinkController extends Controller
                 'id' => $resultUser->id,
                 'telegram_id' => $resultUser->telegram_id,
                 'telegram_username' => $resultUser->telegram_username,
+                'telegram_first_name' => $resultUser->telegram_first_name,
+                'telegram_last_name' => $resultUser->telegram_last_name,
                 'email' => $resultUser->email,
                 'trial_used' => (bool) $resultUser->trial_used,
             ],

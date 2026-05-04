@@ -27,6 +27,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'trial_used',
         'telegram_id',
         'telegram_username',
+        'telegram_first_name',
+        'telegram_last_name',
     ];
 
     /**
@@ -118,6 +120,56 @@ class User extends Authenticatable implements MustVerifyEmail
             && is_string($this->email)
             && str_starts_with($this->email, 'tg-')
             && str_ends_with($this->email, '@bot.avavpn.ru');
+    }
+
+    /**
+     * Имя из Telegram: «Имя Фамилия». Возвращает null, если first_name/last_name не сохранены
+     * (старые записи до миграции telegram_names или юзеры без TG).
+     */
+    public function telegramFullName(): ?string
+    {
+        $full = trim(((string) $this->telegram_first_name).' '.((string) $this->telegram_last_name));
+
+        return $full !== '' ? $full : null;
+    }
+
+    /**
+     * Подпись для админки: @username → «Имя Фамилия» → TG #id → null.
+     * Используется в `admin/test-keys.blade.php` (вкладки тестовых и оплаченных ключей).
+     */
+    public function telegramDisplayLabel(): ?string
+    {
+        if ($this->telegram_username) {
+            return '@'.$this->telegram_username;
+        }
+
+        $full = $this->telegramFullName();
+        if ($full !== null) {
+            return $full;
+        }
+
+        if ($this->telegram_id !== null) {
+            return 'TG #'.$this->telegram_id;
+        }
+
+        return null;
+    }
+
+    /**
+     * Кликабельная ссылка на профиль в Telegram. Если есть @username — стандартная https,
+     * иначе deeplink `tg://user?id=…` (открывает чат в установленном клиенте).
+     */
+    public function telegramDeeplink(): ?string
+    {
+        if ($this->telegram_username) {
+            return 'https://t.me/'.ltrim($this->telegram_username, '@');
+        }
+
+        if ($this->telegram_id !== null) {
+            return 'tg://user?id='.$this->telegram_id;
+        }
+
+        return null;
     }
 
     public function sendEmailVerificationNotification(): void

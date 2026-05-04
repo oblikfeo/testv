@@ -122,7 +122,8 @@
                             @php
                                 $trial = $trialByEmail[$client['email']] ?? null;
                                 $user = $trial?->user;
-                                $tgUsername = $user?->telegram_username ? '@'.$user->telegram_username : '—';
+                                $tgLabel = $user?->telegramDisplayLabel();
+                                $tgLink = $user?->telegramDeeplink();
                                 $emailValue = $user?->email ?: ($client['email'] ?: '—');
                                 $usageBytes = (int) ($client['up'] + $client['down']);
                                 $limitBytes = (int) $client['total_gb'];
@@ -131,7 +132,15 @@
                                 $isLimitExceeded = $limitBytes > 0 && $usageBytes >= $limitBytes;
                             @endphp
                             <tr class="hover:bg-gray-700/30">
-                                <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-200">{{ $tgUsername }}</td>
+                                <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                                    @if ($tgLabel && $tgLink)
+                                        <a href="{{ $tgLink }}" target="_blank" rel="noopener" class="text-blue-300 hover:text-blue-200 hover:underline">{{ $tgLabel }}</a>
+                                    @elseif ($tgLabel)
+                                        {{ $tgLabel }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
                                 <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-200">{{ $emailValue }}</td>
                                 <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                     @if (! $client['enable'])
@@ -204,15 +213,22 @@
                     @foreach ($paidKeys as $saleKey)
                         <tr class="hover:bg-gray-700/30">
                             @php
-                                $tgUsername = $saleKey->user?->telegram_username ? '@'.$saleKey->user->telegram_username : '—';
+                                $tgLabel = $saleKey->user?->telegramDisplayLabel();
+                                $tgLink = $saleKey->user?->telegramDeeplink();
                                 $emailValue = $saleKey->user?->email ?: ($saleKey->email ?: '—');
                                 $source = $saleKey->subscription?->purchase_source ?: ($saleKey->keyOrder?->purchase_source ?: 'unknown');
                                 $isExpired = $saleKey->expires_at?->isPast() ?? false;
                                 $isLimitExceeded = $saleKey->total_bytes > 0 && $saleKey->used_bytes >= $saleKey->total_bytes;
                                 $isSubscriptionInactive = $saleKey->subscription && $saleKey->subscription->status !== 'active';
                             @endphp
-                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
-                                <span class="text-gray-200 text-sm">{{ $tgUsername }}</span>
+                            <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
+                                @if ($tgLabel && $tgLink)
+                                    <a href="{{ $tgLink }}" target="_blank" rel="noopener" class="text-blue-300 hover:text-blue-200 hover:underline">{{ $tgLabel }}</a>
+                                @elseif ($tgLabel)
+                                    <span class="text-gray-200">{{ $tgLabel }}</span>
+                                @else
+                                    <span class="text-gray-400">—</span>
+                                @endif
                             </td>
                             <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                 {{ $emailValue }}
