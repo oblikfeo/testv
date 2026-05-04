@@ -53,7 +53,7 @@ class SubscriptionFeedBuilder
         );
 
         return [
-            'body' => $this->appendHappRoutingRules($line),
+            'body' => $line,
             'user_info' => $userInfo,
             'profile_title' => 'AVA тестовый период',
         ];
@@ -120,7 +120,7 @@ class SubscriptionFeedBuilder
             $lines[] = $line2;
         }
 
-        $body = $this->appendHappRoutingRules(implode("\n", $lines));
+        $body = implode("\n", $lines);
 
         $total = $saleKey->total_bytes > 0 ? (int) $saleKey->total_bytes : 0;
         $userInfo = HappSubscriptionFormatter::buildUserInfo(
@@ -213,7 +213,7 @@ class SubscriptionFeedBuilder
             return ['error' => 'Ошибка: в подписке нет ни одного сервера продаж (проверьте ключи на панелях или перевыдайте подписку)', 'code' => 500];
         }
 
-        $body = $this->appendHappRoutingRules(implode("\n", $lines));
+        $body = implode("\n", $lines);
         $total = $saleKey->total_bytes > 0 ? (int) $saleKey->total_bytes : 0;
         $userInfo = HappSubscriptionFormatter::buildUserInfo(
             0,
@@ -227,24 +227,5 @@ class SubscriptionFeedBuilder
             'user_info' => $userInfo,
             'profile_title' => 'AVA VPN',
         ];
-    }
-
-    /**
-     * Дописывает правила маршрутизации в конец подписки (см. config('admin.happ_routing_rules')).
-     */
-    protected function appendHappRoutingRules(string $body): string
-    {
-        $rules = config('admin.happ_routing_rules', []);
-        if (! is_array($rules) || $rules === []) {
-            return $body;
-        }
-
-        $lines = array_values(array_filter(array_map('strval', $rules), fn (string $l) => $l !== ''));
-
-        if ($lines === []) {
-            return $body;
-        }
-
-        return rtrim($body, "\n")."\n\n".implode("\n", $lines);
     }
 }

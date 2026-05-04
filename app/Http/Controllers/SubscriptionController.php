@@ -167,9 +167,9 @@ class SubscriptionController extends Controller
                 ->header('X-Device-Register-Url', url('/api/device/register'))
                 ->header('X-Device-Validate-Url', url('/api/device/validate'));
 
-            if ($routing) {
-                $resp->header('routing', $routing);
-            }
+            // НЕ дублируем $routing в HTTP-заголовке: при длинном списке DirectSites deeplink
+            // раздувается до нескольких KiB — nginx по умолчанию даёт «upstream sent too big header» → 502.
+            // Happ принимает профиль и из первой строки тела подписки (см. HappSubscriptionFormatter).
 
             return $resp;
         }
@@ -181,7 +181,16 @@ class SubscriptionController extends Controller
 
     protected function isHappClient(string $userAgent): bool
     {
-        $happClients = ['happ', 'hiddify', 'v2rayn', 'v2rayng', 'streisand', 'shadowrocket', 'quantumult', 'clash'];
+        // 'v2rayn' НЕ ловит 'v2raytun' (между 'v2ray' и 'n' стоит 'tu') — поэтому 'v2raytun' нужен явно.
+        // 'happ' стоит первым, так что Happ остаётся «приоритетным» — формат deeplink родной для него,
+        // остальные клиенты могут проигнорировать неподдерживаемую строку, не ломая подписку.
+        $happClients = [
+            'happ', 'hiddify',
+            'v2rayn', 'v2rayng', 'v2raytun',
+            'streisand', 'shadowrocket', 'quantumult',
+            'clash', 'nekobox', 'nekoray', 'karing',
+            'flclash', 'sing-box', 'singbox',
+        ];
         $userAgentLower = strtolower($userAgent);
 
         foreach ($happClients as $client) {
