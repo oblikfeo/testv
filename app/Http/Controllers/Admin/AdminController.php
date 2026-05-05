@@ -68,6 +68,14 @@ class AdminController extends Controller
     {
         $testPanel = config('admin.test_panel');
         $activeTab = request()->query('tab', 'test');
+        $paidFilters = [
+            'source' => (string) request()->query('source', ''),
+            'status' => (string) request()->query('status', ''),
+            'traffic' => (string) request()->query('traffic', ''),
+            'expiring' => (string) request()->query('expiring', ''),
+            'sort_by' => (string) request()->query('sort_by', 'expires_at'),
+            'sort_dir' => (string) request()->query('sort_dir', 'desc'),
+        ];
 
         $clients = [];
         $error = null;
@@ -119,10 +127,84 @@ class AdminController extends Controller
                 'subscription.plan:id,name,slug',
                 'keyOrder:id,purchase_source',
             ])
-            ->orderByDesc('expires_at')
             ->get();
 
-        return view('admin.test-keys', compact('clients', 'error', 'testPanel', 'trialByEmail', 'paidKeys', 'activeTab'));
+        if ($activeTab === 'paid') {
+            $now = now();
+            $paidKeys = $paidKeys->filter(function (SaleKey $saleKey) use ($paidFilters, $now): bool {
+                $source = (string) ($saleKey->subscription?->purchase_source ?: ($saleKey->keyOrder?->purchase_source ?: 'unknown'));
+                $isExpired = $saleKey->expires_at?->isPast() ?? false;
+                $isLimitExceeded = (int) ($saleKey->total_bytes ?? 0) > 0 && (int) ($saleKey->used_bytes ?? 0) >= (int) $saleKey->total_bytes;
+                $isSubscriptionInactive = $saleKey->subscription && $saleKey->subscription->status !== 'active';
+                $status = match (true) {
+                    $saleKey->status !== 'active' => 'revoked',
+                    $isSubscriptionInactive => 'sub_inactive',
+                    $isExpired => 'expired',
+                    $isLimitExceeded => 'limit_exceeded',
+                    default => 'active',
+                };
+
+                if ($paidFilters['source'] !== '' && $paidFilters['source'] !== $source) {
+                    return false;
+                }
+                if ($paidFilters['status'] !== '' && $paidFilters['status'] !== $status) {
+                    return false;
+                }
+
+                if ($paidFilters['traffic'] === 'exhausted' && ! $isLimitExceeded) {
+                    return false;
+                }
+                if ($paidFilters['traffic'] === 'remaining' && $isLimitExceeded) {
+                    return false;
+                }
+                if ($paidFilters['traffic'] === 'unlimited' && (int) ($saleKey->total_bytes ?? 0) > 0) {
+                    return false;
+                }
+
+                if ($paidFilters['expiring'] === 'expired' && ! $isExpired) {
+                    return false;
+                }
+                if ($paidFilters['expiring'] === 'today' && ! ($saleKey->expires_at?->isToday() ?? false)) {
+                    return false;
+                }
+                if ($paidFilters['expiring'] === '3days' && ! ($saleKey->expires_at && $saleKey->expires_at->isFuture() && $saleKey->expires_at->lte($now->copy()->addDays(3)))) {
+                    return false;
+                }
+                if ($paidFilters['expiring'] === '7days' && ! ($saleKey->expires_at && $saleKey->expires_at->isFuture() && $saleKey->expires_at->lte($now->copy()->addDays(7)))) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            $sortBy = in_array($paidFilters['sort_by'], ['source', 'status', 'traffic', 'expires_at'], true)
+                ? $paidFilters['sort_by']
+                : 'expires_at';
+            $sortDir = $paidFilters['sort_dir'] === 'asc' ? 'asc' : 'desc';
+
+            $paidKeys = $paidKeys->sortBy(function (SaleKey $saleKey) use ($sortBy): mixed {
+                $source = (string) ($saleKey->subscription?->purchase_source ?: ($saleKey->keyOrder?->purchase_source ?: 'unknown'));
+                $isExpired = $saleKey->expires_at?->isPast() ?? false;
+                $isLimitExceeded = (int) ($saleKey->total_bytes ?? 0) > 0 && (int) ($saleKey->used_bytes ?? 0) >= (int) $saleKey->total_bytes;
+                $isSubscriptionInactive = $saleKey->subscription && $saleKey->subscription->status !== 'active';
+                $status = match (true) {
+                    $saleKey->status !== 'active' => 'revoked',
+                    $isSubscriptionInactive => 'sub_inactive',
+                    $isExpired => 'expired',
+                    $isLimitExceeded => 'limit_exceeded',
+                    default => 'active',
+                };
+
+                return match ($sortBy) {
+                    'source' => $source,
+                    'status' => $status,
+                    'traffic' => (int) ($saleKey->used_bytes ?? 0),
+                    default => (int) ($saleKey->expires_at?->timestamp ?? 0),
+                };
+            }, options: SORT_REGULAR, descending: $sortDir === 'desc')->values();
+        }
+
+        return view('admin.test-keys', compact('clients', 'error', 'testPanel', 'trialByEmail', 'paidKeys', 'activeTab', 'paidFilters'));
     }
 
     public function settings()

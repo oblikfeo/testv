@@ -185,9 +185,86 @@
         @endif
     </div>
 @else
+    <div class="bg-gray-800 rounded-xl p-4 sm:p-6 mb-6">
+        <form method="GET" action="{{ route('admin.test-keys') }}" class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            <input type="hidden" name="tab" value="paid">
+
+            <label class="text-sm text-gray-300">
+                Источник
+                <select name="source" class="mt-1 w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                    <option value="">Все</option>
+                    <option value="web" @selected(($paidFilters['source'] ?? '') === 'web')>Сайт</option>
+                    <option value="bot" @selected(($paidFilters['source'] ?? '') === 'bot')>Бот</option>
+                    <option value="unknown" @selected(($paidFilters['source'] ?? '') === 'unknown')>Неизвестно</option>
+                </select>
+            </label>
+
+            <label class="text-sm text-gray-300">
+                Статус
+                <select name="status" class="mt-1 w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                    <option value="">Все</option>
+                    <option value="active" @selected(($paidFilters['status'] ?? '') === 'active')>Активен</option>
+                    <option value="expired" @selected(($paidFilters['status'] ?? '') === 'expired')>Истёк</option>
+                    <option value="limit_exceeded" @selected(($paidFilters['status'] ?? '') === 'limit_exceeded')>Лимит исчерпан</option>
+                    <option value="sub_inactive" @selected(($paidFilters['status'] ?? '') === 'sub_inactive')>Подписка неактивна</option>
+                    <option value="revoked" @selected(($paidFilters['status'] ?? '') === 'revoked')>Отозван</option>
+                </select>
+            </label>
+
+            <label class="text-sm text-gray-300">
+                Трафик
+                <select name="traffic" class="mt-1 w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                    <option value="">Любой</option>
+                    <option value="remaining" @selected(($paidFilters['traffic'] ?? '') === 'remaining')>Есть остаток</option>
+                    <option value="exhausted" @selected(($paidFilters['traffic'] ?? '') === 'exhausted')>Исчерпан</option>
+                    <option value="unlimited" @selected(($paidFilters['traffic'] ?? '') === 'unlimited')>Безлимит</option>
+                </select>
+            </label>
+
+            <label class="text-sm text-gray-300">
+                Истекает
+                <select name="expiring" class="mt-1 w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                    <option value="">Любой срок</option>
+                    <option value="today" @selected(($paidFilters['expiring'] ?? '') === 'today')>Сегодня</option>
+                    <option value="3days" @selected(($paidFilters['expiring'] ?? '') === '3days')>В ближайшие 3 дня</option>
+                    <option value="7days" @selected(($paidFilters['expiring'] ?? '') === '7days')>В ближайшие 7 дней</option>
+                    <option value="expired" @selected(($paidFilters['expiring'] ?? '') === 'expired')>Уже истёк</option>
+                </select>
+            </label>
+
+            <label class="text-sm text-gray-300">
+                Сортировать по
+                <select name="sort_by" class="mt-1 w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                    <option value="expires_at" @selected(($paidFilters['sort_by'] ?? 'expires_at') === 'expires_at')>Истечению</option>
+                    <option value="traffic" @selected(($paidFilters['sort_by'] ?? '') === 'traffic')>Трафику</option>
+                    <option value="source" @selected(($paidFilters['sort_by'] ?? '') === 'source')>Источнику</option>
+                    <option value="status" @selected(($paidFilters['sort_by'] ?? '') === 'status')>Статусу</option>
+                </select>
+            </label>
+
+            <label class="text-sm text-gray-300">
+                Порядок
+                <select name="sort_dir" class="mt-1 w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                    <option value="desc" @selected(($paidFilters['sort_dir'] ?? 'desc') === 'desc')>По убыванию</option>
+                    <option value="asc" @selected(($paidFilters['sort_dir'] ?? '') === 'asc')>По возрастанию</option>
+                </select>
+            </label>
+
+            <div class="md:col-span-3 xl:col-span-6 flex gap-3 mt-1">
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition">
+                    Применить
+                </button>
+                <a href="{{ route('admin.test-keys', ['tab' => 'paid']) }}" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm transition">
+                    Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+
     <div class="bg-gray-800 rounded-xl overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-700">
             <h2 class="text-lg font-semibold text-white">Список оплаченных ключей</h2>
+            <p class="text-xs text-gray-400 mt-1">Найдено: {{ $paidKeys->count() }}</p>
         </div>
 
         @if ($paidKeys->isEmpty())
