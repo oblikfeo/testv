@@ -31,7 +31,7 @@ class PlansSeeder extends Seeder
                 'discount' => 20,
                 'is_popular' => false,
                 'sort_order' => 2,
-                'traffic_gb' => 100,
+                'traffic_gb' => 300,
             ],
             [
                 'name' => 'Стандартный',
@@ -42,7 +42,7 @@ class PlansSeeder extends Seeder
                 'discount' => 34,
                 'is_popular' => false,
                 'sort_order' => 3,
-                'traffic_gb' => 100,
+                'traffic_gb' => 600,
             ],
 
             // Расширенный - 5 устройств
@@ -66,7 +66,7 @@ class PlansSeeder extends Seeder
                 'discount' => 18,
                 'is_popular' => true,
                 'sort_order' => 5,
-                'traffic_gb' => 100,
+                'traffic_gb' => 300,
             ],
             [
                 'name' => 'Расширенный',
@@ -77,7 +77,7 @@ class PlansSeeder extends Seeder
                 'discount' => 27,
                 'is_popular' => false,
                 'sort_order' => 6,
-                'traffic_gb' => 100,
+                'traffic_gb' => 600,
             ],
         ];
 
