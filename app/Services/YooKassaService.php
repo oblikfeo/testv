@@ -170,6 +170,27 @@ class YooKassaService
         return true;
     }
 
+    public function syncRefundStatus(KeyOrder $order): bool
+    {
+        if (! $order->payment_id) {
+            return false;
+        }
+
+        $payment = $this->getPayment($order->payment_id);
+        if (! $payment) {
+            return false;
+        }
+
+        if (! $this->isFullyRefundedPayment($payment)) {
+            return false;
+        }
+
+        return $this->handleRefundSucceeded($order->payment_id, [
+            'id' => $payment['id'] ?? null,
+            'source' => 'payment_poll',
+        ]);
+    }
+
     protected function handleRefundSucceeded(string $paymentId, array $refundData): bool
     {
         $order = KeyOrder::query()->where('payment_id', $paymentId)->first();
@@ -354,6 +375,15 @@ class YooKassaService
         }
 
         $status = $payment['status'] ?? null;
+
+        if ($this->isFullyRefundedPayment($payment)) {
+            $this->handleRefundSucceeded($order->payment_id, [
+                'id' => $payment['id'] ?? null,
+                'source' => 'payment_status_check',
+            ]);
+            $order->refresh();
+            return $order->payment_status;
+        }
         
         if ($status && $status !== $order->payment_status) {
             $order->update(['payment_status' => $status]);
@@ -364,5 +394,17 @@ class YooKassaService
         }
 
         return $status;
+    }
+
+    private function isFullyRefundedPayment(array $payment): bool
+    {
+        $amount = (float) ($payment['amount']['value'] ?? 0);
+        $refunded = (float) ($payment['refunded_amount']['value'] ?? 0);
+
+        if ($amount <= 0 || $refunded <= 0) {
+            return false;
+        }
+
+        return $refunded >= $amount;
     }
 }

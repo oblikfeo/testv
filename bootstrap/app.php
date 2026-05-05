@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
         })->everyMinute()->name('ensure-key-pools');
 
         $schedule->command('subscriptions:check-expired')->hourly();
+        $schedule->command('payments:reconcile-refunds --hours=336')->everyTenMinutes();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
