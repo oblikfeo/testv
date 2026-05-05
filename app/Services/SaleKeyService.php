@@ -524,6 +524,34 @@ class SaleKeyService
         $subscription?->delete();
     }
 
+    public function deactivateRetailSaleKey(SaleKey $saleKey): void
+    {
+        if ($saleKey->is_sponsor || $saleKey->is_admin_bundle) {
+            return;
+        }
+
+        try {
+            $panel = $this->getSalePanelConfig((int) $saleKey->panel_index);
+            $this->xuiApi->deleteClient(
+                $panel['url'],
+                $panel['username'],
+                $panel['password'],
+                (int) $saleKey->inbound_id,
+                (string) $saleKey->uuid
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Retail sale key panel deactivation failed', [
+                'sale_key_id' => $saleKey->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        $saleKey->update([
+            'status' => 'expired',
+            'expires_at' => now(),
+        ]);
+    }
+
     /**
      * @return array{url: string, username: string, password: string, server_ip: string}
      */

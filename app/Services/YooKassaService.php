@@ -225,12 +225,21 @@ class YooKassaService
                     'expires_at' => now(),
                 ]);
 
-                SaleKey::query()
+                $saleKeys = SaleKey::query()
                     ->where('subscription_id', $subscription->id)
-                    ->update([
+                    ->get();
+
+                foreach ($saleKeys as $saleKey) {
+                    if (! $saleKey->is_sponsor && ! $saleKey->is_admin_bundle) {
+                        $this->saleKeyService->deactivateRetailSaleKey($saleKey);
+                        continue;
+                    }
+
+                    $saleKey->update([
                         'status' => 'expired',
                         'expires_at' => now(),
                     ]);
+                }
             }
         }
 
