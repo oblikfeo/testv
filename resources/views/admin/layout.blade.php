@@ -39,6 +39,10 @@
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.admin-friends') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                                 Все серверы
                             </a>
+                            <a href="{{ route('admin.trial-feedback') }}"
+                               class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.trial-feedback') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                                Отзывы после теста
+                            </a>
                             @php
                                 $supportPending = \App\Models\SupportTicket::query()
                                     ->whereIn('status', ['open', 'pending_user'])
@@ -84,6 +88,10 @@
                     <a href="{{ route('admin.admin-friends') }}"
                        class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.admin-friends') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
                         Все серверы
+                    </a>
+                    <a href="{{ route('admin.trial-feedback') }}"
+                       class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.trial-feedback') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
+                        Отзывы после теста
                     </a>
                     <a href="{{ route('admin.support.index') }}"
                        class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.support.*') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">

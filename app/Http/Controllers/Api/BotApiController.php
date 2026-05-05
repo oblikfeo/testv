@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KeyOrder;
 use App\Models\Plan;
 use App\Models\SaleKey;
+use App\Models\TrialFeedback;
 use App\Models\TrialKey;
 use App\Models\User;
 use App\Services\TrialKeyService;
@@ -347,6 +348,32 @@ class BotApiController extends Controller
             'status' => $this->mapYooKassaStatus($order->payment_status),
             'order_status' => $order->status?->value,
         ]);
+    }
+
+    /**
+     * POST /api/bot/trial-feedback
+     * Сохраняет отзыв после завершения пробного доступа.
+     */
+    public function submitTrialFeedback(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'telegram_id' => 'required|integer',
+            'telegram_username' => 'nullable|string|max:64',
+            'message' => 'required|string|min:3|max:4000',
+            'trigger' => 'nullable|string|max:32',
+        ]);
+
+        $user = User::query()->where('telegram_id', (int) $data['telegram_id'])->first();
+
+        TrialFeedback::create([
+            'user_id' => $user?->id,
+            'telegram_id' => (int) $data['telegram_id'],
+            'telegram_username' => $data['telegram_username'] ?? $user?->telegram_username,
+            'trigger' => $data['trigger'] ?? 'trial_expired',
+            'message' => trim((string) $data['message']),
+        ]);
+
+        return response()->json(['ok' => true]);
     }
 
     protected function defaultBotReturnUrl(int $orderId): string

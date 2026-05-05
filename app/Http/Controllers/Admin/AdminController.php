@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SaleKey;
 use App\Models\Setting;
+use App\Models\TrialFeedback;
 use App\Models\TrialKey;
 use App\Models\User;
 use App\Services\SaleKeyService;
@@ -197,6 +198,16 @@ class AdminController extends Controller
             ->first();
 
         return view('admin.admin-friends', compact('adminKey'));
+    }
+
+    public function trialFeedback()
+    {
+        $items = TrialFeedback::query()
+            ->with('user:id,email,name,telegram_username')
+            ->orderByDesc('id')
+            ->paginate(50);
+
+        return view('admin.trial-feedback', compact('items'));
     }
 
     public function createAdminFriends(Request $request, SaleKeyService $saleKeyService)

@@ -174,6 +174,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/admin-friends', [AdminController::class, 'adminFriends'])->name('admin.admin-friends');
         Route::post('/admin-friends', [AdminController::class, 'createAdminFriends'])->name('admin.admin-friends.create');
         Route::post('/admin-friends/revoke', [AdminController::class, 'revokeAdminFriends'])->name('admin.admin-friends.revoke');
+        Route::get('/trial-feedback', [AdminController::class, 'trialFeedback'])->name('admin.trial-feedback');
 
         Route::get('/support', [AdminSupportController::class, 'index'])->name('admin.support.index');
         Route::get('/support/{ticket}', [AdminSupportController::class, 'show'])->name('admin.support.show');

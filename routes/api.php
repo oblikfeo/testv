@@ -23,6 +23,7 @@ Route::middleware(['api.token'])->group(function (): void {
         Route::get('subscription', [BotApiController::class, 'getSubscription'])->name('api.bot.subscription');
         Route::get('subscriptions', [BotApiController::class, 'listSubscriptions'])->name('api.bot.subscriptions');
         Route::post('trial', [BotApiController::class, 'issueTrial'])->name('api.bot.trial');
+        Route::post('trial-feedback', [BotApiController::class, 'submitTrialFeedback'])->name('api.bot.trial-feedback');
 
         // Привязка существующего web-аккаунта (email) к Telegram через код.
         Route::post('link/start', [BotLinkController::class, 'start'])->name('api.bot.link.start');
