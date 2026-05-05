@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Plan;
 use App\Models\SaleKey;
+use App\Models\TrialFeedback;
+use App\Models\TrialFeedbackRequest;
 use App\Services\TrialKeyService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,6 +15,22 @@ class CabinetController extends Controller
     public function __construct(
         protected TrialKeyService $trialKeyService
     ) {}
+    protected function pendingTrialFeedbackRequest(int $userId): ?TrialFeedbackRequest
+    {
+        $alreadyLeftFeedback = TrialFeedback::query()
+            ->where('user_id', $userId)
+            ->exists();
+        if ($alreadyLeftFeedback) {
+            return null;
+        }
+
+        return TrialFeedbackRequest::query()
+            ->where('user_id', $userId)
+            ->whereNull('submitted_at')
+            ->latest('id')
+            ->first();
+    }
+
     public function subscription(Request $request): View
     {
         $user = $request->user();
@@ -32,6 +50,7 @@ class CabinetController extends Controller
             'user' => $user,
             'subscriptions' => $subscriptions,
             'saleKeys' => $saleKeys,
+            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
     }
 
@@ -53,7 +72,31 @@ class CabinetController extends Controller
             'trialKey' => $trialKey,
             'trialDevices' => $trialDevices,
             'canUseTrial' => $user->canUseTrial(),
+            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
+    }
+
+    public function submitTrialFeedback(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'message' => 'required|string|min:3|max:4000',
+        ]);
+
+        TrialFeedback::create([
+            'user_id' => $user->id,
+            'telegram_id' => $user->telegram_id,
+            'telegram_username' => $user->telegram_username,
+            'trigger' => 'cabinet_after_trial',
+            'message' => trim((string) $data['message']),
+        ]);
+
+        TrialFeedbackRequest::query()
+            ->where('user_id', $user->id)
+            ->whereNull('submitted_at')
+            ->update(['submitted_at' => now()]);
+
+        return back()->with('success', 'Спасибо за отзыв! Мы уже передали его команде.');
     }
 
     public function deleteTrialDevice(Request $request, int $deviceId)
@@ -96,6 +139,7 @@ class CabinetController extends Controller
         return view('cabinet.profile', [
             'activeRoute' => 'profile',
             'user' => $request->user(),
+            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($request->user()->id),
         ]);
     }
 
@@ -104,6 +148,7 @@ class CabinetController extends Controller
         return view('cabinet.security', [
             'activeRoute' => 'security',
             'user' => $request->user(),
+            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($request->user()->id),
         ]);
     }
 
@@ -124,6 +169,7 @@ class CabinetController extends Controller
             'plans' => $plans,
             'standardPlans' => $standardPlans,
             'extendedPlans' => $extendedPlans,
+            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
     }
 
@@ -148,6 +194,7 @@ class CabinetController extends Controller
             'user' => $user,
             'subscriptions' => $subscriptions,
             'saleKeys' => $saleKeys,
+            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
     }
 }

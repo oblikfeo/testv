@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $schedule->command('subscriptions:check-expired')->hourly();
         $schedule->command('payments:reconcile-refunds --hours=336')->everyTenMinutes();
+        $schedule->command('trial-feedback:notify')->everyFifteenMinutes();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -114,6 +114,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cabinet/profile', [CabinetController::class, 'profile'])->name('cabinet.profile');
     Route::get('/cabinet/security', [CabinetController::class, 'security'])->name('cabinet.security');
     Route::get('/cabinet/history', [CabinetController::class, 'history'])->name('cabinet.history');
+    Route::post('/cabinet/trial-feedback', [CabinetController::class, 'submitTrialFeedback'])->name('cabinet.trial-feedback.submit');
 
     // Profile update must be available even before email verification,
     // otherwise users cannot change placeholder emails created via Telegram login.

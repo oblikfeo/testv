@@ -8,6 +8,7 @@ use App\Models\KeyOrder;
 use App\Models\Plan;
 use App\Models\SaleKey;
 use App\Models\TrialFeedback;
+use App\Models\TrialFeedbackRequest;
 use App\Models\TrialKey;
 use App\Models\User;
 use App\Services\TrialKeyService;
@@ -372,6 +373,13 @@ class BotApiController extends Controller
             'trigger' => $data['trigger'] ?? 'trial_expired',
             'message' => trim((string) $data['message']),
         ]);
+
+        if ($user) {
+            TrialFeedbackRequest::query()
+                ->where('user_id', $user->id)
+                ->whereNull('submitted_at')
+                ->update(['submitted_at' => now()]);
+        }
 
         return response()->json(['ok' => true]);
     }
