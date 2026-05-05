@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\KeyOrder;
 use App\Models\Plan;
+use App\Models\SaleKey;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
@@ -126,6 +127,19 @@ class YooKassaService
         }
 
         $paymentId = $object['id'] ?? null;
+        if ($event === 'refund.succeeded') {
+            // For refund webhooks YooKassa sends refund object (id/status/payment_id),
+            // not payment metadata. We must resolve order by original payment_id.
+            $paymentId = $object['payment_id'] ?? null;
+            if (! $paymentId) {
+                Log::warning('YooKassa webhook refund: missing payment_id', $data);
+
+                return false;
+            }
+
+            return $this->handleRefundSucceeded($paymentId, $object);
+        }
+
         $status = $object['status'] ?? null;
         $metadata = $object['metadata'] ?? [];
         $orderId = $metadata['order_id'] ?? null;
@@ -152,6 +166,58 @@ class YooKassaService
         if ($event === 'payment.canceled') {
             $order->update(['status' => OrderStatus::Cancelled]);
         }
+
+        return true;
+    }
+
+    protected function handleRefundSucceeded(string $paymentId, array $refundData): bool
+    {
+        $order = KeyOrder::query()->where('payment_id', $paymentId)->first();
+        if (! $order) {
+            Log::error('YooKassa refund: order not found by payment_id', [
+                'payment_id' => $paymentId,
+                'refund_id' => $refundData['id'] ?? null,
+            ]);
+
+            return false;
+        }
+
+        $order->update([
+            'status' => OrderStatus::Cancelled,
+            'payment_status' => 'refunded',
+        ]);
+
+        $subscriptionId = null;
+        if ($order->purchase_action === 'renew_subscription' && $order->target_subscription_id) {
+            $subscriptionId = (int) $order->target_subscription_id;
+        } else {
+            $subscriptionId = SaleKey::query()
+                ->where('key_order_id', $order->id)
+                ->value('subscription_id');
+        }
+
+        if ($subscriptionId) {
+            $subscription = Subscription::query()->find($subscriptionId);
+            if ($subscription) {
+                $subscription->update([
+                    'status' => 'expired',
+                    'expires_at' => now(),
+                ]);
+
+                SaleKey::query()
+                    ->where('subscription_id', $subscription->id)
+                    ->update([
+                        'status' => 'expired',
+                        'expires_at' => now(),
+                    ]);
+            }
+        }
+
+        Log::info('YooKassa refund processed', [
+            'order_id' => $order->id,
+            'payment_id' => $paymentId,
+            'refund_id' => $refundData['id'] ?? null,
+        ]);
 
         return true;
     }
