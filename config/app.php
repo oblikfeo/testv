@@ -20,6 +20,7 @@ return [
     'brand_suffix' => env('APP_BRAND_SUFFIX', 'VPN'),
 
     'telegram_support_url' => env('TELEGRAM_SUPPORT_URL', 'https://t.me/avavpn_ru'),
+    'telegram_channel_url' => env('TELEGRAM_CHANNEL_URL', env('TELEGRAM_SUPPORT_URL', 'https://t.me/avavpn_ru')),
 
     /*
     |--------------------------------------------------------------------------

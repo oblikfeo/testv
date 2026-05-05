@@ -182,6 +182,21 @@
                     <span class="hint">8 часов без оплаты. Карта не нужна.</span>
                 @endauth
             </div>
+            @php
+                $botUsername = (string) (config('services.telegram_bot.username') ?? '');
+                $botUrl = $botUsername !== '' ? 'https://t.me/'.ltrim($botUsername, '@') : null;
+                $channelUrl = (string) config('app.telegram_channel_url');
+            @endphp
+            @if ($channelUrl !== '' || $botUrl)
+                <div class="hero-cta reveal" style="--reveal-delay: 210ms">
+                    @if ($channelUrl !== '')
+                        <a href="{{ $channelUrl }}" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">ТГ-канал</a>
+                    @endif
+                    @if ($botUrl)
+                        <a href="{{ $botUrl }}" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">ТГ-бот</a>
+                    @endif
+                </div>
+            @endif
 
             <ul class="hero-trust reveal" style="--reveal-delay: 240ms" aria-label="Преимущества">
                 <li><span class="trust-check">✓</span> Без логов</li>
