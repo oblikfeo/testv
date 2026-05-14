@@ -7,42 +7,23 @@ use App\Models\TrialKey;
 use App\Support\HappSubscriptionFormatter;
 
 /**
- * Текст подписки и заголовки для Happ / клиентов (trial и платные ключи).
+ * Сборка единого статического фида подписки для Happ / совместимых клиентов.
+ *
+ * Модель «одна подписка для всех»: контент фида одинаков для всех активных подписчиков,
+ * параметры VLESS/Hysteria берутся из config('admin.shared') и config('admin.endpoints').
+ * Персонализирован только заголовок `subscription-userinfo` — лимиты/срок конкретного ключа.
  */
 class SubscriptionFeedBuilder
 {
-    public function __construct(
-        protected TrialKeyService $trialKeyService,
-        protected SaleKeyService $saleKeyService
-    ) {}
-
     public function buildForTrial(TrialKey $trialKey): array
     {
         if (! $trialKey->isActive()) {
             return ['error' => 'Пробный период недоступен', 'code' => 403];
         }
 
-        $this->trialKeyService->syncTrafficFromPanel($trialKey);
-        $trialKey->refresh();
-
-        $inbound = $this->trialKeyService->getInboundSettings($trialKey);
-        if (! $inbound) {
-            return ['error' => 'Ошибка получения настроек', 'code' => 500];
-        }
-
-        $serverIp = config('admin.test_panel.server_ip');
-        $label = HappSubscriptionFormatter::happNodeLabel(
-            (string) (config('admin.test_panel.happ_label') ?? '🇷🇺 Тест')
-        );
-
-        [$line, $err] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
-            $inbound,
-            $trialKey->uuid,
-            $serverIp,
-            $label
-        );
-        if ($err !== null) {
-            return ['error' => $err, 'code' => 500];
+        $body = $this->buildPublicBody();
+        if ($body === '') {
+            return ['error' => 'Подписка не сконфигурирована (admin.endpoints пуст)', 'code' => 500];
         }
 
         $userInfo = HappSubscriptionFormatter::buildUserInfo(
@@ -53,7 +34,7 @@ class SubscriptionFeedBuilder
         );
 
         return [
-            'body' => $line,
+            'body' => $body,
             'user_info' => $userInfo,
             'profile_title' => 'AVA тестовый период',
         ];
@@ -61,66 +42,18 @@ class SubscriptionFeedBuilder
 
     public function buildForSale(SaleKey $saleKey): array
     {
-        $this->saleKeyService->syncTrafficFromPanel($saleKey);
-        $saleKey->refresh();
-
-        if ($saleKey->status !== 'active' || $saleKey->isExpired() || $saleKey->isTrafficExceeded()) {
-            return ['error' => 'Подписка не активна или лимит исчерпан', 'code' => 403];
+        if ($saleKey->status !== 'active' || $saleKey->isExpired()) {
+            return ['error' => 'Подписка не активна', 'code' => 403];
         }
 
         if (! $saleKey->subscription?->isActive()) {
             return ['error' => 'Подписка не активна', 'code' => 403];
         }
 
-        if ($saleKey->is_admin_bundle) {
-            return $this->buildAdminBundleBody($saleKey);
+        $body = $this->buildPublicBody();
+        if ($body === '') {
+            return ['error' => 'Подписка не сконфигурирована (admin.endpoints пуст)', 'code' => 500];
         }
-
-        $panel = $this->saleKeyService->getSalePanelConfig($saleKey->panel_index);
-        $inbound = $this->saleKeyService->getInboundForPanel($saleKey->panel_index, (int) $saleKey->inbound_id);
-        if (! $inbound) {
-            return ['error' => 'Ошибка получения настроек', 'code' => 500];
-        }
-
-        $lines = [];
-        $label1 = $this->happLabelForPanel((int) $saleKey->panel_index);
-        [$line1, $err1] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
-            $inbound,
-            $saleKey->uuid,
-            $panel['server_ip'],
-            $label1
-        );
-        if ($err1 !== null) {
-            return ['error' => $err1, 'code' => 500];
-        }
-        $lines[] = $line1;
-
-        if ($saleKey->is_sponsor && $saleKey->secondary_uuid && $saleKey->secondary_panel_index !== null) {
-            $p2 = $this->saleKeyService->getSalePanelConfig((int) $saleKey->secondary_panel_index);
-            $inbound2 = $this->saleKeyService->getInboundForPanel(
-                (int) $saleKey->secondary_panel_index,
-                (int) $saleKey->secondary_inbound_id
-            );
-            if (! $inbound2) {
-                return [
-                    'error' => 'Нет inbound id='.(int) $saleKey->secondary_inbound_id.' на панели '.(int) $saleKey->secondary_panel_index.' — обновите secondary_inbound_id в БД под панель 3x-ui.',
-                    'code' => 500,
-                ];
-            }
-            $label2 = $this->happLabelForPanel((int) $saleKey->secondary_panel_index);
-            [$line2, $err2] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
-                $inbound2,
-                (string) $saleKey->secondary_uuid,
-                $p2['server_ip'],
-                $label2
-            );
-            if ($err2 !== null) {
-                return ['error' => $err2, 'code' => 500];
-            }
-            $lines[] = $line2;
-        }
-
-        $body = implode("\n", $lines);
 
         $total = $saleKey->total_bytes > 0 ? (int) $saleKey->total_bytes : 0;
         $userInfo = HappSubscriptionFormatter::buildUserInfo(
@@ -138,94 +71,113 @@ class SubscriptionFeedBuilder
     }
 
     /**
-     * Подпись узла в Happ: AVA + флаг + страна (admin.happ_brand + sale_panels.*.happ_label).
+     * Тело публичного фида: одна строка на каждый endpoint в config('admin.endpoints').
+     * Поддерживаемые типы: vless (Reality), hysteria2.
      */
-    protected function happLabelForPanel(int $panelIndex): string
+    public function buildPublicBody(): string
     {
-        $panels = config('admin.sale_panels', []);
-        $base = (string) ($panels[$panelIndex]['happ_label'] ?? ('🌐 '.($panelIndex + 1)));
+        $endpoints = (array) config('admin.endpoints', []);
+        if ($endpoints === []) {
+            return '';
+        }
 
-        return HappSubscriptionFormatter::happNodeLabel($base);
+        $lines = [];
+        foreach ($endpoints as $ep) {
+            $line = $this->endpointLine((array) $ep);
+            if ($line !== '') {
+                $lines[] = $line;
+            }
+        }
+
+        return implode("\n", $lines);
     }
 
     /**
-     * @return array{body: string, user_info: string, profile_title: string}|array{error: string, code: int}
+     * @param  array<string, mixed>  $endpoint
      */
-    protected function buildAdminBundleBody(SaleKey $saleKey): array
+    protected function endpointLine(array $endpoint): string
     {
-        $lines = [];
-        $seenPanelIndex = [];
+        $type = (string) ($endpoint['type'] ?? '');
+        $host = (string) ($endpoint['host'] ?? '');
+        $port = (int) ($endpoint['port'] ?? 0);
+        $label = HappSubscriptionFormatter::happNodeLabel(
+            (string) ($endpoint['happ_label'] ?? '')
+        );
 
-        $appendSaleLine = function (int $panelIndex, string $uuid, int $inboundId) use (&$lines, &$seenPanelIndex): ?string {
-            if (isset($seenPanelIndex[$panelIndex])) {
-                return null;
-            }
-            $seenPanelIndex[$panelIndex] = true;
+        if ($host === '' || $port <= 0) {
+            return '';
+        }
 
-            $panel = $this->saleKeyService->getSalePanelConfig($panelIndex);
-            $inbound = $this->saleKeyService->getInboundForPanel($panelIndex, $inboundId);
-            if (! $inbound) {
-                return 'Нет inbound на панели '.$panelIndex;
-            }
-
-            $label = $this->happLabelForPanel($panelIndex);
-            [$line, $err] = HappSubscriptionFormatter::vlessLineFromInboundOrError(
-                $inbound,
-                $uuid,
-                $panel['server_ip'],
-                $label
-            );
-            if ($err !== null) {
-                return $err;
-            }
-            $lines[] = $line;
-
-            return null;
+        return match ($type) {
+            'vless' => $this->vlessLine($host, $port, $label),
+            'hysteria2', 'hy2', 'hysteria' => $this->hysteriaLine($host, $port, $label),
+            default => '',
         };
+    }
 
-        if (! $saleKey->admin_primary_is_test) {
-            $e = $appendSaleLine((int) $saleKey->panel_index, (string) $saleKey->uuid, (int) $saleKey->inbound_id);
-            if ($e !== null) {
-                return ['error' => $e, 'code' => 500];
-            }
+    protected function vlessLine(string $host, int $port, string $label): string
+    {
+        $shared = (array) config('admin.shared', []);
+        $uuid = (string) ($shared['vless_uuid'] ?? '');
+        $pbk = (string) ($shared['reality_pbk'] ?? '');
+        $sid = (string) ($shared['reality_sid'] ?? '');
+        $sni = (string) ($shared['reality_sni'] ?? 'www.cloudflare.com');
+        $fp = (string) ($shared['reality_fp'] ?? 'chrome');
+        $flow = (string) ($shared['reality_flow'] ?? 'xtls-rprx-vision');
+
+        if ($uuid === '' || $pbk === '') {
+            return '';
         }
 
-        foreach ($saleKey->bundle_endpoints ?? [] as $ep) {
-            $type = $ep['t'] ?? 'sale';
-            if ($type === 'test') {
-                continue;
-            }
-            if ($type !== 'sale') {
-                continue;
-            }
-
-            $e = $appendSaleLine(
-                (int) ($ep['i'] ?? 0),
-                (string) ($ep['uuid'] ?? ''),
-                (int) ($ep['inbound_id'] ?? 0)
-            );
-            if ($e !== null) {
-                return ['error' => $e, 'code' => 500];
-            }
-        }
-
-        if ($lines === []) {
-            return ['error' => 'Ошибка: в подписке нет ни одного сервера продаж (проверьте ключи на панелях или перевыдайте подписку)', 'code' => 500];
-        }
-
-        $body = implode("\n", $lines);
-        $total = $saleKey->total_bytes > 0 ? (int) $saleKey->total_bytes : 0;
-        $userInfo = HappSubscriptionFormatter::buildUserInfo(
-            0,
-            (int) $saleKey->used_bytes,
-            $total,
-            $saleKey->expires_at->timestamp
-        );
-
-        return [
-            'body' => $body,
-            'user_info' => $userInfo,
-            'profile_title' => 'AVA VPN',
+        $params = [
+            'type' => 'tcp',
+            'security' => 'reality',
+            'encryption' => 'none',
+            'fp' => $fp,
+            'pbk' => $pbk,
+            'sid' => $sid,
+            'sni' => $sni,
+            'flow' => $flow,
         ];
+
+        return sprintf(
+            'vless://%s@%s:%d?%s#%s',
+            $uuid,
+            $host,
+            $port,
+            http_build_query($params, '', '&', PHP_QUERY_RFC3986),
+            rawurlencode($label)
+        );
+    }
+
+    protected function hysteriaLine(string $host, int $port, string $label): string
+    {
+        $shared = (array) config('admin.shared', []);
+        $password = (string) ($shared['hysteria_password'] ?? '');
+        $obfs = (string) ($shared['hysteria_obfs'] ?? 'salamander');
+        $obfsPassword = (string) ($shared['hysteria_obfs_password'] ?? '');
+        $sni = (string) ($shared['reality_sni'] ?? 'www.cloudflare.com');
+
+        if ($password === '') {
+            return '';
+        }
+
+        $params = [
+            'sni' => $sni,
+            'insecure' => '0',
+        ];
+        if ($obfsPassword !== '') {
+            $params['obfs'] = $obfs;
+            $params['obfs-password'] = $obfsPassword;
+        }
+
+        return sprintf(
+            'hysteria2://%s@%s:%d/?%s#%s',
+            rawurlencode($password),
+            $host,
+            $port,
+            http_build_query($params, '', '&', PHP_QUERY_RFC3986),
+            rawurlencode($label)
+        );
     }
 }

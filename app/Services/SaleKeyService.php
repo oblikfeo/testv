@@ -5,12 +5,19 @@ namespace App\Services;
 use App\Models\KeyOrder;
 use App\Models\Plan;
 use App\Models\SaleKey;
-use App\Models\Setting;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+/**
+ * Работа с записями SaleKey в БД.
+ *
+ * Модель «общая подписка для всех»: фид VLESS+Hysteria — статический из config('admin.endpoints').
+ * SaleKey хранит только метаданные (срок, soft-квоту, sub_id), без обращения к 3x-ui.
+ * Поля panel_index/inbound_id/uuid/email сохраняем для обратной совместимости (миграции,
+ * админка, отчёты) — заполняем sentinel-значениями.
+ */
 class SaleKeyService
 {
     public const SPONSOR_PLAN_SLUG = 'sponsor-bundle';
@@ -19,36 +26,12 @@ class SaleKeyService
 
     public const MAX_SPONSOR_KEYS = 10;
 
-    public function __construct(
-        protected XuiApiService $xuiApi
-    ) {}
-
-    /**
-     * @return array{url: string, username: string, password: string, server_ip: string}
-     */
-    public function getSalePanelConfig(int $panelIndex): array
-    {
-        $panels = config('admin.sale_panels', []);
-        if (! isset($panels[$panelIndex])) {
-            throw new \InvalidArgumentException('Неизвестная связка: '.$panelIndex);
-        }
-
-        return $panels[$panelIndex];
-    }
-
-    public function getActiveSalePanelIndex(): int
-    {
-        $v = Setting::get('active_sale_panel', '0');
-
-        return (int) $v;
-    }
+    public const SHARED_UUID_FALLBACK = '00000000-0000-0000-0000-000000000000';
 
     public function totalBytesFromPlan(Plan $plan): int
     {
         $gb = (int) ($plan->traffic_gb ?? 0);
         if ($gb <= 0) {
-            // Для служебных тарифов 0 = безлимит на панели. Для обычных планов 0 в БД обычно ошибка
-            // (в 3x-ui totalGB=0 тоже даёт безлимит) — подставляем лимит из config.
             if (in_array($plan->slug, [self::SPONSOR_PLAN_SLUG, self::ADMIN_FRIENDS_PLAN_SLUG], true)) {
                 return 0;
             }
@@ -65,6 +48,7 @@ class SaleKeyService
 
     /**
      * После успешной оплаты: продление существующего ключа или создание нового.
+     * В новой модели — только запись в БД, без обращений к 3x-ui.
      */
     public function syncAfterSuccessfulPayment(User $user, Subscription $subscription, Plan $plan, KeyOrder $order): void
     {
@@ -87,195 +71,24 @@ class SaleKeyService
             }
         }
 
-        $panelIndex = $this->getActiveSalePanelIndex();
-        $saleKey = $this->createSaleKeyOnPanel($user, $subscription, $plan, $order, $panelIndex, false);
-
+        $saleKey = $this->createSaleKeyRecord($user, $subscription, $plan, $order, false);
         $order->update(['sale_key_id' => $saleKey->id]);
     }
 
     public function extendSaleKey(SaleKey $saleKey, Subscription $subscription, Plan $plan): void
     {
         $totalBytes = $this->totalBytesFromPlan($plan);
-        $expiryMs = (int) round($subscription->expires_at->timestamp * 1000);
 
         $saleKey->update([
             'expires_at' => $subscription->expires_at,
             'total_bytes' => $totalBytes > 0 ? $totalBytes : $saleKey->total_bytes,
             'status' => 'active',
         ]);
-
-        if ($saleKey->is_admin_bundle) {
-            $this->extendAdminBundleEndpoints($saleKey, $subscription, $plan, $totalBytes, $expiryMs);
-
-            return;
-        }
-
-        $panel = $this->getSalePanelConfig($saleKey->panel_index);
-        $clientPayload = $this->buildClientPayload(
-            $subscription,
-            $plan,
-            $saleKey->email,
-            $saleKey->uuid,
-            $saleKey->sub_id,
-            $expiryMs,
-            $totalBytes
-        );
-
-        $result = $this->xuiApi->updateClient(
-            $panel['url'],
-            $panel['username'],
-            $panel['password'],
-            (int) $saleKey->inbound_id,
-            $clientPayload
-        );
-
-        if (empty($result['success'])) {
-            Log::error('SaleKey extend failed', [
-                'sale_key_id' => $saleKey->id,
-                'msg' => $result['msg'] ?? null,
-            ]);
-        }
-
-        if ($saleKey->is_sponsor && $saleKey->secondary_uuid && $saleKey->secondary_panel_index !== null) {
-            $panel2 = $this->getSalePanelConfig((int) $saleKey->secondary_panel_index);
-            $result2 = $this->xuiApi->updateClient(
-                $panel2['url'],
-                $panel2['username'],
-                $panel2['password'],
-                (int) $saleKey->secondary_inbound_id,
-                $this->buildClientPayload(
-                    $subscription,
-                    $plan,
-                    (string) $saleKey->secondary_email,
-                    (string) $saleKey->secondary_uuid,
-                    (string) $saleKey->sub_id,
-                    $expiryMs,
-                    $totalBytes
-                )
-            );
-            if (empty($result2['success'])) {
-                Log::error('SaleKey sponsor secondary extend failed', [
-                    'sale_key_id' => $saleKey->id,
-                    'msg' => $result2['msg'] ?? null,
-                ]);
-            }
-        }
-    }
-
-    public function createSaleKeyOnPanel(
-        User $user,
-        Subscription $subscription,
-        Plan $plan,
-        ?KeyOrder $order,
-        int $panelIndex,
-        bool $isSponsor,
-        ?int $secondaryPanelIndex = null
-    ): SaleKey {
-        $panel = $this->getSalePanelConfig($panelIndex);
-        $email = 'sale-'.$user->id.'-'.time().'-'.Str::random(4);
-        $uuid = Str::uuid()->toString();
-        $subId = Str::random(16);
-
-        $inbounds = $this->xuiApi->getInbounds($panel['url'], $panel['username'], $panel['password']);
-        if (empty($inbounds['obj'][0])) {
-            throw new \RuntimeException('Нет inbound на связке '.$panelIndex);
-        }
-
-        $inboundId = (int) $inbounds['obj'][0]['id'];
-        $expiryMs = (int) round($subscription->expires_at->timestamp * 1000);
-        $totalBytes = $this->totalBytesFromPlan($plan);
-
-        $clientPayload = $this->buildClientPayload(
-            $subscription,
-            $plan,
-            $email,
-            $uuid,
-            $subId,
-            $expiryMs,
-            $totalBytes
-        );
-
-        $result = $this->xuiApi->addClient(
-            $panel['url'],
-            $panel['username'],
-            $panel['password'],
-            $inboundId,
-            $clientPayload
-        );
-
-        if (empty($result['success'])) {
-            throw new \RuntimeException($result['msg'] ?? 'Ошибка addClient на панели');
-        }
-
-        $secondaryUuid = null;
-        $secondaryEmail = null;
-        $secondarySubId = null;
-        $secondaryInboundId = null;
-
-        if ($isSponsor && $secondaryPanelIndex !== null && $secondaryPanelIndex !== $panelIndex) {
-            $panel2 = $this->getSalePanelConfig($secondaryPanelIndex);
-            $email2 = 'sale-'.$user->id.'-'.time().'-s-'.Str::random(4);
-            $secondaryUuid = Str::uuid()->toString();
-            // Один и тот же subId на обеих панелях — одна подписка Happ по URL, два UUID (как в 3x-ui для одной группы).
-            $secondarySubId = $subId;
-
-            $inbounds2 = $this->xuiApi->getInbounds($panel2['url'], $panel2['username'], $panel2['password']);
-            if (empty($inbounds2['obj'][0])) {
-                throw new \RuntimeException('Нет inbound на второй связке');
-            }
-
-            $inboundId2 = (int) $inbounds2['obj'][0]['id'];
-            $client2 = $this->buildClientPayload(
-                $subscription,
-                $plan,
-                $email2,
-                $secondaryUuid,
-                $secondarySubId,
-                $expiryMs,
-                $totalBytes
-            );
-
-            $r2 = $this->xuiApi->addClient(
-                $panel2['url'],
-                $panel2['username'],
-                $panel2['password'],
-                $inboundId2,
-                $client2
-            );
-
-            if (empty($r2['success'])) {
-                throw new \RuntimeException($r2['msg'] ?? 'Ошибка addClient на второй панели');
-            }
-
-            $secondaryEmail = $email2;
-            $secondaryInboundId = $inboundId2;
-        }
-
-        return SaleKey::create([
-            'user_id' => $user->id,
-            'subscription_id' => $subscription->id,
-            'key_order_id' => $order?->id,
-            'panel_index' => $panelIndex,
-            'uuid' => $uuid,
-            'email' => $email,
-            'sub_id' => $subId,
-            'inbound_id' => $inboundId,
-            'total_bytes' => $totalBytes,
-            'used_bytes' => 0,
-            'expires_at' => $subscription->expires_at,
-            'activated_at' => now(),
-            'is_sponsor' => $isSponsor,
-            'secondary_panel_index' => $secondaryPanelIndex,
-            'secondary_uuid' => $secondaryUuid,
-            'secondary_email' => $secondaryEmail,
-            'secondary_sub_id' => $secondarySubId,
-            'secondary_inbound_id' => $secondaryInboundId,
-            'status' => 'active',
-        ]);
     }
 
     /**
-     * Спонсорская подписка: две связки, один URL подписки (primary sub_id), в теле — два VLESS.
+     * Спонсорская подписка: в старой модели — две связки, два UUID. В новой — одна запись SaleKey,
+     * фид общий (5 endpoint'ов). Поле is_sponsor сохраняем для совместимости и админ-отчётов.
      */
     public function createSponsorBundle(User $user, int $days, int $trafficGb, int $maxDevices = 5): SaleKey
     {
@@ -301,25 +114,12 @@ class SaleKeyService
         $planOverride = clone $plan;
         $planOverride->traffic_gb = $trafficGb;
 
-        $primaryIndex = 0;
-        $secondaryIndex = 1;
-        if (count(config('admin.sale_panels', [])) < 2) {
-            throw new \RuntimeException('Нужны две связки в config admin.sale_panels');
-        }
-
-        return $this->createSaleKeyOnPanel(
-            $user,
-            $subscription,
-            $planOverride,
-            null,
-            $primaryIndex,
-            true,
-            $secondaryIndex
-        );
+        return $this->createSaleKeyRecord($user, $subscription, $planOverride, null, true);
     }
 
     /**
-     * Одна глобальная подписка: только связки продаж (sale_panels), без тестовой панели. Один URL Happ.
+     * Подписка «полный доступ»: одна запись SaleKey, общий фид (как у всех).
+     * Сохраняем is_admin_bundle=true для отображения в админке.
      */
     public function createAdminFriendsBundle(User $user, int $days, int $trafficGb, int $maxDevices = 10): SaleKey
     {
@@ -341,145 +141,23 @@ class SaleKeyService
         $planOverride = clone $plan;
         $planOverride->traffic_gb = $trafficGb;
 
-        $expiryMs = (int) round($subscription->expires_at->timestamp * 1000);
-        $totalBytes = $this->totalBytesFromPlan($planOverride);
-
-        $targets = [];
-        foreach (array_keys(config('admin.sale_panels', [])) as $idx) {
-            $targets[] = ['t' => 'sale', 'i' => (int) $idx];
-        }
-
-        if ($targets === []) {
-            throw new \RuntimeException('Нет панелей в config admin');
-        }
-
-        if (count($targets) < 2) {
-            throw new \RuntimeException(
-                'Подписка «все серверы» требует минимум две панели в admin.sale_panels (NL + FR и т.д.).'
-            );
-        }
-
-        $sharedSubId = Str::random(16);
-        $extras = [];
-        $saleKey = null;
-
-        foreach ($targets as $pos => $target) {
-            $panel = $target['t'] === 'sale'
-                ? $this->getSalePanelConfig((int) $target['i'])
-                : $this->getTestPanelConfig();
-
-            $email = 'bundle-'.$user->id.'-'.$pos.'-'.time();
-            $uuid = Str::uuid()->toString();
-
-            $inbounds = $this->xuiApi->getInbounds($panel['url'], $panel['username'], $panel['password']);
-            if (empty($inbounds['obj'][0])) {
-                throw new \RuntimeException('Нет inbound на панели '.$target['t']);
-            }
-
-            $inboundId = (int) $inbounds['obj'][0]['id'];
-
-            $payload = $this->buildClientPayload(
-                $subscription,
-                $planOverride,
-                $email,
-                $uuid,
-                $sharedSubId,
-                $expiryMs,
-                $totalBytes
-            );
-
-            $result = $this->xuiApi->addClient(
-                $panel['url'],
-                $panel['username'],
-                $panel['password'],
-                $inboundId,
-                $payload
-            );
-
-            if (empty($result['success'])) {
-                throw new \RuntimeException($result['msg'] ?? 'Ошибка addClient: '.$target['t']);
-            }
-
-            if ($saleKey === null) {
-                $panelIndex = $target['t'] === 'sale' ? (int) $target['i'] : 0;
-
-                $saleKey = SaleKey::create([
-                    'user_id' => $user->id,
-                    'subscription_id' => $subscription->id,
-                    'key_order_id' => null,
-                    'panel_index' => $panelIndex,
-                    'uuid' => $uuid,
-                    'email' => $email,
-                    'sub_id' => $sharedSubId,
-                    'inbound_id' => $inboundId,
-                    'total_bytes' => $totalBytes,
-                    'used_bytes' => 0,
-                    'expires_at' => $subscription->expires_at,
-                    'activated_at' => now(),
-                    'is_sponsor' => false,
-                    'is_admin_bundle' => true,
-                    'admin_primary_is_test' => $target['t'] === 'test',
-                    'secondary_panel_index' => null,
-                    'secondary_uuid' => null,
-                    'secondary_email' => null,
-                    'secondary_sub_id' => null,
-                    'secondary_inbound_id' => null,
-                    'bundle_endpoints' => [],
-                    'status' => 'active',
-                ]);
-            } else {
-                $extras[] = [
-                    't' => $target['t'],
-                    'i' => $target['i'],
-                    'uuid' => $uuid,
-                    'email' => $email,
-                    'inbound_id' => $inboundId,
-                ];
-            }
-        }
-
-        if ($saleKey === null) {
-            throw new \RuntimeException('Не создана запись ключа (первая панель недоступна?).');
-        }
-
-        if (count($extras) !== count($targets) - 1) {
-            throw new \RuntimeException(
-                'Созданы не все клиенты на панелях: ожидалось '.count($targets).' точек, доп. записей '.count($extras).'.'
-            );
-        }
-
-        $saleKey->update(['bundle_endpoints' => $extras]);
-
-        return $saleKey->fresh();
+        return $this->createSaleKeyRecord(
+            $user,
+            $subscription,
+            $planOverride,
+            null,
+            false,
+            isAdminBundle: true,
+        );
     }
 
     /**
-     * Снять спонсорскую подписку: удалить клиентов с обеих панелей и запись в БД.
+     * Снять спонсорскую подписку.
      */
     public function revokeSponsorBundle(SaleKey $saleKey): void
     {
         if (! $saleKey->is_sponsor) {
             throw new \InvalidArgumentException('Не спонсорская подписка');
-        }
-
-        $panel = $this->getSalePanelConfig($saleKey->panel_index);
-        $this->xuiApi->deleteClient(
-            $panel['url'],
-            $panel['username'],
-            $panel['password'],
-            (int) $saleKey->inbound_id,
-            $saleKey->uuid
-        );
-
-        if ($saleKey->secondary_uuid && $saleKey->secondary_panel_index !== null) {
-            $p2 = $this->getSalePanelConfig((int) $saleKey->secondary_panel_index);
-            $this->xuiApi->deleteClient(
-                $p2['url'],
-                $p2['username'],
-                $p2['password'],
-                (int) $saleKey->secondary_inbound_id,
-                (string) $saleKey->secondary_uuid
-            );
         }
 
         $subscription = $saleKey->subscription;
@@ -493,32 +171,6 @@ class SaleKeyService
             throw new \InvalidArgumentException('Не админская подписка');
         }
 
-        $primaryPanel = $saleKey->admin_primary_is_test
-            ? $this->getTestPanelConfig()
-            : $this->getSalePanelConfig($saleKey->panel_index);
-
-        $this->xuiApi->deleteClient(
-            $primaryPanel['url'],
-            $primaryPanel['username'],
-            $primaryPanel['password'],
-            (int) $saleKey->inbound_id,
-            $saleKey->uuid
-        );
-
-        foreach ($saleKey->bundle_endpoints ?? [] as $ep) {
-            $p = ($ep['t'] ?? '') === 'test'
-                ? $this->getTestPanelConfig()
-                : $this->getSalePanelConfig((int) ($ep['i'] ?? 0));
-
-            $this->xuiApi->deleteClient(
-                $p['url'],
-                $p['username'],
-                $p['password'],
-                (int) ($ep['inbound_id'] ?? 0),
-                (string) ($ep['uuid'] ?? '')
-            );
-        }
-
         $subscription = $saleKey->subscription;
         $saleKey->delete();
         $subscription?->delete();
@@ -530,26 +182,98 @@ class SaleKeyService
             return;
         }
 
-        try {
-            $panel = $this->getSalePanelConfig((int) $saleKey->panel_index);
-            $this->xuiApi->deleteClient(
-                $panel['url'],
-                $panel['username'],
-                $panel['password'],
-                (int) $saleKey->inbound_id,
-                (string) $saleKey->uuid
-            );
-        } catch (\Throwable $e) {
-            Log::warning('Retail sale key panel deactivation failed', [
-                'sale_key_id' => $saleKey->id,
-                'message' => $e->getMessage(),
-            ]);
-        }
-
         $saleKey->update([
             'status' => 'expired',
             'expires_at' => now(),
         ]);
+    }
+
+    /**
+     * Совместимость со старым кодом: точный учёт трафика по пользователю невозможен,
+     * пока UUID общий для всех. Метод оставлен no-op'ом.
+     */
+    public function syncTrafficFromPanel(SaleKey $saleKey): void
+    {
+        // no-op: общий UUID, агрегированный трафик в 3x-ui не делится на пользователей.
+    }
+
+    /**
+     * Создаёт запись SaleKey с sentinel-полями panel_index/inbound_id/uuid/email,
+     * чтобы существующие индексы / NOT NULL не падали.
+     */
+    protected function createSaleKeyRecord(
+        User $user,
+        Subscription $subscription,
+        Plan $plan,
+        ?KeyOrder $order,
+        bool $isSponsor,
+        bool $isAdminBundle = false,
+    ): SaleKey {
+        $sharedUuid = (string) config('admin.shared.vless_uuid', '');
+        if ($sharedUuid === '') {
+            $sharedUuid = self::SHARED_UUID_FALLBACK;
+            Log::warning('SaleKeyService: SHARED_VLESS_UUID не задан — использован fallback UUID', [
+                'user_id' => $user->id,
+                'subscription_id' => $subscription->id,
+            ]);
+        }
+
+        $totalBytes = $this->totalBytesFromPlan($plan);
+        $subId = Str::random(16);
+        $email = 'sale-'.$user->id.'-'.time().'-'.Str::random(4);
+
+        return SaleKey::create([
+            'user_id' => $user->id,
+            'subscription_id' => $subscription->id,
+            'key_order_id' => $order?->id,
+            'panel_index' => 0,
+            'uuid' => $sharedUuid,
+            'email' => $email,
+            'sub_id' => $subId,
+            'inbound_id' => 0,
+            'total_bytes' => $totalBytes,
+            'used_bytes' => 0,
+            'expires_at' => $subscription->expires_at,
+            'activated_at' => now(),
+            'is_sponsor' => $isSponsor,
+            'secondary_panel_index' => null,
+            'secondary_uuid' => null,
+            'secondary_email' => null,
+            'secondary_sub_id' => null,
+            'secondary_inbound_id' => null,
+            'is_admin_bundle' => $isAdminBundle,
+            'admin_primary_is_test' => false,
+            'bundle_endpoints' => [],
+            'status' => 'active',
+        ]);
+    }
+
+    /* ---------------------------------------------------------------------
+     * Заглушки старых методов, оставлены для обратной совместимости
+     * (вызовы из админки и админ-команд проходят без ошибок).
+     * --------------------------------------------------------------------- */
+
+    public function getActiveSalePanelIndex(): int
+    {
+        return 0;
+    }
+
+    /**
+     * @return array{url: string, username: string, password: string, server_ip: string}
+     */
+    public function getSalePanelConfig(int $panelIndex): array
+    {
+        $panels = config('admin.sale_panels', []);
+        if (isset($panels[$panelIndex])) {
+            return $panels[$panelIndex];
+        }
+
+        return [
+            'url' => '',
+            'username' => '',
+            'password' => '',
+            'server_ip' => '',
+        ];
     }
 
     /**
@@ -558,164 +282,22 @@ class SaleKeyService
     public function getTestPanelConfig(): array
     {
         $t = config('admin.test_panel', []);
-        if (empty($t['url'])) {
-            throw new \RuntimeException('Не задан admin.test_panel');
-        }
-
-        return $t;
-    }
-
-    protected function extendAdminBundleEndpoints(
-        SaleKey $saleKey,
-        Subscription $subscription,
-        Plan $plan,
-        int $totalBytes,
-        int $expiryMs
-    ): void {
-        $primaryPanel = $saleKey->admin_primary_is_test
-            ? $this->getTestPanelConfig()
-            : $this->getSalePanelConfig($saleKey->panel_index);
-
-        $payload = $this->buildClientPayload(
-            $subscription,
-            $plan,
-            $saleKey->email,
-            $saleKey->uuid,
-            $saleKey->sub_id,
-            $expiryMs,
-            $totalBytes
-        );
-
-        $r = $this->xuiApi->updateClient(
-            $primaryPanel['url'],
-            $primaryPanel['username'],
-            $primaryPanel['password'],
-            (int) $saleKey->inbound_id,
-            $payload
-        );
-        if (empty($r['success'])) {
-            Log::error('Admin bundle primary extend failed', ['id' => $saleKey->id, 'msg' => $r['msg'] ?? null]);
-        }
-
-        foreach ($saleKey->bundle_endpoints ?? [] as $ep) {
-            $p = ($ep['t'] ?? '') === 'test'
-                ? $this->getTestPanelConfig()
-                : $this->getSalePanelConfig((int) ($ep['i'] ?? 0));
-
-            $payloadEp = $this->buildClientPayload(
-                $subscription,
-                $plan,
-                (string) ($ep['email'] ?? ''),
-                (string) ($ep['uuid'] ?? ''),
-                $saleKey->sub_id,
-                $expiryMs,
-                $totalBytes
-            );
-
-            $r2 = $this->xuiApi->updateClient(
-                $p['url'],
-                $p['username'],
-                $p['password'],
-                (int) ($ep['inbound_id'] ?? 0),
-                $payloadEp
-            );
-            if (empty($r2['success'])) {
-                Log::error('Admin bundle endpoint extend failed', ['sale_key_id' => $saleKey->id, 'msg' => $r2['msg'] ?? null]);
-            }
-        }
-    }
-
-    public function getInboundForTestPanel(?int $inboundIdFilter = null): ?array
-    {
-        $panel = $this->getTestPanelConfig();
-        $inbounds = $this->xuiApi->getInbounds($panel['url'], $panel['username'], $panel['password']);
-        if (empty($inbounds['obj'])) {
-            return null;
-        }
-
-        foreach ($inbounds['obj'] as $inbound) {
-            if ($inboundIdFilter === null || (int) $inbound['id'] === $inboundIdFilter) {
-                return $inbound;
-            }
-        }
-
-        return $inbounds['obj'][0] ?? null;
-    }
-
-    protected function buildClientPayload(
-        Subscription $subscription,
-        Plan $plan,
-        string $email,
-        string $uuid,
-        string $subId,
-        int $expiryTimeMs,
-        int $totalBytes
-    ): array {
-        $limitIp = max(1, (int) ($subscription->max_devices ?? $plan->devices));
 
         return [
-            'id' => $uuid,
-            'email' => $email,
-            'enable' => true,
-            'expiryTime' => $expiryTimeMs,
-            'totalGB' => $totalBytes,
-            'limitIp' => $limitIp,
-            'flow' => 'xtls-rprx-vision',
-            'subId' => $subId,
-            'tgId' => '',
-            'reset' => 0,
+            'url' => (string) ($t['url'] ?? ''),
+            'username' => (string) ($t['username'] ?? ''),
+            'password' => (string) ($t['password'] ?? ''),
+            'server_ip' => (string) ($t['server_ip'] ?? ''),
         ];
-    }
-
-    public function syncTrafficFromPanel(SaleKey $saleKey): void
-    {
-        try {
-            if ($saleKey->is_admin_bundle && $saleKey->admin_primary_is_test) {
-                $panel = $this->getTestPanelConfig();
-            } else {
-                $panel = $this->getSalePanelConfig($saleKey->panel_index);
-            }
-            $this->applyTrafficForEmail($panel, $saleKey->email, $saleKey);
-        } catch (\Throwable $e) {
-            Log::warning('SaleKey syncTraffic', ['id' => $saleKey->id, 'e' => $e->getMessage()]);
-        }
-    }
-
-    protected function applyTrafficForEmail(array $panel, string $email, SaleKey $saleKey): void
-    {
-        $inbounds = $this->xuiApi->getInbounds($panel['url'], $panel['username'], $panel['password']);
-        if (empty($inbounds['obj'])) {
-            return;
-        }
-
-        foreach ($inbounds['obj'] as $inbound) {
-            foreach ($inbound['clientStats'] ?? [] as $client) {
-                if (($client['email'] ?? '') === $email) {
-                    $saleKey->update([
-                        'used_bytes' => (int) (($client['up'] ?? 0) + ($client['down'] ?? 0)),
-                    ]);
-
-                    return;
-                }
-            }
-        }
     }
 
     public function getInboundForPanel(int $panelIndex, ?int $inboundIdFilter = null): ?array
     {
-        $panel = $this->getSalePanelConfig($panelIndex);
-        $inbounds = $this->xuiApi->getInbounds($panel['url'], $panel['username'], $panel['password']);
-        if (empty($inbounds['obj'])) {
-            return null;
-        }
+        return null;
+    }
 
-        foreach ($inbounds['obj'] as $inbound) {
-            if ($inboundIdFilter === null || (int) $inbound['id'] === $inboundIdFilter) {
-                return $inbound;
-            }
-        }
-
-        // Не подставляем «первый попавшийся» inbound: иначе в VLESS попадут чужие Reality/port при устаревшем inbound_id в БД.
+    public function getInboundForTestPanel(?int $inboundIdFilter = null): ?array
+    {
         return null;
     }
 }

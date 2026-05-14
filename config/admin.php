@@ -8,10 +8,78 @@ return [
     'happ_brand' => env('HAPP_BRAND', 'AVA'),
 
     /**
-     * Если у активного розничного тарифа в БД traffic_gb = 0, на панель уходит totalGB=0 (безлимит).
-     * Подставка ГБ для панели (sponsor / admin-friends с 0 не трогаем). 0 = не подставлять.
+     * Если у активного розничного тарифа в БД traffic_gb = 0, для подписки показывается
+     * этот объём (информационно, в subscription-userinfo). 0 = безлимит.
      */
     'default_retail_traffic_gb' => (int) env('DEFAULT_RETAIL_TRAFFIC_GB', 100),
+
+    /**
+     * Общие параметры VLESS Reality / Hysteria2, одинаковые на всех узлах.
+     * Один UUID и один Hysteria-пароль для всей инфры — модель «общая подписка для всех».
+     * Контроль срока подписки на стороне сайта (/sub/{sub_id} отдаёт 403 после expires_at).
+     */
+    'shared' => [
+        'vless_uuid' => env('SHARED_VLESS_UUID', ''),
+        'reality_pbk' => env('SHARED_REALITY_PBK', ''),
+        'reality_sid' => env('SHARED_REALITY_SID', ''),
+        'reality_sni' => env('SHARED_REALITY_SNI', 'www.cloudflare.com'),
+        'reality_fp' => env('SHARED_REALITY_FP', 'chrome'),
+        'reality_flow' => env('SHARED_REALITY_FLOW', 'xtls-rprx-vision'),
+        'hysteria_password' => env('SHARED_HYSTERIA_PASSWORD', ''),
+        'hysteria_obfs_password' => env('SHARED_HYSTERIA_OBFS_PASSWORD', ''),
+        'hysteria_obfs' => env('SHARED_HYSTERIA_OBFS', 'salamander'),
+    ],
+
+    /**
+     * Endpoint'ы подписки. Каждый элемент — одна строка в фиде Happ.
+     * type = vless | hysteria2. Имя узла берётся из happ_brand + happ_label.
+     */
+    'endpoints' => [
+        [
+            'key' => 'vless-yandex-nl',
+            'type' => 'vless',
+            'happ_label' => env('NODE_A_HAPP_LABEL', '🇳🇱 Нидерланды'),
+            'host' => env('NODE_A_HOST', '158.160.229.195'),
+            'port' => (int) env('NODE_A_VLESS_PORT', 443),
+        ],
+        [
+            'key' => 'vless-nl',
+            'type' => 'vless',
+            'happ_label' => env('NODE_C_HAPP_LABEL', '🇳🇱 Нидерланды Direct'),
+            'host' => env('NODE_C_HOST', '82.23.162.45'),
+            'port' => (int) env('NODE_C_VLESS_PORT', 443),
+        ],
+        [
+            'key' => 'hy-fr',
+            'type' => 'hysteria2',
+            'happ_label' => env('NODE_D_HAPP_LABEL', '🇫🇷 Франция'),
+            'host' => env('NODE_D_HOST', '82.22.50.114'),
+            'port' => (int) env('NODE_D_HYSTERIA_PORT', 8443),
+        ],
+        [
+            'key' => 'vless-new',
+            'type' => 'vless',
+            'happ_label' => env('NODE_E_VLESS_HAPP_LABEL', '🌐 Резерв VLESS'),
+            'host' => env('NODE_E_HOST', '185.214.108.78'),
+            'port' => (int) env('NODE_E_VLESS_PORT', 443),
+        ],
+        [
+            'key' => 'hy-new',
+            'type' => 'hysteria2',
+            'happ_label' => env('NODE_E_HYSTERIA_HAPP_LABEL', '🌐 Резерв Hysteria'),
+            'host' => env('NODE_E_HOST', '185.214.108.78'),
+            'port' => (int) env('NODE_E_HYSTERIA_PORT', 8443),
+        ],
+    ],
+
+    /**
+     * Профиль триала: показываем «осталось 5 ГБ» в subscription-userinfo (soft-лимит, не блочим),
+     * а по таймеру 3 часа /sub/{sub_id} отдаёт 403.
+     */
+    'trial' => [
+        'duration_hours' => (int) env('TRIAL_DURATION_HOURS', 3),
+        'soft_quota_gb' => (int) env('TRIAL_SOFT_QUOTA_GB', 5),
+    ],
 
     'test_panel' => [
         'url' => env('TEST_PANEL_URL', ''),
