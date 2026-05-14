@@ -28,6 +28,9 @@ return [
         'hysteria_password' => env('SHARED_HYSTERIA_PASSWORD', ''),
         'hysteria_obfs_password' => env('SHARED_HYSTERIA_OBFS_PASSWORD', ''),
         'hysteria_obfs' => env('SHARED_HYSTERIA_OBFS', 'salamander'),
+        'hysteria_sni' => env('SHARED_HYSTERIA_SNI', env('SHARED_REALITY_SNI', 'www.cloudflare.com')),
+        // 1 -- клиент пропускает self-signed TLS (нужно для cert'ов под IP). 0 -- строгий чек.
+        'hysteria_insecure' => (int) env('SHARED_HYSTERIA_INSECURE', 1),
     ],
 
     /**

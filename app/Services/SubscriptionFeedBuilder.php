@@ -156,7 +156,10 @@ class SubscriptionFeedBuilder
         $password = (string) ($shared['hysteria_password'] ?? '');
         $obfs = (string) ($shared['hysteria_obfs'] ?? 'salamander');
         $obfsPassword = (string) ($shared['hysteria_obfs_password'] ?? '');
-        $sni = (string) ($shared['reality_sni'] ?? 'www.cloudflare.com');
+        $sni = (string) ($shared['hysteria_sni'] ?? $shared['reality_sni'] ?? 'www.cloudflare.com');
+        // По умолчанию insecure=1: на standalone Hysteria-узлах сертификат для IP самоподписанный
+        // (3x-ui установщик / hy2 install). Можно отключить через SHARED_HYSTERIA_INSECURE=0.
+        $insecure = (int) ($shared['hysteria_insecure'] ?? 1) ? '1' : '0';
 
         if ($password === '') {
             return '';
@@ -164,7 +167,7 @@ class SubscriptionFeedBuilder
 
         $params = [
             'sni' => $sni,
-            'insecure' => '0',
+            'insecure' => $insecure,
         ];
         if ($obfsPassword !== '') {
             $params['obfs'] = $obfs;
