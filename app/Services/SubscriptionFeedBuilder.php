@@ -109,21 +109,25 @@ class SubscriptionFeedBuilder
         }
 
         return match ($type) {
-            'vless' => $this->vlessLine($host, $port, $label),
+            'vless' => $this->vlessLine($host, $port, $label, $endpoint),
             'hysteria2', 'hy2', 'hysteria' => $this->hysteriaLine($host, $port, $label),
             default => '',
         };
     }
 
-    protected function vlessLine(string $host, int $port, string $label): string
+    /**
+     * @param  array<string, mixed>  $endpoint
+     */
+    protected function vlessLine(string $host, int $port, string $label, array $endpoint = []): string
     {
         $shared = (array) config('admin.shared', []);
-        $uuid = (string) ($shared['vless_uuid'] ?? '');
-        $pbk = (string) ($shared['reality_pbk'] ?? '');
-        $sid = (string) ($shared['reality_sid'] ?? '');
-        $sni = (string) ($shared['reality_sni'] ?? 'www.cloudflare.com');
-        $fp = (string) ($shared['reality_fp'] ?? 'chrome');
-        $flow = (string) ($shared['reality_flow'] ?? 'xtls-rprx-vision');
+        $uuid = (string) ($endpoint['vless_uuid'] ?? $shared['vless_uuid'] ?? '');
+        $pbk = (string) ($endpoint['reality_pbk'] ?? $shared['reality_pbk'] ?? '');
+        $sid = (string) ($endpoint['reality_sid'] ?? $shared['reality_sid'] ?? '');
+        $sni = (string) ($endpoint['reality_sni'] ?? $shared['reality_sni'] ?? 'www.cloudflare.com');
+        $fp = (string) ($endpoint['reality_fp'] ?? $shared['reality_fp'] ?? 'chrome');
+        $flow = (string) ($endpoint['reality_flow'] ?? $shared['reality_flow'] ?? 'xtls-rprx-vision');
+        $spx = (string) ($endpoint['reality_spx'] ?? '');
 
         if ($uuid === '' || $pbk === '') {
             return '';
@@ -139,6 +143,9 @@ class SubscriptionFeedBuilder
             'sni' => $sni,
             'flow' => $flow,
         ];
+        if ($spx !== '') {
+            $params['spx'] = $spx;
+        }
 
         return sprintf(
             'vless://%s@%s:%d?%s#%s',

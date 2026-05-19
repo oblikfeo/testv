@@ -7,20 +7,46 @@ use Illuminate\Support\Facades\Log;
 class HappSubscriptionFormatter
 {
     /**
-     * Подпись узла в подписке: бренд + флаг/страна из config (например «AVA 🇳🇱 Нидерланды»).
+     * Подпись узла в подписке: «AVA · 🇷🇺 Нидерланды».
+     * Флаг России добавляется автоматически; старые флаги стран в начале строки снимаются.
      */
     public static function happNodeLabel(string $baseLabel): string
     {
         $brand = trim((string) config('admin.happ_brand', 'AVA'));
-        $base = trim($baseLabel);
+        $base = self::normalizeNodeLabel($baseLabel);
         if ($base === '') {
             return $brand !== '' ? $brand : 'VPN';
         }
-        if ($brand !== '' && preg_match('/^'.preg_quote($brand, '/').'\s+/iu', $base)) {
+
+        $prefix = $brand !== '' ? $brand.' · ' : '';
+        if ($brand !== '' && preg_match('/^'.preg_quote($brand, '/').'(\s+|[·•]\s*)/iu', $base)) {
             return $base;
         }
 
-        return trim($brand.' '.$base);
+        return trim($prefix.$base);
+    }
+
+    /**
+     * Единый вид подписи: 🇷🇺 + текст без чужих флагов/эмодзи-«стран» в начале.
+     */
+    public static function normalizeNodeLabel(string $label): string
+    {
+        $text = trim($label);
+        if ($text === '') {
+            return '';
+        }
+
+        $text = preg_replace('/^[\x{1F1E6}-\x{1F1FF}]{2}\s*/u', '', $text) ?? $text;
+        $text = preg_replace('/^[\x{1F3F4}\x{1F6E1}\x{1F6E9}\x{1F310}\x{1F30D}-\x{1F30F}\x{1F5FA}\x{1F5FB}-\x{1F5FF}\x{1F9ED}\x{1F9F3}\x{26F0}-\x{26FA}\x{2708}\x{FE0F}?]+\s*/u', '', $text) ?? $text;
+        $text = trim($text);
+        if ($text === '') {
+            return '🇷🇺 VPN';
+        }
+        if (str_starts_with($text, '🇷🇺')) {
+            return $text;
+        }
+
+        return '🇷🇺 '.$text;
     }
 
     /**
