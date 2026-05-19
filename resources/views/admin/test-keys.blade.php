@@ -84,7 +84,7 @@
                     Создать ключ
                 </button>
             </form>
-            <p class="text-gray-500 text-sm mt-3">По умолчанию: 8 часов, 10 GB — после истечения ключ автоматически станет неактивным</p>
+            <p class="text-gray-500 text-sm mt-3">По умолчанию: {{ (int) config('admin.trial.duration_hours', 3) }} ч., {{ (int) config('admin.trial.soft_quota_gb', 5) }} ГБ — после истечения ключ автоматически станет неактивным</p>
         </div>
 
         <div class="bg-gray-800 rounded-xl p-6">

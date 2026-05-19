@@ -278,9 +278,14 @@
 </script>
 @endpush
 
+@php
+    $trialHours = (int) config('admin.trial.duration_hours', 3);
+    $trialQuotaGb = (int) config('admin.trial.soft_quota_gb', 5);
+@endphp
+
 @section('content')
     <h1 class="cab-page-title">Тест-драйв</h1>
-    <p class="cab-page-desc">Бесплатный ключ на 8 часов и 10 ГБ, чтобы проверить сервис перед покупкой. Выдаётся один раз на аккаунт.</p>
+    <p class="cab-page-desc">Бесплатный ключ на {{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }}@if($trialQuotaGb > 0) и {{ $trialQuotaGb }} ГБ@endif, чтобы проверить сервис перед покупкой. Выдаётся один раз на аккаунт.</p>
 
     @if (session('success'))
         <div class="alert alert-success" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 20px; color: #22c55e;">
@@ -469,7 +474,7 @@
                 <span class="cab-badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">Доступно</span>
             </div>
             <p class="info-text">
-                Нажмите кнопку — мы создадим для вас тестовую подписку на <strong>8 часов</strong> и <strong>10 ГБ</strong> трафика. 
+                Нажмите кнопку — мы создадим для вас тестовую подписку на <strong>{{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }}</strong>@if($trialQuotaGb > 0) и <strong>{{ $trialQuotaGb }} ГБ</strong> трафика@endif. 
                 Вы получите ссылку, которую нужно добавить в VPN-приложение.
             </p>
             <form method="POST" action="{{ route('cabinet.trial.create') }}">

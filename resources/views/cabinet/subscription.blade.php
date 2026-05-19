@@ -6,6 +6,12 @@
     <h1 class="cab-page-title">Подписка</h1>
     <p class="cab-page-desc">Статус ваших активных тарифов.</p>
 
+    @if(request()->has('order_id'))
+        <div id="payment-status-banner" class="alert alert-info" role="status">
+            Проверяем статус оплаты…
+        </div>
+    @endif
+
     @if(session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
@@ -122,5 +128,81 @@
     color: var(--text-muted);
     margin-left: 4px;
 }
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    color: #93c5fd;
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #f87171;
+}
 </style>
+@endpush
+
+@push('scripts')
+@if(request()->has('order_id'))
+<script>
+(function () {
+    const orderId = @json(request('order_id'));
+    const statusUrl = @json(route('payment.status')) + '?order_id=' + encodeURIComponent(orderId);
+    const banner = document.getElementById('payment-status-banner');
+    const maxAttempts = 30;
+    let attempts = 0;
+
+    function cleanUrl() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('order_id');
+        window.history.replaceState({}, '', url.pathname + url.search);
+    }
+
+    function setBanner(className, text) {
+        if (!banner) return;
+        banner.className = 'alert ' + className;
+        banner.textContent = text;
+    }
+
+    function poll() {
+        attempts += 1;
+        fetch(statusUrl, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.status === 'fulfilled') {
+                    setBanner('alert-success', 'Оплата прошла успешно. Обновляем кабинет…');
+                    cleanUrl();
+                    window.setTimeout(function () { window.location.reload(); }, 1200);
+                    return;
+                }
+                if (data.status === 'cancelled') {
+                    setBanner('alert-error', 'Платёж отменён. Можно попробовать снова в разделе «Покупки».');
+                    cleanUrl();
+                    return;
+                }
+                if (attempts >= maxAttempts) {
+                    setBanner('alert-info', 'Оплата ещё обрабатывается. Обновите страницу через минуту или откройте «Управление».');
+                    cleanUrl();
+                    return;
+                }
+                window.setTimeout(poll, 2000);
+            })
+            .catch(function () {
+                if (attempts >= maxAttempts) {
+                    setBanner('alert-info', 'Не удалось проверить оплату. Обновите страницу.');
+                    cleanUrl();
+                    return;
+                }
+                window.setTimeout(poll, 2000);
+            });
+    }
+
+    poll();
+})();
+</script>
+@endif
 @endpush

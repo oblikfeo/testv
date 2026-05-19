@@ -10,7 +10,7 @@
 
     {{-- Title & description --}}
     <title>@yield('title', 'AVA VPN — быстрый и приватный VPN для России | Бесплатный тест')</title>
-    <meta name="description" content="@yield('meta_description', 'AVA VPN — быстрый и стабильный VPN-сервис для России. Подключение в один клик, защита от блокировок, поддержка всех устройств. Бесплатный тестовый доступ на 8 часов без карты.')">
+    <meta name="description" content="@yield('meta_description', 'AVA VPN — быстрый и стабильный VPN-сервис для России. Подключение в один клик, защита от блокировок, поддержка всех устройств. Бесплатный тестовый доступ на 3 часа без карты.')">
     <meta name="keywords" content="@yield('meta_keywords', 'VPN, ВПН, купить VPN, VPN сервис, VPN для России, быстрый VPN, безопасный VPN, VPN для Telegram, VPN для Instagram, VPN для компьютера, VPN для телефона, VPN для андроид, VPN для iphone, лучший VPN, VLESS, надёжный VPN')">
     <meta name="robots" content="@yield('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')">
     <meta name="author" content="AVA VPN">

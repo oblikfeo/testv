@@ -112,7 +112,7 @@ class BotApiController extends Controller
 
     /**
      * POST /api/bot/trial
-     * Выпустить пробный ключ на 8 часов. Идемпотентно возвращает уже существующий ключ.
+     * Выпустить пробный ключ (срок из config admin.trial). Идемпотентно возвращает уже существующий ключ.
      */
     public function issueTrial(Request $request): JsonResponse
     {
