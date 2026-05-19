@@ -55,7 +55,7 @@
     <div class="text-gray-400 space-y-2 text-sm">
         <p><strong class="text-white">🇳🇱 Нидерланды:</strong> Yandex 158.160.229.195 → NL 82.23.162.45 (6 GB RAM, 118 GB диск)</p>
         <p><strong class="text-white">🇫🇷 Франция:</strong> Yandex 158.160.249.138 → FR 82.22.50.114 (6 GB RAM, 118 GB диск)</p>
-        <p><strong class="text-yellow-400">🇷🇺 Тест:</strong> Yandex 158.160.253.217 → NL 82.23.163.202 (2 GB RAM, 58 GB диск)</p>
+        <p><strong class="text-yellow-400">🇷🇺 Тест-драйв:</strong> общая подписка Happ из БД (3 ч / 5 ГБ), без отдельной панели 3x-ui</p>
     </div>
 </div>
 @endsection

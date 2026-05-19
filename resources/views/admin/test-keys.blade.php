@@ -3,9 +3,14 @@
 @section('title', 'Подписки')
 
 @section('content')
+@php
+    $defaultHours = (int) ($trialDefaults['hours'] ?? config('admin.trial.duration_hours', 3));
+    $defaultGb = (int) ($trialDefaults['gb'] ?? config('admin.trial.soft_quota_gb', 5));
+@endphp
+
 <div class="mb-8">
     <h1 class="text-2xl font-bold text-white">Подписки</h1>
-    <p class="text-gray-400 mt-1">Тестовая панель: {{ $testPanel['url'] }} (2 GB RAM)</p>
+    <p class="text-gray-400 mt-1">Тест-драйв: общая подписка Happ (как в кабинете), без панели 3x-ui</p>
 </div>
 
 @if (session('success'))
@@ -13,7 +18,7 @@
         <p class="text-green-400">{{ session('success') }}</p>
         @if (session('vless_link'))
             <div class="mt-3">
-                <label class="block text-sm text-gray-400 mb-1">VLESS ссылка:</label>
+                <label class="block text-sm text-gray-400 mb-1">Ссылка подписки:</label>
                 <div class="flex flex-col sm:flex-row gap-2">
                     <input type="text" 
                            value="{{ session('vless_link') }}" 
@@ -36,12 +41,6 @@
     </div>
 @endif
 
-@if ($error)
-    <div class="bg-red-500/10 border border-red-500/50 rounded-lg p-4 mb-6">
-        <p class="text-red-400">Ошибка подключения к панели: {{ $error }}</p>
-    </div>
-@endif
-
 <div class="mb-6">
     <div class="bg-gray-800 rounded-xl p-2 inline-flex gap-2">
         <a href="{{ route('admin.test-keys', ['tab' => 'test']) }}"
@@ -58,14 +57,19 @@
 @if ($activeTab !== 'paid')
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div class="lg:col-span-2 bg-gray-800 rounded-xl p-6">
-            <h2 class="text-lg font-semibold text-white mb-4">Создать тестовый ключ</h2>
+            <h2 class="text-lg font-semibold text-white mb-4">Выдать тест-драйв пользователю</h2>
             <form method="POST" action="{{ route('admin.test-keys.create') }}" class="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:items-end">
                 @csrf
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-sm text-gray-400 mb-1">Email пользователя</label>
+                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="user@example.com"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                </div>
                 <div>
                     <label class="block text-sm text-gray-400 mb-1">Время жизни (часы)</label>
                     <input type="number" 
                            name="hours" 
-                           value="8" 
+                           value="{{ old('hours', $defaultHours) }}" 
                            min="1" 
                            max="24"
                            class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white w-24">
@@ -74,14 +78,14 @@
                     <label class="block text-sm text-gray-400 mb-1">Лимит трафика (GB)</label>
                     <input type="number" 
                            name="gb" 
-                           value="10" 
-                           min="1" 
+                           value="{{ old('gb', $defaultGb) }}" 
+                           min="0" 
                            max="50"
                            class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white w-24">
                 </div>
                 <button type="submit" 
                         class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition w-full sm:w-auto">
-                    Создать ключ
+                    Выдать доступ
                 </button>
             </form>
             <p class="text-gray-500 text-sm mt-3">По умолчанию: {{ (int) config('admin.trial.duration_hours', 3) }} ч., {{ (int) config('admin.trial.soft_quota_gb', 5) }} ГБ — после истечения ключ автоматически станет неактивным</p>
@@ -89,7 +93,7 @@
 
         <div class="bg-gray-800 rounded-xl p-6">
             <h2 class="text-lg font-semibold text-white mb-2">Статистика</h2>
-            <div class="text-3xl font-bold text-blue-400">{{ count($clients) }}</div>
+            <div class="text-3xl font-bold text-blue-400">{{ $trialKeys->count() }}</div>
             <p class="text-gray-400 text-sm">тестовых ключей</p>
         </div>
     </div>
@@ -99,7 +103,7 @@
             <h2 class="text-lg font-semibold text-white">Список тестовых ключей</h2>
         </div>
 
-        @if (empty($clients))
+        @if ($trialKeys->isEmpty())
             <div class="p-6 text-center text-gray-400">
                 Нет тестовых ключей
             </div>
@@ -110,6 +114,7 @@
                         <tr>
                             <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">TG ник</th>
                             <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
+                            <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Подписка</th>
                             <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Статус</th>
                             <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Трафик</th>
                             <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Лимит</th>
@@ -118,18 +123,13 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
-                        @foreach ($clients as $client)
+                        @foreach ($trialKeys as $trialKey)
                             @php
-                                $trial = $trialByEmail[$client['email']] ?? null;
-                                $user = $trial?->user;
+                                $user = $trialKey->user;
                                 $tgLabel = $user?->telegramDisplayLabel();
                                 $tgLink = $user?->telegramDeeplink();
-                                $emailValue = $user?->email ?: ($client['email'] ?: '—');
-                                $usageBytes = (int) ($client['up'] + $client['down']);
-                                $limitBytes = (int) $client['total_gb'];
-                                $expiry = $client['expiry_time'] > 0 ? \Carbon\Carbon::createFromTimestampMs($client['expiry_time']) : null;
-                                $isExpired = $expiry?->isPast() ?? false;
-                                $isLimitExceeded = $limitBytes > 0 && $usageBytes >= $limitBytes;
+                                $emailValue = $user?->email ?? '—';
+                                $subUrl = url('/sub/'.$trialKey->sub_id);
                             @endphp
                             <tr class="hover:bg-gray-700/30">
                                 <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-200">
@@ -142,38 +142,38 @@
                                     @endif
                                 </td>
                                 <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-200">{{ $emailValue }}</td>
+                                <td class="px-3 sm:px-6 py-4 text-sm">
+                                    <a href="{{ $subUrl }}" target="_blank" rel="noopener" class="text-blue-300 hover:underline font-mono text-xs break-all">{{ $subUrl }}</a>
+                                </td>
                                 <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
-                                    @if (! $client['enable'])
-                                        <span class="px-2 py-1 bg-gray-500/10 text-gray-300 text-xs rounded-full">Отключён</span>
-                                    @elseif ($isExpired)
+                                    @if ($trialKey->isExpired())
                                         <span class="px-2 py-1 bg-red-500/10 text-red-400 text-xs rounded-full">Истёк</span>
-                                    @elseif ($isLimitExceeded)
+                                    @elseif ($trialKey->isTrafficExceeded())
                                         <span class="px-2 py-1 bg-orange-500/10 text-orange-400 text-xs rounded-full">Лимит исчерпан</span>
                                     @else
                                         <span class="px-2 py-1 bg-green-500/10 text-green-400 text-xs rounded-full">Активен</span>
                                     @endif
                                 </td>
                                 <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
-                                    {{ number_format($usageBytes / 1024 / 1024 / 1024, 2) }} GB
+                                    {{ $trialKey->getUsedGb() }} GB
                                 </td>
                                 <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
-                                    @if ($limitBytes > 0)
-                                        {{ number_format($limitBytes / 1024 / 1024 / 1024, 0) }} GB
+                                    @if ($trialKey->total_bytes > 0)
+                                        {{ $trialKey->getTotalGb() }} GB
                                     @else
                                         ∞
                                     @endif
                                 </td>
                                 <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
-                                    {{ $expiry ? $expiry->format('d.m.Y H:i') : 'Бессрочно' }}
+                                    {{ $trialKey->expires_at->format('d.m.Y H:i') }}
                                 </td>
                                 <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
                                     <form method="POST" action="{{ route('admin.test-keys.delete') }}" class="inline"
-                                          onsubmit="return confirm('Удалить ключ {{ $client['email'] }}?')">
+                                          onsubmit="return confirm('Отозвать тестовый доступ?')">
                                         @csrf
-                                        <input type="hidden" name="inbound_id" value="{{ $client['inbound_id'] }}">
-                                        <input type="hidden" name="uuid" value="{{ $client['uuid'] }}">
+                                        <input type="hidden" name="trial_key_id" value="{{ $trialKey->id }}">
                                         <button type="submit" class="text-red-400 hover:text-red-300 text-sm">
-                                            Удалить
+                                            Отозвать
                                         </button>
                                     </form>
                                 </td>

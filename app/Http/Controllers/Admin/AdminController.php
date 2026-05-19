@@ -9,6 +9,7 @@ use App\Models\TrialFeedback;
 use App\Models\TrialKey;
 use App\Models\User;
 use App\Services\SaleKeyService;
+use App\Services\TrialKeyService;
 use App\Services\XuiApiService;
 use App\Support\HappSubscriptionFormatter;
 use Illuminate\Http\Request;
@@ -18,8 +19,10 @@ class AdminController extends Controller
 {
     protected XuiApiService $xuiApi;
 
-    public function __construct(XuiApiService $xuiApi)
-    {
+    public function __construct(
+        XuiApiService $xuiApi,
+        protected TrialKeyService $trialKeyService,
+    ) {
         $this->xuiApi = $xuiApi;
     }
 
@@ -66,7 +69,6 @@ class AdminController extends Controller
 
     public function testKeys()
     {
-        $testPanel = config('admin.test_panel');
         $activeTab = request()->query('tab', 'test');
         $paidFilters = [
             'source' => (string) request()->query('source', ''),
@@ -77,46 +79,10 @@ class AdminController extends Controller
             'sort_dir' => (string) request()->query('sort_dir', 'desc'),
         ];
 
-        $clients = [];
-        $error = null;
-
-        try {
-            $inbounds = $this->xuiApi->getInbounds($testPanel['url'], $testPanel['username'], $testPanel['password']);
-
-            if (! empty($inbounds['obj'])) {
-                foreach ($inbounds['obj'] as $inbound) {
-                    $settings = json_decode($inbound['settings'], true);
-                    if (! empty($settings['clients'])) {
-                        foreach ($settings['clients'] as $client) {
-                            $clientStats = collect($inbound['clientStats'] ?? [])
-                                ->firstWhere('email', $client['email']);
-
-                            $clients[] = [
-                                'inbound_id' => $inbound['id'],
-                                'email' => $client['email'],
-                                'name' => $client['name'] ?? null,
-                                'uuid' => $client['id'],
-                                'enable' => $client['enable'],
-                                'expiry_time' => $client['expiryTime'] ?? 0,
-                                'total_gb' => $client['totalGB'] ?? 0,
-                                'up' => $clientStats['up'] ?? 0,
-                                'down' => $clientStats['down'] ?? 0,
-                                'last_online' => $clientStats['lastOnline'] ?? null,
-                            ];
-                        }
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            $error = $e->getMessage();
-        }
-
-        $emails = collect($clients)->pluck('email')->filter()->unique()->values()->all();
-        $trialByEmail = TrialKey::query()
-            ->whereIn('email', $emails)
+        $trialKeys = TrialKey::query()
             ->with('user:id,email,name,telegram_username')
-            ->get()
-            ->keyBy('email');
+            ->orderByDesc('id')
+            ->get();
 
         $paidKeys = SaleKey::query()
             ->where('is_sponsor', false)
@@ -204,7 +170,12 @@ class AdminController extends Controller
             }, options: SORT_REGULAR, descending: $sortDir === 'desc')->values();
         }
 
-        return view('admin.test-keys', compact('clients', 'error', 'testPanel', 'trialByEmail', 'paidKeys', 'activeTab', 'paidFilters'));
+        $trialDefaults = [
+            'hours' => (int) config('admin.trial.duration_hours', 3),
+            'gb' => (int) config('admin.trial.soft_quota_gb', 5),
+        ];
+
+        return view('admin.test-keys', compact('trialKeys', 'paidKeys', 'activeTab', 'paidFilters', 'trialDefaults'));
     }
 
     public function settings()
@@ -336,84 +307,40 @@ class AdminController extends Controller
     public function createTestKey(Request $request)
     {
         $request->validate([
+            'email' => 'required|email|exists:users,email',
             'hours' => 'required|integer|min:1|max:24',
-            'gb' => 'required|integer|min:1|max:50',
+            'gb' => 'required|integer|min:0|max:50',
         ]);
 
-        $testPanel = config('admin.test_panel');
-        $email = 'test-' . time();
-        $uuid = Str::uuid()->toString();
-        
-        $expiryTime = now()->addHours($request->hours)->timestamp * 1000;
-        $totalBytes = $request->gb * 1024 * 1024 * 1024;
+        $user = User::query()->where('email', $request->input('email'))->firstOrFail();
 
         try {
-            $inbounds = $this->xuiApi->getInbounds($testPanel['url'], $testPanel['username'], $testPanel['password']);
-            
-            if (empty($inbounds['obj'])) {
-                return back()->withErrors(['error' => 'Не найдены inbound на панели']);
-            }
-
-            $inboundId = $inbounds['obj'][0]['id'];
-            
-            $result = $this->xuiApi->addClient(
-                $testPanel['url'],
-                $testPanel['username'],
-                $testPanel['password'],
-                $inboundId,
-                [
-                    'id' => $uuid,
-                    'email' => $email,
-                    'enable' => true,
-                    'expiryTime' => $expiryTime,
-                    'totalGB' => $totalBytes,
-                    'limitIp' => 0,
-                    'flow' => '',
-                    'subId' => Str::random(16),
-                    'tgId' => '',
-                    'reset' => 0,
-                ]
+            $trialKey = $this->trialKeyService->createTrialKeyForAdmin(
+                $user,
+                $request->integer('hours'),
+                $request->integer('gb')
             );
 
-            if ($result['success']) {
-                $vlessLink = $this->generateVlessLink($inbounds['obj'][0], $uuid);
-                
-                return back()->with('success', "Тестовый ключ создан: $email")
-                    ->with('vless_link', $vlessLink);
-            }
-
-            return back()->withErrors(['error' => $result['msg'] ?? 'Ошибка создания ключа']);
-
-        } catch (\Exception $e) {
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->with('success', 'Тестовый доступ выдан пользователю '.$user->email)
+                ->with('vless_link', url('/sub/'.$trialKey->sub_id));
+        } catch (\Throwable $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
     }
 
     public function deleteTestKey(Request $request)
     {
         $request->validate([
-            'inbound_id' => 'required|integer',
-            'uuid' => 'required|string',
+            'trial_key_id' => 'required|integer|exists:trial_keys,id',
         ]);
 
-        $testPanel = config('admin.test_panel');
+        $trialKey = TrialKey::query()->findOrFail($request->integer('trial_key_id'));
 
         try {
-            $result = $this->xuiApi->deleteClient(
-                $testPanel['url'],
-                $testPanel['username'],
-                $testPanel['password'],
-                $request->inbound_id,
-                $request->uuid
-            );
+            $this->trialKeyService->revokeTrialKey($trialKey);
 
-            if ($result['success']) {
-                return back()->with('success', 'Ключ удалён');
-            }
-
-            return back()->withErrors(['error' => $result['msg'] ?? 'Ошибка удаления ключа']);
-
-        } catch (\Exception $e) {
+            return back()->with('success', 'Тестовый доступ отозван');
+        } catch (\Throwable $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }

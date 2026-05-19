@@ -22,8 +22,40 @@ class TrialKeyService
         $durationHours = (int) config('admin.trial.duration_hours', 3);
         $softQuotaGb = (int) config('admin.trial.soft_quota_gb', 5);
 
+        return $this->issueTrialKey($user, $durationHours, $softQuotaGb);
+    }
+
+    /**
+     * Выдача триала из админки: можно переопределить срок/квоту и перевыпустить ключ.
+     */
+    public function createTrialKeyForAdmin(User $user, int $durationHours, int $softQuotaGb): TrialKey
+    {
         $durationHours = max(1, $durationHours);
         $softQuotaGb = max(0, $softQuotaGb);
+
+        return $this->issueTrialKey($user, $durationHours, $softQuotaGb, replaceExisting: true);
+    }
+
+    public function revokeTrialKey(TrialKey $trialKey): void
+    {
+        $userId = $trialKey->user_id;
+        $trialKey->devices()->delete();
+        $trialKey->delete();
+
+        $user = User::query()->find($userId);
+        if ($user && ! TrialKey::query()->where('user_id', $userId)->exists()) {
+            $user->update(['trial_used' => false]);
+        }
+    }
+
+    protected function issueTrialKey(User $user, int $durationHours, int $softQuotaGb, bool $replaceExisting = false): TrialKey
+    {
+        if ($replaceExisting) {
+            $existing = TrialKey::query()->where('user_id', $user->id)->first();
+            if ($existing) {
+                $this->revokeTrialKey($existing);
+            }
+        }
 
         $email = 'trial-'.$user->id.'-'.time();
         $subId = Str::random(16);
