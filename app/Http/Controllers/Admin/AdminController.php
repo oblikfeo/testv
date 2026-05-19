@@ -13,7 +13,6 @@ use App\Services\TrialKeyService;
 use App\Services\XuiApiService;
 use App\Support\HappSubscriptionFormatter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
