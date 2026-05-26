@@ -164,9 +164,8 @@ class BotLinkController extends Controller
         // Re-assign ownership on all user-bound entities.
         DB::table('subscriptions')->where('user_id', $from->id)->update(['user_id' => $to->id]);
         DB::table('orders')->where('user_id', $from->id)->update(['user_id' => $to->id]);
-        DB::table('sale_keys')->where('user_id', $from->id)->update(['user_id' => $to->id]);
         DB::table('trial_keys')->where('user_id', $from->id)->update(['user_id' => $to->id]);
-        DB::table('subscription_keys')->where('user_id', $from->id)->update(['user_id' => $to->id]);
+        DB::table('support_tickets')->where('user_id', $from->id)->update(['user_id' => $to->id]);
 
         // Preserve trial_used if it was used in either account.
         if ($from->trial_used && ! $to->trial_used) {

@@ -4,6 +4,12 @@
 
 @section('content')
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <a href="{{ route('admin.trials') }}"
+       class="bg-gray-800 rounded-xl p-6 hover:bg-gray-750 transition group">
+        <h3 class="text-lg font-semibold text-white">Триалы</h3>
+        <p class="text-gray-400 text-sm mt-1">Выдача и отзыв тестового доступа</p>
+    </a>
+
     <a href="{{ route('admin.trial-feedback') }}"
        class="bg-gray-800 rounded-xl p-6 hover:bg-gray-750 transition group">
         <h3 class="text-lg font-semibold text-white">Отзывы после теста</h3>

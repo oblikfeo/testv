@@ -74,7 +74,12 @@ fi
 
 echo "== 5. Laravel =="
 php artisan storage:link --force 2>/dev/null || true
-php artisan migrate --force
+if [[ "${MIGRATE_FRESH:-0}" == "1" ]]; then
+  echo "== 5b. БД: migrate:fresh + seed =="
+  php artisan migrate:fresh --force --seed
+else
+  php artisan migrate --force
+fi
 if [[ "$FIRST_RUN" -eq 1 ]]; then
   php artisan db:seed --force --class=PlansSeeder 2>/dev/null || true
 fi

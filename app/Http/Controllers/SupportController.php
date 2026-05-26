@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\KeyOrder;
-use App\Models\SaleKey;
 use App\Models\SupportMessage;
 use App\Models\SupportTicket;
 use App\Services\SupportNotifier;
@@ -44,12 +43,6 @@ class SupportController extends Controller
 
         $activeSubscription = $user->activeSubscriptions()->first();
         $lastOrder = $user->keyOrders()->latest()->first();
-        $saleKeyId = null;
-        if ($activeSubscription) {
-            $saleKeyId = SaleKey::query()
-                ->where('subscription_id', $activeSubscription->id)
-                ->value('id');
-        }
 
         $ticket = SupportTicket::create([
             'user_id' => $user->id,
@@ -59,7 +52,6 @@ class SupportController extends Controller
             'last_message_at' => now(),
             'meta' => [
                 'subscription_id' => $activeSubscription?->id,
-                'sale_key_id' => $saleKeyId,
                 'last_order_id' => $lastOrder?->id,
                 'ip' => $request->ip(),
                 'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),

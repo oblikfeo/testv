@@ -115,12 +115,6 @@
                             <dd class="text-white">#{{ $ticket->meta['subscription_id'] }}</dd>
                         </div>
                     @endif
-                    @if(! empty($ticket->meta['sale_key_id']))
-                        <div>
-                            <dt class="text-gray-500">SaleKey</dt>
-                            <dd class="text-white">#{{ $ticket->meta['sale_key_id'] }}</dd>
-                        </div>
-                    @endif
                     @if(! empty($ticket->meta['last_order_id']))
                         <div>
                             <dt class="text-gray-500">Последний заказ</dt>

@@ -153,8 +153,9 @@ Route::prefix('admin')->group(function () {
 
     Route::middleware(AdminAuth::class)->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-        Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
-        Route::post('/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
+        Route::get('/trials', [AdminController::class, 'trials'])->name('admin.trials');
+        Route::post('/trials/create', [AdminController::class, 'createTrial'])->name('admin.trials.create');
+        Route::post('/trials/revoke', [AdminController::class, 'revokeTrial'])->name('admin.trials.revoke');
         Route::get('/trial-feedback', [AdminController::class, 'trialFeedback'])->name('admin.trial-feedback');
 
         Route::get('/support', [AdminSupportController::class, 'index'])->name('admin.support.index');

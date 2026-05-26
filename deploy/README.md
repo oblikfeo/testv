@@ -28,6 +28,14 @@ git pull origin main
 bash deploy/server-deploy.sh
 ```
 
+### Полная пересборка БД (удаляет все данные)
+
+```bash
+cd /var/www/testv
+git pull origin main
+MIGRATE_FRESH=1 bash deploy/server-deploy.sh
+```
+
 ### Файлы
 
 | Файл | Назначение |

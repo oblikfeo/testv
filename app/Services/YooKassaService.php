@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\KeyOrder;
 use App\Models\Plan;
-use App\Models\SaleKey;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
@@ -27,11 +26,6 @@ class YooKassaService
         $this->secretKey = config('yookassa.secret_key');
     }
 
-    /**
-     * @param  string|null  $returnUrlOverride  если передано — заменяет `yookassa.return_url`
-     *                                          для этого конкретного платежа (используется ботом,
-     *                                          чтобы после YooKassa юзера возвращало в чат Telegram).
-     */
     public function createPayment(User $user, Plan $plan, KeyOrder $order, ?string $returnUrlOverride = null): ?array
     {
         $idempotenceKey = Str::uuid()->toString();
@@ -85,6 +79,7 @@ class YooKassaService
                 'payment_id' => $data['id'],
                 'order_id' => $order->id,
             ]);
+
             return $data;
         }
 
@@ -120,15 +115,14 @@ class YooKassaService
         $event = $data['event'] ?? null;
         $object = $data['object'] ?? null;
 
-        if (!$event || !$object) {
+        if (! $event || ! $object) {
             Log::warning('YooKassa webhook: invalid data', $data);
+
             return false;
         }
 
         $paymentId = $object['id'] ?? null;
         if ($event === 'refund.succeeded') {
-            // For refund webhooks YooKassa sends refund object (id/status/payment_id),
-            // not payment metadata. We must resolve order by original payment_id.
             $paymentId = $object['payment_id'] ?? null;
             if (! $paymentId) {
                 Log::warning('YooKassa webhook refund: missing payment_id', $data);
@@ -143,14 +137,16 @@ class YooKassaService
         $metadata = $object['metadata'] ?? [];
         $orderId = $metadata['order_id'] ?? null;
 
-        if (!$paymentId || !$orderId) {
+        if (! $paymentId || ! $orderId) {
             Log::warning('YooKassa webhook: missing payment_id or order_id', $data);
+
             return false;
         }
 
         $order = KeyOrder::find($orderId);
-        if (!$order) {
+        if (! $order) {
             Log::error('YooKassa webhook: order not found', ['order_id' => $orderId]);
+
             return false;
         }
 
@@ -210,12 +206,6 @@ class YooKassaService
         $subscriptionId = $order->purchase_action === 'renew_subscription' && $order->target_subscription_id
             ? (int) $order->target_subscription_id
             : null;
-
-        if (! $subscriptionId && $order->sale_key_id) {
-            $subscriptionId = (int) (SaleKey::query()
-                ->where('id', $order->sale_key_id)
-                ->value('subscription_id') ?? 0);
-        }
 
         if (! $subscriptionId) {
             $subscriptionId = (int) (Subscription::query()
@@ -300,15 +290,13 @@ class YooKassaService
                 ]);
             }
 
-            // Если это бот-пользователь — пушим уведомление прямо в Telegram,
-            // чтобы не ждать нажатия «Я оплатил — проверить». Ошибка не роняет вебхук.
             if ($user->telegram_id) {
                 try {
                     $untilHuman = $subscription->expires_at?->timezone(config('app.timezone', 'UTC'))->format('d.m.Y H:i') ?? '';
                     $text = "✅ <b>Оплата получена!</b>\n"
-                        . "Тариф: <b>{$plan->name}</b> ({$plan->devices} устр.)\n"
+                        . "Тариф: <b>{$plan->name}</b>\n"
                         . "Активна до: <code>{$untilHuman}</code>\n\n"
-                        . "Нажмите «🔐 Подключиться» в меню — ссылка и QR уже готовы.";
+                        . 'Ссылка для подключения — в меню бота.';
                     $this->tgNotifier->sendMessage((int) $user->telegram_id, $text);
                 } catch (\Throwable $e) {
                     Log::warning('Telegram notify after payment failed', [
@@ -338,7 +326,7 @@ class YooKassaService
                 ? rtrim($configured, '/')
                 : url($configured);
 
-            return $base . (str_contains($base, '?') ? '&' : '?') . http_build_query(['order_id' => $order->id]);
+            return $base.(str_contains($base, '?') ? '&' : '?').http_build_query(['order_id' => $order->id]);
         }
 
         return route('cabinet.subscription', ['order_id' => $order->id], true);
@@ -357,12 +345,12 @@ class YooKassaService
 
     public function checkPaymentStatus(KeyOrder $order): ?string
     {
-        if (!$order->payment_id) {
+        if (! $order->payment_id) {
             return null;
         }
 
         $payment = $this->getPayment($order->payment_id);
-        if (!$payment) {
+        if (! $payment) {
             return null;
         }
 
@@ -374,9 +362,10 @@ class YooKassaService
                 'source' => 'payment_status_check',
             ]);
             $order->refresh();
+
             return $order->payment_status;
         }
-        
+
         if ($status && $status !== $order->payment_status) {
             $order->update(['payment_status' => $status]);
 

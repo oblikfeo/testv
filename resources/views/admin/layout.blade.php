@@ -23,9 +23,9 @@
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.dashboard') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                                 Главная
                             </a>
-                            <a href="{{ route('admin.settings') }}" 
-                               class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.settings') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                Настройки
+                            <a href="{{ route('admin.trials') }}" 
+                               class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.trials*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                                Триалы
                             </a>
                             <a href="{{ route('admin.trial-feedback') }}"
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.trial-feedback') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
@@ -61,9 +61,9 @@
                        class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.dashboard') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
                         Главная
                     </a>
-                    <a href="{{ route('admin.settings') }}"
-                       class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.settings') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
-                        Настройки
+                    <a href="{{ route('admin.trials') }}"
+                       class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.trials*') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
+                        Триалы
                     </a>
                     <a href="{{ route('admin.trial-feedback') }}"
                        class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.trial-feedback') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
