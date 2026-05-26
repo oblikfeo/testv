@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plan;
-use App\Models\SaleKey;
 use App\Models\TrialFeedback;
 use App\Models\TrialFeedbackRequest;
 use App\Services\TrialKeyService;
+use App\Support\SharedVpnAccess;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -15,6 +15,7 @@ class CabinetController extends Controller
     public function __construct(
         protected TrialKeyService $trialKeyService
     ) {}
+
     protected function pendingTrialFeedbackRequest(int $userId): ?TrialFeedbackRequest
     {
         $alreadyLeftFeedback = TrialFeedback::query()
@@ -35,21 +36,13 @@ class CabinetController extends Controller
     {
         $user = $request->user();
         $subscriptions = $user->activeSubscriptions()->with('plan')->get();
-
-        $saleKeys = [];
-        if ($subscriptions->isNotEmpty()) {
-            $saleKeys = SaleKey::query()
-                ->whereIn('subscription_id', $subscriptions->pluck('id'))
-                ->where('status', 'active')
-                ->get()
-                ->keyBy('subscription_id');
-        }
+        $connectionUri = SharedVpnAccess::connectionUriForUser($user);
 
         return view('cabinet.subscription', [
             'activeRoute' => 'subscription',
             'user' => $user,
             'subscriptions' => $subscriptions,
-            'saleKeys' => $saleKeys,
+            'connectionUri' => $connectionUri,
             'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
     }
@@ -58,19 +51,15 @@ class CabinetController extends Controller
     {
         $user = $request->user();
         $trialKey = $user->trialKey;
-        $trialDevices = collect();
-
-        if ($trialKey) {
-            $this->trialKeyService->syncTrafficFromPanel($trialKey);
-            $trialKey->refresh();
-            $trialDevices = $trialKey->devices()->latest()->get();
-        }
+        $connectionUri = SharedVpnAccess::trialIsActive($trialKey)
+            ? SharedVpnAccess::connectionUri()
+            : null;
 
         return view('cabinet.trial', [
             'activeRoute' => 'trial',
             'user' => $user,
             'trialKey' => $trialKey,
-            'trialDevices' => $trialDevices,
+            'connectionUri' => $connectionUri,
             'canUseTrial' => $user->canUseTrial(),
             'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
@@ -99,36 +88,18 @@ class CabinetController extends Controller
         return back()->with('success', 'Спасибо за отзыв! Мы уже передали его команде.');
     }
 
-    public function deleteTrialDevice(Request $request, int $deviceId)
-    {
-        $user = $request->user();
-        $trialKey = $user->trialKey;
-
-        if (! $trialKey) {
-            return back()->withErrors(['device' => 'Тестовый ключ не найден']);
-        }
-
-        $device = $trialKey->devices()->find($deviceId);
-        if (! $device) {
-            return back()->withErrors(['device' => 'Устройство не найдено']);
-        }
-
-        $device->delete();
-
-        return back()->with('success', 'Устройство удалено');
-    }
-
     public function createTrial(Request $request)
     {
         $user = $request->user();
 
-        if (!$user->canUseTrial()) {
+        if (! $user->canUseTrial()) {
             return back()->withErrors(['trial' => 'Вы уже использовали тестовый период']);
         }
 
         try {
-            $trialKey = $this->trialKeyService->createTrialKey($user);
-            return back()->with('success', 'Тестовый ключ успешно создан!');
+            $this->trialKeyService->createTrialKey($user);
+
+            return back()->with('success', 'Тестовый период активирован! Скопируйте ссылку подключения ниже.');
         } catch (\Exception $e) {
             return back()->withErrors(['trial' => $e->getMessage()]);
         }
@@ -163,37 +134,13 @@ class CabinetController extends Controller
         $plans = Plan::active()->ordered()->get();
         $standardPlans = $plans->where('devices', 2)->sortBy('days')->values();
         $extendedPlans = $plans->where('devices', 5)->sortBy('days')->values();
+
         return view('cabinet.history', [
             'activeRoute' => 'history',
             'orders' => $orders,
             'plans' => $plans,
             'standardPlans' => $standardPlans,
             'extendedPlans' => $extendedPlans,
-            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
-        ]);
-    }
-
-    public function devices(Request $request): View
-    {
-        $user = $request->user();
-        $subscriptions = $user->activeSubscriptions()->with(['plan', 'devices' => function ($query) {
-            $query->latest();
-        }])->get();
-
-        $saleKeys = [];
-        if ($subscriptions->isNotEmpty()) {
-            $saleKeys = SaleKey::query()
-                ->whereIn('subscription_id', $subscriptions->pluck('id'))
-                ->where('status', 'active')
-                ->get()
-                ->keyBy('subscription_id');
-        }
-
-        return view('cabinet.devices', [
-            'activeRoute' => 'devices',
-            'user' => $user,
-            'subscriptions' => $subscriptions,
-            'saleKeys' => $saleKeys,
             'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
     }

@@ -3,12 +3,10 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminSupportController;
 use App\Http\Controllers\CabinetController;
-use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\LandingTrafficController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\SubscriptionKeyController;
 use App\Http\Controllers\SupportController;
 use App\Http\Middleware\AdminAuth;
 use App\Services\IndexNowService;
@@ -109,7 +107,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/cabinet', [CabinetController::class, 'subscription'])->name('cabinet.subscription');
-    Route::get('/cabinet/devices', [CabinetController::class, 'devices'])->name('cabinet.devices');
+    Route::redirect('/cabinet/devices', '/cabinet')->name('cabinet.devices');
     Route::get('/cabinet/trial', [CabinetController::class, 'trial'])->name('cabinet.trial');
     Route::get('/cabinet/profile', [CabinetController::class, 'profile'])->name('cabinet.profile');
     Route::get('/cabinet/security', [CabinetController::class, 'security'])->name('cabinet.security');
@@ -123,9 +121,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::delete('/cabinet/devices/{device}', [DeviceController::class, 'destroy'])->name('cabinet.devices.destroy');
     Route::post('/cabinet/trial', [CabinetController::class, 'createTrial'])->name('cabinet.trial.create');
-    Route::delete('/cabinet/trial/devices/{device}', [CabinetController::class, 'deleteTrialDevice'])->name('cabinet.trial.devices.destroy');
 
     Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
     Route::get('/payment/status', [PaymentController::class, 'checkStatus'])->name('payment.status');
@@ -136,13 +132,6 @@ Route::get('/sub/{subId}', [SubscriptionController::class, 'show'])->name('subsc
 
 // YooKassa webhook (public)
 Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/keys', [SubscriptionKeyController::class, 'index'])->name('keys.index');
-    Route::post('/keys/issue', [SubscriptionKeyController::class, 'issue'])->name('keys.issue');
-    Route::post('/keys/{subscription_key}/activate', [SubscriptionKeyController::class, 'activate'])
-        ->name('keys.activate');
-});
 
 Route::middleware(['auth'])->prefix('cabinet/support')->name('cabinet.support.')->group(function () {
     Route::get('/', [SupportController::class, 'index'])->name('index');
@@ -164,17 +153,8 @@ Route::prefix('admin')->group(function () {
 
     Route::middleware(AdminAuth::class)->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-        Route::get('/test-keys', [AdminController::class, 'testKeys'])->name('admin.test-keys');
-        Route::post('/test-keys/create', [AdminController::class, 'createTestKey'])->name('admin.test-keys.create');
-        Route::post('/test-keys/delete', [AdminController::class, 'deleteTestKey'])->name('admin.test-keys.delete');
-        Route::post('/paid-keys/delete', [AdminController::class, 'deletePaidKey'])->name('admin.paid-keys.delete');
         Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
         Route::post('/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
-        Route::get('/sponsor', [AdminController::class, 'sponsorKeys'])->name('admin.sponsor');
-        Route::post('/sponsor', [AdminController::class, 'createSponsor'])->name('admin.sponsor.create');
-        Route::get('/admin-friends', [AdminController::class, 'adminFriends'])->name('admin.admin-friends');
-        Route::post('/admin-friends', [AdminController::class, 'createAdminFriends'])->name('admin.admin-friends.create');
-        Route::post('/admin-friends/revoke', [AdminController::class, 'revokeAdminFriends'])->name('admin.admin-friends.revoke');
         Route::get('/trial-feedback', [AdminController::class, 'trialFeedback'])->name('admin.trial-feedback');
 
         Route::get('/support', [AdminSupportController::class, 'index'])->name('admin.support.index');

@@ -7,10 +7,6 @@
             <span class="cab-nav-icon">◈</span>
             <span>Подписка</span>
         </a>
-        <a href="{{ route('cabinet.devices') }}" class="{{ $active === 'devices' ? 'active' : '' }}">
-            <span class="cab-nav-icon">◇</span>
-            <span>Управление</span>
-        </a>
         <a href="{{ route('cabinet.trial') }}" class="{{ $active === 'trial' ? 'active' : '' }}">
             <span class="cab-nav-icon">▷</span>
             <span>Тест-драйв</span>

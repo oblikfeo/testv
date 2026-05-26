@@ -21,7 +21,6 @@ class YooKassaService
     protected string $apiUrl = 'https://api.yookassa.ru/v3';
 
     public function __construct(
-        protected SaleKeyService $saleKeyService,
         protected TelegramBotNotifier $tgNotifier
     ) {
         $this->shopId = config('yookassa.shop_id');
@@ -208,39 +207,32 @@ class YooKassaService
             'payment_status' => 'refunded',
         ]);
 
-        $subscriptionId = null;
-        if ($order->purchase_action === 'renew_subscription' && $order->target_subscription_id) {
-            $subscriptionId = (int) $order->target_subscription_id;
-        } else {
-            $subscriptionId = SaleKey::query()
-                ->where('key_order_id', $order->id)
-                ->value('subscription_id');
+        $subscriptionId = $order->purchase_action === 'renew_subscription' && $order->target_subscription_id
+            ? (int) $order->target_subscription_id
+            : null;
+
+        if (! $subscriptionId && $order->sale_key_id) {
+            $subscriptionId = (int) (SaleKey::query()
+                ->where('id', $order->sale_key_id)
+                ->value('subscription_id') ?? 0);
+        }
+
+        if (! $subscriptionId) {
+            $subscriptionId = (int) (Subscription::query()
+                ->where('user_id', $order->user_id)
+                ->where('plan_id', $order->plan_id)
+                ->where('created_at', '>=', $order->created_at?->subMinutes(5) ?? now()->subMinutes(5))
+                ->orderByDesc('id')
+                ->value('id') ?? 0);
         }
 
         if ($subscriptionId) {
-            $subscription = Subscription::query()->find($subscriptionId);
-            if ($subscription) {
-                $subscription->update([
+            Subscription::query()
+                ->where('id', $subscriptionId)
+                ->update([
                     'status' => 'expired',
                     'expires_at' => now(),
                 ]);
-
-                $saleKeys = SaleKey::query()
-                    ->where('subscription_id', $subscription->id)
-                    ->get();
-
-                foreach ($saleKeys as $saleKey) {
-                    if (! $saleKey->is_sponsor && ! $saleKey->is_admin_bundle) {
-                        $this->saleKeyService->deactivateRetailSaleKey($saleKey);
-                        continue;
-                    }
-
-                    $saleKey->update([
-                        'status' => 'expired',
-                        'expires_at' => now(),
-                    ]);
-                }
-            }
         }
 
         Log::info('YooKassa refund processed', [
@@ -305,15 +297,6 @@ class YooKassaService
                     'max_devices' => $plan->devices,
                     'starts_at' => now(),
                     'expires_at' => now()->addDays($plan->days),
-                ]);
-            }
-
-            try {
-                $this->saleKeyService->syncAfterSuccessfulPayment($user, $subscription, $plan, $order);
-            } catch (\Throwable $e) {
-                Log::error('SaleKey after payment failed', [
-                    'order_id' => $order->id,
-                    'message' => $e->getMessage(),
                 ]);
             }
 

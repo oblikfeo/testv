@@ -6,13 +6,13 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\KeyOrder;
 use App\Models\Plan;
-use App\Models\SaleKey;
 use App\Models\TrialFeedback;
 use App\Models\TrialFeedbackRequest;
 use App\Models\TrialKey;
 use App\Models\User;
 use App\Services\TrialKeyService;
 use App\Services\YooKassaService;
+use App\Support\SharedVpnAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -167,10 +167,7 @@ class BotApiController extends Controller
     {
         $plans = Plan::query()
             ->active()
-            ->whereNotIn('slug', [
-                \App\Services\SaleKeyService::SPONSOR_PLAN_SLUG,
-                \App\Services\SaleKeyService::ADMIN_FRIENDS_PLAN_SLUG,
-            ])
+            ->whereNotIn('slug', ['sponsor-bundle', 'admin-friends-bundle'])
             ->ordered()
             ->get();
 
@@ -507,36 +504,31 @@ class BotApiController extends Controller
      */
     protected function resolveSubscription(User $user, ?TrialKey $trialKey = null): array
     {
+        $connectionUri = SharedVpnAccess::connectionUri();
+
         $activeSubscription = $user->activeSubscriptions()->with('plan')->first();
         if ($activeSubscription) {
-            $saleKey = SaleKey::query()
-                ->where('subscription_id', $activeSubscription->id)
-                ->where('status', 'active')
-                ->first();
-
             return [
                 'status' => 'active',
                 'plan_slug' => $activeSubscription->plan?->slug,
                 'plan_name' => $activeSubscription->plan?->name,
-                'max_devices' => $activeSubscription->max_devices,
                 'expires_at' => $activeSubscription->expires_at?->toIso8601String(),
-                'sub_link' => $saleKey ? url('/sub/'.$saleKey->sub_id) : null,
-                'sub_id' => $saleKey?->sub_id,
+                'connection_uri' => $connectionUri,
+                'sub_link' => $connectionUri,
             ];
         }
 
         $trialKey = $trialKey ?? $user->trialKey;
         if ($trialKey) {
-            $isActive = ! $trialKey->isExpired() && ! $trialKey->isTrafficExceeded();
+            $isActive = $trialKey->isActive();
 
             return [
                 'status' => $isActive ? 'trial' : 'expired',
-                'plan_slug' => 'trial-8h',
+                'plan_slug' => 'trial',
                 'plan_name' => 'Пробный доступ',
-                'max_devices' => 1,
                 'expires_at' => $trialKey->expires_at?->toIso8601String(),
-                'sub_link' => url('/sub/'.$trialKey->sub_id),
-                'sub_id' => $trialKey->sub_id,
+                'connection_uri' => $isActive ? $connectionUri : null,
+                'sub_link' => $isActive ? $connectionUri : null,
             ];
         }
 
@@ -553,22 +545,9 @@ class BotApiController extends Controller
     protected function collectSubscriptionItems(User $user): array
     {
         $items = [];
+        $connectionUri = SharedVpnAccess::connectionUri();
 
-        $activeSubscriptions = $user->activeSubscriptions()->with('plan')->get();
-
-        $saleKeys = collect();
-        if ($activeSubscriptions->isNotEmpty()) {
-            $saleKeys = SaleKey::query()
-                ->whereIn('subscription_id', $activeSubscriptions->pluck('id'))
-                ->where('status', 'active')
-                ->get()
-                ->keyBy('subscription_id');
-        }
-
-        foreach ($activeSubscriptions as $sub) {
-            /** @var SaleKey|null $key */
-            $key = $saleKeys->get($sub->id);
-
+        foreach ($user->activeSubscriptions()->with('plan')->get() as $sub) {
             $planName = trim(
                 ($sub->plan?->name ?? '')
                 .($sub->plan?->days ? ' · '.$sub->plan->days.' дн.' : '')
@@ -581,26 +560,24 @@ class BotApiController extends Controller
                 'is_trial' => false,
                 'plan_slug' => $sub->plan?->slug,
                 'plan_name' => $planName !== '' ? $planName : 'Подписка',
-                'max_devices' => (int) $sub->max_devices,
                 'expires_at' => $sub->expires_at?->toIso8601String(),
-                'sub_link' => $key ? url('/sub/'.$key->sub_id) : null,
-                'sub_id' => $key?->sub_id,
+                'connection_uri' => $connectionUri,
+                'sub_link' => $connectionUri,
             ];
         }
 
         $trialKey = $user->trialKey;
-        if ($trialKey && ! $trialKey->isExpired() && ! $trialKey->isTrafficExceeded()) {
+        if ($trialKey && $trialKey->isActive()) {
             $items[] = [
                 'key' => 'trial',
                 'subscription_id' => null,
                 'status' => 'trial',
                 'is_trial' => true,
-                'plan_slug' => 'trial-8h',
+                'plan_slug' => 'trial',
                 'plan_name' => 'Пробный доступ',
-                'max_devices' => 1,
                 'expires_at' => $trialKey->expires_at?->toIso8601String(),
-                'sub_link' => url('/sub/'.$trialKey->sub_id),
-                'sub_id' => $trialKey->sub_id,
+                'connection_uri' => $connectionUri,
+                'sub_link' => $connectionUri,
             ];
         }
 
@@ -613,10 +590,9 @@ class BotApiController extends Controller
             'status' => 'none',
             'plan_slug' => null,
             'plan_name' => null,
-            'max_devices' => null,
             'expires_at' => null,
+            'connection_uri' => null,
             'sub_link' => null,
-            'sub_id' => null,
         ];
     }
 }

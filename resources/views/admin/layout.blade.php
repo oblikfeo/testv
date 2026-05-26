@@ -23,21 +23,9 @@
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.dashboard') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                                 Главная
                             </a>
-                            <a href="{{ route('admin.test-keys') }}" 
-                               class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.test-keys') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                Подписки
-                            </a>
                             <a href="{{ route('admin.settings') }}" 
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.settings') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                Панели
-                            </a>
-                            <a href="{{ route('admin.sponsor') }}" 
-                               class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.sponsor') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                2 сервера
-                            </a>
-                            <a href="{{ route('admin.admin-friends') }}" 
-                               class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.admin-friends') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                                Все серверы
+                                Настройки
                             </a>
                             <a href="{{ route('admin.trial-feedback') }}"
                                class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admin.trial-feedback') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
@@ -73,21 +61,9 @@
                        class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.dashboard') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
                         Главная
                     </a>
-                    <a href="{{ route('admin.test-keys') }}"
-                       class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.test-keys') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
-                        Подписки
-                    </a>
                     <a href="{{ route('admin.settings') }}"
                        class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.settings') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
-                        Панели
-                    </a>
-                    <a href="{{ route('admin.sponsor') }}"
-                       class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.sponsor') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
-                        2 сервера
-                    </a>
-                    <a href="{{ route('admin.admin-friends') }}"
-                       class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.admin-friends') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">
-                        Все серверы
+                        Настройки
                     </a>
                     <a href="{{ route('admin.trial-feedback') }}"
                        class="px-3 py-2 rounded-md text-sm text-center font-medium {{ request()->routeIs('admin.trial-feedback') ? 'bg-gray-900 text-white' : 'text-gray-300 bg-gray-700/60 hover:bg-gray-700 hover:text-white' }}">

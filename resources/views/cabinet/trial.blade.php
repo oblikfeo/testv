@@ -372,7 +372,7 @@
                     <input type="text" 
                            id="subLinkInput" 
                            class="sub-link-input" 
-                           value="{{ url('/sub/' . $trialKey->sub_id) }}" 
+                           value="{{ $connectionUri ?? '' }}" 
                            readonly>
                     <button id="copyBtn" class="btn btn-primary btn-sm" onclick="copySubLink()">Копировать</button>
                 </div>
@@ -388,83 +388,6 @@
                     Как подключиться?
                 </div>
                 <p>Скопируйте ссылку и добавьте её в приложение как «Подписку». Рекомендуем <a href="https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973" target="_blank" rel="noopener noreferrer">Happ</a> для iOS или <a href="https://play.google.com/store/apps/details?id=app.hiddify.com" target="_blank" rel="noopener noreferrer">Hiddify</a> для Android.</p>
-            </div>
-
-            {{-- Список привязанных устройств --}}
-            <div class="devices-section">
-                <div class="devices-header">
-                    <span class="devices-title">Привязанные устройства</span>
-                    <span class="devices-count">{{ $trialDevices->count() }} / 1</span>
-                </div>
-
-                @if($trialDevices->isEmpty())
-                    <div class="devices-empty">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
-                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                            <line x1="12" y1="18" x2="12.01" y2="18"/>
-                        </svg>
-                        <p>Пока нет подключённых устройств</p>
-                        <small>Устройство появится после первого подключения через VPN-приложение</small>
-                    </div>
-                @else
-                    <div class="devices-list">
-                        @foreach($trialDevices as $device)
-                            <div class="device-item">
-                                <div class="device-info">
-                                    <div class="device-icon">
-                                        @if(str_contains($device->display_name, 'iPhone') || str_contains($device->display_name, 'iPad'))
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                                                <line x1="12" y1="18" x2="12.01" y2="18"/>
-                                            </svg>
-                                        @elseif(str_contains($device->display_name, 'Android'))
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                                                <line x1="12" y1="18" x2="12.01" y2="18"/>
-                                            </svg>
-                                        @elseif(str_contains($device->display_name, 'Windows') || str_contains($device->display_name, 'Mac') || str_contains($device->display_name, 'Linux'))
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                                                <line x1="8" y1="21" x2="16" y2="21"/>
-                                                <line x1="12" y1="17" x2="12" y2="21"/>
-                                            </svg>
-                                        @else
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                                                <line x1="12" y1="18" x2="12.01" y2="18"/>
-                                            </svg>
-                                        @endif
-                                    </div>
-                                    <div class="device-details">
-                                        <span class="device-name">{{ $device->display_name }}</span>
-                                        <span class="device-meta">
-                                            @if($device->last_active_at)
-                                                Активность: {{ $device->last_active_at->diffForHumans() }}
-                                            @else
-                                                Добавлено: {{ $device->created_at->diffForHumans() }}
-                                            @endif
-                                            @if($device->ip_address)
-                                                · IP: {{ $device->ip_address }}
-                                            @endif
-                                        </span>
-                                    </div>
-                                </div>
-                                <form method="POST" action="{{ route('cabinet.trial.devices.destroy', $device->id) }}" onsubmit="return confirm('Удалить это устройство?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="device-delete-btn" title="Удалить устройство">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <polyline points="3 6 5 6 21 6"/>
-                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                            <line x1="10" y1="11" x2="10" y2="17"/>
-                                            <line x1="14" y1="11" x2="14" y2="17"/>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
             </div>
 
         @elseif ($canUseTrial)
@@ -505,7 +428,7 @@
     @if ($user->hasVerifiedEmail())
         <div class="mt-24">
             @include('partials.platform-instructions', [
-                'subUrl' => $trialKey ? url('/sub/' . $trialKey->sub_id) : null,
+                'subUrl' => $connectionUri ?? null,
                 'title'  => 'Как подключиться',
                 'desc'   => $trialKey
                     ? 'Выберите вашу платформу и следуйте трём шагам — ссылка подписки уже подставлена в кнопки ниже.'

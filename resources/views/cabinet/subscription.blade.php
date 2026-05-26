@@ -18,14 +18,8 @@
         </div>
     @endif
 
-    @php
-        $primarySaleKey = collect($saleKeys)->first();
-        $primarySubUrl  = $primarySaleKey ? url('/sub/'.$primarySaleKey->sub_id) : null;
-    @endphp
-
     @if($subscriptions->isNotEmpty())
         @foreach($subscriptions as $subscription)
-            @php($saleKey = $saleKeys[$subscription->id] ?? null)
             <div class="cab-card {{ !$loop->first ? 'mt-24' : '' }}">
                 <div class="cab-card-header">
                     <span class="cab-card-title">
@@ -49,10 +43,6 @@
                     <span class="sub-row-value">{{ $subscription->plan->name }}</span>
                 </div>
                 <div class="sub-row">
-                    <span class="sub-row-label">Устройств</span>
-                    <span class="sub-row-value">{{ $subscription->devices_count }} / {{ $subscription->max_devices }}</span>
-                </div>
-                <div class="sub-row">
                     <span class="sub-row-label">Действует до</span>
                     <span class="sub-row-value {{ $subscription->days_left <= 7 ? 'text-warning' : '' }}">
                         {{ $subscription->expires_at->format('d.m.Y') }}
@@ -63,7 +53,6 @@
                 </div>
 
                 <div style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 12px;">
-                    <a href="{{ route('cabinet.devices') }}" class="btn btn-secondary btn-sm">Управление устройствами и ключами</a>
                     <a href="{{ route('cabinet.history') }}" class="btn btn-primary btn-sm">Продлить подписку</a>
                 </div>
             </div>
@@ -79,10 +68,6 @@
                 <span class="sub-row-value muted">—</span>
             </div>
             <div class="sub-row">
-                <span class="sub-row-label">Устройств</span>
-                <span class="sub-row-value muted">—</span>
-            </div>
-            <div class="sub-row">
                 <span class="sub-row-label">Действует до</span>
                 <span class="sub-row-value muted">—</span>
             </div>
@@ -92,16 +77,43 @@
         </div>
     @endif
 
+    @if(!empty($connectionUri))
+        <div class="cab-card mt-24">
+            <div class="cab-card-header">
+                <span class="cab-card-title">Ссылка для подключения</span>
+            </div>
+            <p class="cab-page-desc" style="margin-bottom: 12px;">Скопируйте и вставьте в Happ / Hiddify / v2RayTun как подписку или отдельный сервер Hysteria2.</p>
+            <div style="display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;">
+                <input type="text" id="connectionUriInput" readonly value="{{ $connectionUri }}"
+                       style="flex:1;min-width:200px;font-family:monospace;font-size:0.8rem;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.25);color:inherit;">
+                <button type="button" class="btn btn-primary btn-sm" id="copyConnectionUriBtn">Копировать</button>
+            </div>
+        </div>
+    @endif
+
     <div class="mt-24">
         @include('partials.platform-instructions', [
-            'subUrl' => $primarySubUrl,
+            'subUrl' => $connectionUri ?? null,
             'title'  => 'Как подключиться',
-            'desc'   => $primarySubUrl
-                ? 'Выберите вашу платформу и следуйте трём шагам. Ссылку подписки можно найти во вкладке «Управление».'
-                : 'Выберите вашу платформу и следуйте трём шагам. После оформления подписки ссылка для подключения появится во вкладке «Управление».',
+            'desc'   => !empty($connectionUri)
+                ? 'Скопируйте ссылку выше и добавьте её в VPN-приложение.'
+                : 'После оформления подписки здесь появится ссылка для подключения.',
         ])
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('copyConnectionUriBtn')?.addEventListener('click', function () {
+    var input = document.getElementById('connectionUriInput');
+    if (!input) return;
+    navigator.clipboard.writeText(input.value);
+    this.textContent = 'Скопировано!';
+    var btn = this;
+    setTimeout(function () { btn.textContent = 'Копировать'; }, 2000);
+});
+</script>
+@endpush
 
 @push('styles')
 <style>
@@ -185,7 +197,7 @@
                     return;
                 }
                 if (attempts >= maxAttempts) {
-                    setBanner('alert-info', 'Оплата ещё обрабатывается. Обновите страницу через минуту или откройте «Управление».');
+                    setBanner('alert-info', 'Оплата ещё обрабатывается. Обновите страницу через минуту.');
                     cleanUrl();
                     return;
                 }
