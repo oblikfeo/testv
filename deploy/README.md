@@ -14,7 +14,7 @@ bash deploy/server-bootstrap.sh
 bash deploy/server-deploy.sh --first-run
 ```
 
-После первого запуска отредактируйте `/var/www/testv/.env` (секреты, YooKassa, `ADMIN_*`, `API_TOKEN`, узлы VPN) и снова:
+После первого запуска отредактируйте `/var/www/testv/.env` (секреты, YooKassa, `ADMIN_*`, `API_TOKEN`, `SHARED_HY2_URI`, `SHARED_VLESS_URI`) и снова:
 
 ```bash
 cd /var/www/testv && bash deploy/server-deploy.sh

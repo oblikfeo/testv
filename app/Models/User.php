@@ -20,6 +20,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'trial_used',
+        'vpn_sub_id',
         'telegram_id',
         'telegram_username',
         'telegram_first_name',

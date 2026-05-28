@@ -279,13 +279,12 @@
 @endpush
 
 @php
-    $trialHours = (int) config('admin.trial.duration_hours', 3);
-    $trialQuotaGb = (int) config('admin.trial.soft_quota_gb', 5);
+    $trialHours = (int) config('vpn.trial.duration_hours', 3);
 @endphp
 
 @section('content')
     <h1 class="cab-page-title">Тест-драйв</h1>
-    <p class="cab-page-desc">Бесплатный ключ на {{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }}@if($trialQuotaGb > 0) и {{ $trialQuotaGb }} ГБ@endif, чтобы проверить сервис перед покупкой. Выдаётся один раз на аккаунт.</p>
+    <p class="cab-page-desc">Бесплатная подписка на {{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }} — те же серверы и ссылка, что у платного тарифа. Один раз на аккаунт.</p>
 
     @if (session('success'))
         <div class="alert alert-success" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 20px; color: #22c55e;">
@@ -315,80 +314,28 @@
                 </form>
             </div>
 
-        @elseif ($trialKey)
-            {{-- Ключ уже выдан --}}
-            <div class="trial-name">
-                <span class="country-flag">🇷🇺</span>
-                AVA тестовый период
-                @if ($trialKey->isActive())
-                    <span class="trial-badge active">● Активен</span>
-                @else
-                    <span class="trial-badge expired">● Истёк</span>
-                @endif
+        @elseif ($trialKey && $trialKey->isActive())
+            <div class="cab-card-header">
+                <span class="cab-card-title">Пробная подписка</span>
+                <span class="cab-badge green">Активна</span>
             </div>
-
-            <div class="trial-stats">
-                <div class="trial-stat {{ $trialKey->isExpired() ? 'expired' : '' }}">
-                    <div class="trial-stat-value">
-                        @if ($trialKey->isExpired())
-                            Истёк
-                        @else
-                            {{ $trialKey->getRemainingTimeRu() }}
-                        @endif
-                    </div>
-                    <div class="trial-stat-label">Осталось времени</div>
-                </div>
-                <div class="trial-stat {{ $trialKey->getUsagePercent() > 80 ? 'warning' : '' }}">
-                    <div class="trial-stat-value">{{ $trialKey->getRemainingGb() }} ГБ</div>
-                    <div class="trial-stat-label">Осталось трафика</div>
-                </div>
-                <div class="trial-stat">
-                    <div class="trial-stat-value">{{ $trialKey->getUsedGb() }} ГБ</div>
-                    <div class="trial-stat-label">Использовано</div>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 8px; display: flex; justify-content: space-between; font-size: 0.85rem;">
-                <span style="color: var(--text-secondary);">Трафик</span>
-                <span style="color: var(--text-primary);">{{ $trialKey->getUsedGb() }} / {{ $trialKey->getTotalGb() }} ГБ</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill {{ $trialKey->getUsagePercent() > 80 ? 'warning' : '' }}" style="width: {{ $trialKey->getUsagePercent() }}%;"></div>
-            </div>
-
-            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0;">
-                Действует до: <strong style="color: var(--text-primary);">{{ $trialKey->expires_at->format('d.m.Y') }}</strong>
+            <p class="info-text">
+                Действует до <strong>{{ $trialKey->expires_at->timezone(config('app.timezone'))->format('d.m.Y H:i') }}</strong>
+                (осталось {{ $trialKey->getRemainingTimeRu() }}).
+                Подписочная ссылка и инструкции — в разделе «Подписка», как у платного тарифа.
             </p>
+            <a href="{{ route('cabinet.subscription') }}" class="btn btn-primary">Перейти к подписке</a>
 
-            <div class="sub-link-box">
-                <div class="sub-link-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                    </svg>
-                    Подписочная ссылка (для Happ, Hiddify, V2rayN)
-                </div>
-                <div class="sub-link-row">
-                    <input type="text" 
-                           id="subLinkInput" 
-                           class="sub-link-input" 
-                           value="{{ $connectionUri ?? '' }}" 
-                           readonly>
-                    <button id="copyBtn" class="btn btn-primary btn-sm" onclick="copySubLink()">Копировать</button>
-                </div>
+        @elseif ($trialKey)
+            <div class="cab-card-header">
+                <span class="cab-card-title">Пробная подписка</span>
+                <span class="cab-badge gray">Истекла</span>
             </div>
-
-            <div class="apps-hint">
-                <div class="apps-hint-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 16v-4"/>
-                        <path d="M12 8h.01"/>
-                    </svg>
-                    Как подключиться?
-                </div>
-                <p>Скопируйте ссылку и добавьте её в приложение как «Подписку». Рекомендуем <a href="https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973" target="_blank" rel="noopener noreferrer">Happ</a> для iOS или <a href="https://play.google.com/store/apps/details?id=app.hiddify.com" target="_blank" rel="noopener noreferrer">Hiddify</a> для Android.</p>
-            </div>
+            <p class="info-text">
+                Пробный период закончился {{ $trialKey->expires_at->format('d.m.Y H:i') }}.
+                Оформите платную подписку, чтобы снова получить доступ к тем же серверам.
+            </p>
+            <a href="{{ route('home') }}#pricing" class="btn btn-primary">Оформить подписку</a>
 
         @elseif ($canUseTrial)
             {{-- Можно получить ключ --}}
@@ -397,8 +344,8 @@
                 <span class="cab-badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">Доступно</span>
             </div>
             <p class="info-text">
-                Нажмите кнопку — мы создадим для вас тестовую подписку на <strong>{{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }}</strong>@if($trialQuotaGb > 0) и <strong>{{ $trialQuotaGb }} ГБ</strong> трафика@endif. 
-                Вы получите ссылку, которую нужно добавить в VPN-приложение.
+                Нажмите кнопку — активируем пробную подписку на <strong>{{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }}</strong>
+                с той же подписочной ссылкой (Hysteria2 + VLESS), что и после оплаты.
             </p>
             <form method="POST" action="{{ route('cabinet.trial.create') }}">
                 @csrf
@@ -408,7 +355,7 @@
                         <polyline points="7 10 12 15 17 10"/>
                         <line x1="12" y1="15" x2="12" y2="3"/>
                     </svg>
-                    Получить тестовый ключ
+                    Активировать пробную подписку
                 </button>
             </form>
 

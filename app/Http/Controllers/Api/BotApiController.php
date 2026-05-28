@@ -504,7 +504,7 @@ class BotApiController extends Controller
      */
     protected function resolveSubscription(User $user, ?TrialKey $trialKey = null): array
     {
-        $connectionUri = SharedVpnAccess::connectionUri();
+        $subLink = SharedVpnAccess::connectionUriForUser($user);
 
         $activeSubscription = $user->activeSubscriptions()->with('plan')->first();
         if ($activeSubscription) {
@@ -513,8 +513,8 @@ class BotApiController extends Controller
                 'plan_slug' => $activeSubscription->plan?->slug,
                 'plan_name' => $activeSubscription->plan?->name,
                 'expires_at' => $activeSubscription->expires_at?->toIso8601String(),
-                'connection_uri' => $connectionUri,
-                'sub_link' => $connectionUri,
+                'connection_uri' => $subLink,
+                'sub_link' => $subLink,
             ];
         }
 
@@ -527,8 +527,8 @@ class BotApiController extends Controller
                 'plan_slug' => 'trial',
                 'plan_name' => 'Пробный доступ',
                 'expires_at' => $trialKey->expires_at?->toIso8601String(),
-                'connection_uri' => $isActive ? $connectionUri : null,
-                'sub_link' => $isActive ? $connectionUri : null,
+                'connection_uri' => $isActive ? $subLink : null,
+                'sub_link' => $isActive ? $subLink : null,
             ];
         }
 
@@ -545,7 +545,7 @@ class BotApiController extends Controller
     protected function collectSubscriptionItems(User $user): array
     {
         $items = [];
-        $connectionUri = SharedVpnAccess::connectionUri();
+        $subLink = SharedVpnAccess::connectionUriForUser($user);
 
         foreach ($user->activeSubscriptions()->with('plan')->get() as $sub) {
             $planName = trim(
@@ -561,8 +561,8 @@ class BotApiController extends Controller
                 'plan_slug' => $sub->plan?->slug,
                 'plan_name' => $planName !== '' ? $planName : 'Подписка',
                 'expires_at' => $sub->expires_at?->toIso8601String(),
-                'connection_uri' => $connectionUri,
-                'sub_link' => $connectionUri,
+                'connection_uri' => $subLink,
+                'sub_link' => $subLink,
             ];
         }
 
@@ -576,8 +576,8 @@ class BotApiController extends Controller
                 'plan_slug' => 'trial',
                 'plan_name' => 'Пробный доступ',
                 'expires_at' => $trialKey->expires_at?->toIso8601String(),
-                'connection_uri' => $connectionUri,
-                'sub_link' => $connectionUri,
+                'connection_uri' => $subLink,
+                'sub_link' => $subLink,
             ];
         }
 

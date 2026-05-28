@@ -36,12 +36,14 @@ class CabinetController extends Controller
     {
         $user = $request->user();
         $subscriptions = $user->activeSubscriptions()->with('plan')->get();
+        $activeTrialKey = SharedVpnAccess::activeTrialKey($user);
         $connectionUri = SharedVpnAccess::connectionUriForUser($user);
 
         return view('cabinet.subscription', [
             'activeRoute' => 'subscription',
             'user' => $user,
             'subscriptions' => $subscriptions,
+            'activeTrialKey' => $activeTrialKey,
             'connectionUri' => $connectionUri,
             'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
@@ -51,9 +53,7 @@ class CabinetController extends Controller
     {
         $user = $request->user();
         $trialKey = $user->trialKey;
-        $connectionUri = SharedVpnAccess::trialIsActive($trialKey)
-            ? SharedVpnAccess::connectionUri()
-            : null;
+        $connectionUri = SharedVpnAccess::connectionUriForUser($user);
 
         return view('cabinet.trial', [
             'activeRoute' => 'trial',
@@ -99,7 +99,9 @@ class CabinetController extends Controller
         try {
             $this->trialKeyService->createTrialKey($user);
 
-            return back()->with('success', 'Тестовый период активирован! Скопируйте ссылку подключения ниже.');
+            return redirect()
+                ->route('cabinet.subscription')
+                ->with('success', 'Пробная подписка активирована на 3 часа. Скопируйте подписочную ссылку ниже.');
         } catch (\Exception $e) {
             return back()->withErrors(['trial' => $e->getMessage()]);
         }

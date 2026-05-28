@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\TrialKey;
 use App\Models\User;
-use Illuminate\Support\Str;
+use App\Support\SharedVpnAccess;
 
 class TrialKeyService
 {
@@ -14,8 +14,8 @@ class TrialKeyService
             throw new \Exception('Пользователь не может получить тестовый период');
         }
 
-        $durationHours = (int) config('admin.trial.duration_hours', 3);
-        $softQuotaGb = (int) config('admin.trial.soft_quota_gb', 5);
+        $durationHours = (int) config('vpn.trial.duration_hours', 3);
+        $softQuotaGb = (int) config('vpn.trial.soft_quota_gb', 0);
 
         return $this->issueTrialKey($user, $durationHours, $softQuotaGb);
     }
@@ -50,9 +50,11 @@ class TrialKeyService
             }
         }
 
+        $subId = SharedVpnAccess::ensureVpnSubId($user);
+
         $trialKey = TrialKey::create([
             'user_id' => $user->id,
-            'sub_id' => Str::random(16),
+            'sub_id' => $subId,
             'total_bytes' => $softQuotaGb > 0 ? $softQuotaGb * 1024 * 1024 * 1024 : 0,
             'used_bytes' => 0,
             'expires_at' => now()->addHours($durationHours),

@@ -57,6 +57,29 @@
                 </div>
             </div>
         @endforeach
+    @elseif($activeTrialKey)
+        @php $trialHours = (int) config('vpn.trial.duration_hours', 3); @endphp
+        <div class="cab-card">
+            <div class="cab-card-header">
+                <span class="cab-card-title">Текущий тариф</span>
+                <span class="cab-badge green">Активна</span>
+            </div>
+            <div class="sub-row">
+                <span class="sub-row-label">Тариф</span>
+                <span class="sub-row-value">Пробный доступ ({{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }})</span>
+            </div>
+            <div class="sub-row">
+                <span class="sub-row-label">Действует до</span>
+                <span class="sub-row-value">
+                    {{ $activeTrialKey->expires_at->timezone(config('app.timezone'))->format('d.m.Y H:i') }}
+                    <span class="days-left">({{ $activeTrialKey->getRemainingTimeRu() }})</span>
+                </span>
+            </div>
+            <p class="cab-page-desc" style="margin-top: 16px; margin-bottom: 0;">Те же серверы и подписочная ссылка, что и у платного тарифа — отличается только срок ({{ $trialHours }} ч).</p>
+            <div style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 12px;">
+                <a href="{{ route('home') }}#pricing" class="btn btn-primary btn-sm">Оформить подписку</a>
+            </div>
+        </div>
     @else
         <div class="cab-card">
             <div class="cab-card-header">
@@ -72,24 +95,13 @@
                 <span class="sub-row-value muted">—</span>
             </div>
             <div style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 12px;">
+                <a href="{{ route('cabinet.trial') }}" class="btn btn-secondary btn-sm">Пробный доступ</a>
                 <a href="{{ route('cabinet.history') }}" class="btn btn-primary btn-sm">Оформить подписку</a>
             </div>
         </div>
     @endif
 
-    @if(!empty($connectionUri))
-        <div class="cab-card mt-24">
-            <div class="cab-card-header">
-                <span class="cab-card-title">Ссылка для подключения</span>
-            </div>
-            <p class="cab-page-desc" style="margin-bottom: 12px;">Скопируйте и вставьте в Happ / Hiddify / v2RayTun как подписку или отдельный сервер Hysteria2.</p>
-            <div style="display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;">
-                <input type="text" id="connectionUriInput" readonly value="{{ $connectionUri }}"
-                       style="flex:1;min-width:200px;font-family:monospace;font-size:0.8rem;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.25);color:inherit;">
-                <button type="button" class="btn btn-primary btn-sm" id="copyConnectionUriBtn">Копировать</button>
-            </div>
-        </div>
-    @endif
+    @include('partials.cabinet-subscription-link', ['connectionUri' => $connectionUri ?? null])
 
     <div class="mt-24">
         @include('partials.platform-instructions', [
@@ -104,13 +116,15 @@
 
 @push('scripts')
 <script>
-document.getElementById('copyConnectionUriBtn')?.addEventListener('click', function () {
-    var input = document.getElementById('connectionUriInput');
-    if (!input) return;
-    navigator.clipboard.writeText(input.value);
-    this.textContent = 'Скопировано!';
-    var btn = this;
-    setTimeout(function () { btn.textContent = 'Копировать'; }, 2000);
+document.querySelectorAll('.cabinet-copy-sub-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var input = document.getElementById(this.getAttribute('data-copy-target'));
+        if (!input) return;
+        navigator.clipboard.writeText(input.value);
+        this.textContent = 'Скопировано!';
+        var self = this;
+        setTimeout(function () { self.textContent = 'Копировать'; }, 2000);
+    });
 });
 </script>
 @endpush

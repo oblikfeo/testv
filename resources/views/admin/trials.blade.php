@@ -5,7 +5,7 @@
 @section('content')
 <div class="mb-6">
     <h1 class="text-2xl font-bold text-white">Тестовые периоды</h1>
-    <p class="text-gray-400 text-sm mt-1">Общая ссылка подключения: <code class="text-gray-300">{{ \App\Support\SharedVpnAccess::connectionUri() }}</code></p>
+    <p class="text-gray-400 text-sm mt-1">Узлы подписки ({{ count(\App\Support\SharedVpnAccess::nodeUris()) }}): @foreach(\App\Support\SharedVpnAccess::nodeUris() as $uri)<code class="text-gray-300 block mt-1 break-all">{{ $uri }}</code>@endforeach</p>
 </div>
 
 @if(session('success'))
