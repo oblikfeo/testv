@@ -9,13 +9,32 @@ use Illuminate\Support\Str;
 class SharedVpnAccess
 {
     /**
+     * Название подписки в клиенте (Happ: HTTP-заголовок profile-title, макс. 25 символов).
+     */
+    public const PROFILE_TITLE = 'AVA VPN';
+
+    /**
+     * Подписи узлов в Happ. Ключ — config-ключ URI.
+     * name  — отображаемое имя (фрагмент #..., поддерживает эмодзи-флаги).
+     * desc  — подпись под именем вместо «VLESS»/«Hysteria2» (Happ: serverDescription).
+     *
+     * @var array<string, array{name: string, desc: ?string}>
+     */
+    private const NODE_LABELS = [
+        'shared_hy2_uri' => ['name' => '🇷🇺 Высокая скорость Wi-Fi', 'desc' => null],
+        'shared_vless_uri' => ['name' => '🇷🇺 Мобильная сеть', 'desc' => 'все операторы'],
+    ];
+
+    /**
+     * Сырые URI из конфигурации (как заданы в .env), для отображения в админке.
+     *
      * @return list<string>
      */
     public static function nodeUris(): array
     {
         $uris = [];
 
-        foreach (['shared_hy2_uri', 'shared_vless_uri'] as $key) {
+        foreach (array_keys(self::NODE_LABELS) as $key) {
             $uri = trim((string) config("vpn.{$key}", ''));
             if ($uri !== '') {
                 $uris[] = $uri;
@@ -25,9 +44,41 @@ class SharedVpnAccess
         return $uris;
     }
 
+    /**
+     * URI с подписями для Happ: имя узла (#...) и serverDescription.
+     * Любой существующий #fragment в URI заменяется на наш.
+     *
+     * @return list<string>
+     */
+    public static function namedNodeUris(): array
+    {
+        $uris = [];
+
+        foreach (self::NODE_LABELS as $key => $label) {
+            $uri = trim((string) config("vpn.{$key}", ''));
+            if ($uri === '') {
+                continue;
+            }
+
+            $hashPos = strpos($uri, '#');
+            if ($hashPos !== false) {
+                $uri = substr($uri, 0, $hashPos);
+            }
+
+            $fragment = $label['name'];
+            if (! empty($label['desc'])) {
+                $fragment .= '?serverDescription=' . base64_encode($label['desc']);
+            }
+
+            $uris[] = $uri . '#' . $fragment;
+        }
+
+        return $uris;
+    }
+
     public static function subscriptionBody(): string
     {
-        $uris = self::nodeUris();
+        $uris = self::namedNodeUris();
         if ($uris === []) {
             return '';
         }

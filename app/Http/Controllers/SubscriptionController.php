@@ -30,6 +30,7 @@ class SubscriptionController extends Controller
         $headers = [
             'Content-Type' => 'text/plain; charset=utf-8',
             'profile-update-interval' => '12',
+            'profile-title' => SharedVpnAccess::PROFILE_TITLE,
         ];
 
         $expiresAt = SharedVpnAccess::accessExpiresAt($user);
