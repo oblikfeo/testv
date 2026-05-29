@@ -184,7 +184,7 @@
 
             <div class="hero-cta reveal" style="--reveal-delay: 180ms">
                 @auth
-                    <a href="{{ route('keys.index') }}" class="btn btn-primary btn-lg">Перейти в кабинет →</a>
+                    <a href="{{ route('cabinet.subscription') }}" class="btn btn-primary btn-lg">Перейти в кабинет →</a>
                     <span class="hint">Ваши ключи и активные подписки</span>
                 @else
                     <a href="{{ route('register') }}" class="btn btn-primary btn-lg">Получить тест бесплатно →</a>
@@ -430,7 +430,7 @@
 
             <div class="pricing-cta reveal">
                 @auth
-                    <a href="{{ route('keys.index') }}" class="btn btn-primary btn-lg">Перейти в&nbsp;кабинет →</a>
+                    <a href="{{ route('cabinet.subscription') }}" class="btn btn-primary btn-lg">Перейти в&nbsp;кабинет →</a>
                 @else
                     <a href="{{ route('register') }}" class="btn btn-primary btn-lg">Оформить подписку →</a>
                 @endauth
@@ -575,7 +575,7 @@
                 <p>3&nbsp;часа бесплатного тестового доступа без банковской карты.<br>Если понравится — продолжите с&nbsp;любого тарифа.</p>
                 <div class="cta-buttons">
                     @auth
-                        <a href="{{ route('keys.index') }}" class="btn btn-primary btn-lg">Перейти в&nbsp;кабинет →</a>
+                        <a href="{{ route('cabinet.subscription') }}" class="btn btn-primary btn-lg">Перейти в&nbsp;кабинет →</a>
                     @else
                         <a href="{{ route('register') }}" class="btn btn-primary btn-lg">Получить тест бесплатно →</a>
                     @endauth

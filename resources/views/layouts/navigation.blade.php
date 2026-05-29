@@ -15,7 +15,7 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('keys.index')" :active="request()->routeIs('keys.*')">
+                    <x-nav-link :href="route('cabinet.subscription')" :active="request()->routeIs('cabinet.*')">
                         {{ __('Мои ключи') }}
                     </x-nav-link>
                 </div>
@@ -73,7 +73,7 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('keys.index')" :active="request()->routeIs('keys.*')">
+            <x-responsive-nav-link :href="route('cabinet.subscription')" :active="request()->routeIs('cabinet.*')">
                 {{ __('Мои ключи') }}
             </x-responsive-nav-link>
         </div>

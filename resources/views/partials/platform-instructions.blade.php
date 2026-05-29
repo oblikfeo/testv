@@ -108,8 +108,8 @@
                 <h3>Скачайте приложение</h3>
                 <p>Загрузите Happ или v2RayTun для Windows.</p>
                 <div class="inline-buttons">
-                    <a href="https://apps.microsoft.com/detail/9nwf2wpgc3sq" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">Happ — Microsoft Store</a>
-                    <a href="https://github.com/mdf45/v2raytun/releases" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">v2RayTun — Скачать</a>
+                    <a href="https://github.com/Happ-proxy/happ-desktop/releases/latest" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">Happ — Скачать</a>
+                    <a href="https://v2raytun.com/" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">v2RayTun — Скачать</a>
                 </div>
             </div>
         </div>

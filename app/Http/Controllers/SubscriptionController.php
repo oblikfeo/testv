@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 class SubscriptionController extends Controller
 {
     /**
-     * GET /sub/{subId} — подписка для Happ / Hiddify / v2RayTun (base64, несколько узлов).
+     * GET /sub/{subId} — подписка для Happ / v2RayTun (base64, несколько узлов).
      */
     public function show(string $subId, Request $request): Response
     {

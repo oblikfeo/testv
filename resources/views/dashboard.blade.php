@@ -10,7 +10,7 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100 space-y-2">
                     <p>{{ __("You're logged in!") }}</p>
-                    <a href="{{ route('keys.index') }}" class="text-indigo-600 dark:text-indigo-400 text-sm underline">{{ __('Перейти к моим ключам') }}</a>
+                    <a href="{{ route('cabinet.subscription') }}" class="text-indigo-600 dark:text-indigo-400 text-sm underline">{{ __('Перейти к моим ключам') }}</a>
                 </div>
             </div>
         </div>
