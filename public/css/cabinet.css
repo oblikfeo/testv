@@ -125,12 +125,25 @@
     color: var(--red-light);
 }
 
-/* Main */
+/* Main — колонка по центру области справа от сайдбара */
 .cab-main {
+    --cab-content-max: 720px;
+
     margin-left: 220px;
     flex: 1;
-    padding: 36px 40px;
-    max-width: 780px;
+    width: calc(100% - 220px);
+    max-width: none;
+    padding: 36px clamp(20px, 4vw, 56px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: calc(100vh - 73px);
+}
+
+.cab-main > * {
+    width: 100%;
+    max-width: var(--cab-content-max);
 }
 
 .cab-page-title {
@@ -362,7 +375,7 @@
 
 /* ===== Subscription page ===== */
 .cab-main:has(.sub-page) {
-    max-width: 960px;
+    --cab-content-max: 880px;
 }
 
 .sub-page {
@@ -705,7 +718,13 @@
 
     .cab-main {
         margin-left: 0;
+        width: 100%;
         padding: 24px 16px 80px;
+        align-items: stretch;
+    }
+
+    .cab-main > * {
+        max-width: none;
     }
 
     .cab-card { padding: 20px; }
