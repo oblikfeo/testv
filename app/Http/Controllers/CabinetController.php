@@ -109,19 +109,25 @@ class CabinetController extends Controller
 
     public function profile(Request $request): View
     {
+        $user = $request->user();
+
         return view('cabinet.profile', [
             'activeRoute' => 'profile',
-            'user' => $request->user(),
-            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($request->user()->id),
+            'user' => $user,
+            'hasActiveAccess' => $user->activeSubscriptions()->exists()
+                || SharedVpnAccess::activeTrialKey($user) !== null,
+            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
     }
 
     public function security(Request $request): View
     {
+        $user = $request->user();
+
         return view('cabinet.security', [
             'activeRoute' => 'security',
-            'user' => $request->user(),
-            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($request->user()->id),
+            'user' => $user,
+            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
     }
 

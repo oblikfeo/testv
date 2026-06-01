@@ -3,70 +3,113 @@
 @section('title', 'Профиль')
 
 @section('content')
-    <h1 class="cab-page-title">Профиль</h1>
-    <p class="cab-page-desc">Основная информация и настройки аккаунта.</p>
+<div class="account-page profile-page">
+    <header class="account-hero">
+        <h1 class="cab-page-title">Профиль</h1>
+        <p class="cab-page-desc">Основная информация об аккаунте и настройки.</p>
+    </header>
 
-    <div class="cab-card">
-        <div class="info-line">
-            <span class="label">ID</span>
-            <span class="value">#{{ $user->id }}</span>
-        </div>
-        <div class="info-line">
-            <span class="label">Дата регистрации</span>
-            <span class="value">{{ $user->created_at?->timezone(config('app.timezone'))->format('d.m.Y') ?? '—' }}</span>
-        </div>
-        <div class="info-line">
-            <span class="label">Статус</span>
-            <span class="value">Подписка не активна</span>
-        </div>
-    </div>
-
-    <div style="height: 20px;"></div>
-
-    <div class="cab-card">
-        <div class="cab-card-header">
-            <span class="cab-card-title">Редактирование</span>
-        </div>
-        <form method="post" action="{{ route('profile.update') }}">
-            @csrf
-            @method('patch')
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="name">Имя</label>
-                    <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" placeholder="Как вас зовут">
-                    <x-input-error :messages="$errors->get('name')" class="form-error" />
+    <div class="account-stack">
+        <section class="cab-card account-card account-card--overview" aria-label="Сводка аккаунта">
+            <div class="account-card-head">
+                <div class="account-avatar" aria-hidden="true">
+                    {{ mb_strtoupper(mb_substr($user->name ?: $user->email, 0, 1)) }}
                 </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" placeholder="name@mail.ru" autocomplete="email">
-                    <x-input-error :messages="$errors->get('email')" class="form-error" />
+                <div class="account-identity">
+                    <h2 class="account-card-title">{{ $user->name ?: 'Пользователь' }}</h2>
+                    <p class="account-card-sub">{{ $user->email }}</p>
                 </div>
             </div>
 
-            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
-                    Ваш email ещё не подтверждён.
-                    <button type="submit" form="send-verification" style="background: none; border: none; color: var(--red-light); cursor: pointer; text-decoration: underline; padding: 0; font: inherit;">
-                        Отправить ссылку подтверждения ещё раз.
-                    </button>
-                </p>
-                @if (session('status') === 'verification-link-sent')
-                    <p style="color: var(--red-light); font-size: 0.85rem; margin-bottom: 16px;">
-                        Новая ссылка подтверждения отправлена на ваш email.
-                    </p>
+            <div class="account-stats">
+                <div class="account-stat">
+                    <span class="account-stat-label">ID аккаунта</span>
+                    <span class="account-stat-value">#{{ $user->id }}</span>
+                </div>
+                <div class="account-stat">
+                    <span class="account-stat-label">Регистрация</span>
+                    <span class="account-stat-value">{{ $user->created_at?->timezone(config('app.timezone'))->format('d.m.Y') ?? '—' }}</span>
+                </div>
+                <div class="account-stat">
+                    <span class="account-stat-label">Email</span>
+                    <span class="account-stat-value">
+                        @if($user->hasVerifiedEmail())
+                            <span class="account-pill is-ok">Подтверждён</span>
+                        @else
+                            <span class="account-pill is-warn">Не подтверждён</span>
+                        @endif
+                    </span>
+                </div>
+                <div class="account-stat">
+                    <span class="account-stat-label">Доступ VPN</span>
+                    <span class="account-stat-value">
+                        @if($hasActiveAccess)
+                            <span class="account-pill is-ok">Активен</span>
+                        @else
+                            <span class="account-pill is-muted">Нет подписки</span>
+                        @endif
+                    </span>
+                </div>
+                @if($user->telegram_username || $user->telegram_id)
+                    <div class="account-stat account-stat--wide">
+                        <span class="account-stat-label">Telegram</span>
+                        <span class="account-stat-value">
+                            @if($user->telegram_username)
+                                {{ '@' . ltrim($user->telegram_username, '@') }}
+                            @else
+                                ID {{ $user->telegram_id }}
+                            @endif
+                        </span>
+                    </div>
+                @endif
+            </div>
+        </section>
+
+        <section class="cab-card account-card account-card--form" aria-labelledby="profile-edit-title">
+            <div class="account-section-head">
+                <h2 id="profile-edit-title" class="account-section-title">Редактирование</h2>
+                <p class="account-section-desc">Имя и email для входа и уведомлений</p>
+            </div>
+
+            @if($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
+                <div class="account-notice account-notice--warn">
+                    <p>Email ещё не подтверждён — часть функций (включая тест-драйв) недоступна.</p>
+                    <button type="submit" form="send-verification" class="account-notice-link">Отправить ссылку ещё раз</button>
+                </div>
+                @if(session('status') === 'verification-link-sent')
+                    <div class="sub-alert sub-alert-success">Новая ссылка подтверждения отправлена на ваш email.</div>
                 @endif
             @endif
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
-                @if (session('status') === 'profile-updated')
-                    <span style="margin-left: 12px; font-size: 0.85rem; color: var(--text-secondary);">Сохранено.</span>
-                @endif
-            </div>
-        </form>
+            <form method="post" action="{{ route('profile.update') }}" class="account-form">
+                @csrf
+                @method('patch')
+
+                <div class="account-form-grid">
+                    <div class="account-field">
+                        <label for="name">Имя</label>
+                        <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" placeholder="Как вас зовут" autocomplete="name">
+                        <x-input-error :messages="$errors->get('name')" class="form-error" />
+                    </div>
+                    <div class="account-field">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" placeholder="name@mail.ru" autocomplete="email">
+                        <x-input-error :messages="$errors->get('email')" class="form-error" />
+                    </div>
+                </div>
+
+                <div class="account-form-footer">
+                    <button type="submit" class="btn btn-primary account-submit">Сохранить изменения</button>
+                    @if(session('status') === 'profile-updated')
+                        <span class="account-saved" role="status">Сохранено</span>
+                    @endif
+                </div>
+            </form>
+        </section>
     </div>
 
-    <form id="send-verification" method="post" action="{{ route('verification.send') }}" style="display: none;">
+    <form id="send-verification" method="post" action="{{ route('verification.send') }}" class="sr-only">
         @csrf
     </form>
+</div>
 @endsection
