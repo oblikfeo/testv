@@ -175,32 +175,37 @@
     @push('styles')
     <style>
         .platform-block {
-            padding: 24px;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(180deg, var(--bg-card) 0%, rgba(22, 22, 22, 0.98) 100%);
         }
         .platform-block-head {
+            padding: 24px 28px 0;
             margin-bottom: 18px;
         }
         .platform-block-title {
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--text-primary);
-            margin: 0 0 4px;
+            margin: 0 0 6px;
+            letter-spacing: -0.02em;
         }
         .platform-block-desc {
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             color: var(--text-muted);
             margin: 0;
-            line-height: 1.5;
+            line-height: 1.55;
+            max-width: 52ch;
         }
 
         .platform-tabs {
             display: flex;
             gap: 6px;
-            margin-bottom: 16px;
-            padding: 4px;
-            background: var(--bg-primary);
+            margin: 0 28px 20px;
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.35);
             border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius-md);
             overflow-x: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -235,7 +240,8 @@
         .platform-instructions {
             display: none;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
+            padding: 0 28px 28px;
         }
         .platform-instructions.active {
             display: flex;
@@ -243,12 +249,12 @@
 
         .instruction-card {
             display: flex;
-            gap: 14px;
-            padding: 16px;
-            background: var(--bg-primary);
+            gap: 16px;
+            padding: 18px 20px;
+            background: rgba(0, 0, 0, 0.25);
             border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            transition: border-color var(--transition);
+            border-radius: var(--radius-md);
+            transition: border-color var(--transition), background var(--transition);
         }
         .instruction-card:hover {
             border-color: rgba(220, 38, 38, 0.25);
@@ -299,10 +305,18 @@
         }
 
         @media (max-width: 640px) {
-            .platform-block { padding: 18px; }
+            .platform-block-head {
+                padding: 20px 20px 0;
+            }
 
             .platform-tabs {
+                margin-left: 20px;
+                margin-right: 20px;
                 gap: 2px;
+            }
+
+            .platform-instructions {
+                padding: 0 20px 24px;
             }
             .platform-tab {
                 min-width: 72px;
