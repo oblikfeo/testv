@@ -2,385 +2,212 @@
 
 @section('title', 'Тест-драйв')
 
-@push('styles')
-<style>
-    .trial-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-    .trial-stat {
-        background: rgba(255,255,255,0.03);
-        border-radius: 12px;
-        padding: 16px;
-        text-align: center;
-    }
-    .trial-stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--accent);
-        margin-bottom: 4px;
-    }
-    .trial-stat-label {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-    }
-    .trial-stat.expired .trial-stat-value {
-        color: #ef4444;
-    }
-    .trial-stat.warning .trial-stat-value {
-        color: #f59e0b;
-    }
-    .progress-bar {
-        height: 8px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 4px;
-        overflow: hidden;
-        margin: 16px 0;
-    }
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--accent), #8b5cf6);
-        border-radius: 4px;
-        transition: width 0.3s ease;
-    }
-    .progress-fill.warning {
-        background: linear-gradient(90deg, #f59e0b, #ef4444);
-    }
-    .sub-link-box {
-        background: rgba(0,0,0,0.3);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 12px;
-        padding: 16px;
-        margin-top: 20px;
-    }
-    .sub-link-label {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .sub-link-label svg {
-        width: 16px;
-        height: 16px;
-    }
-    .sub-link-row {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-    .sub-link-input {
-        flex: 1;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 8px;
-        padding: 12px 14px;
-        color: var(--text-primary);
-        font-family: monospace;
-        font-size: 0.85rem;
-    }
-    .country-flag {
-        font-size: 1.2rem;
-        margin-right: 6px;
-    }
-    .trial-name {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 12px;
-    }
-    .trial-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    .trial-badge.active {
-        background: rgba(34, 197, 94, 0.15);
-        color: #22c55e;
-    }
-    .trial-badge.expired {
-        background: rgba(239, 68, 68, 0.15);
-        color: #ef4444;
-    }
-    .info-text {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        line-height: 1.6;
-        margin-bottom: 20px;
-    }
-    .info-text strong {
-        color: var(--text-primary);
-    }
-    .apps-hint {
-        margin-top: 20px;
-        padding: 16px;
-        background: rgba(139, 92, 246, 0.1);
-        border-radius: 12px;
-        border: 1px solid rgba(139, 92, 246, 0.2);
-    }
-    .apps-hint-title {
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .apps-hint p {
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-        margin: 0;
-    }
-    .apps-hint a {
-        color: var(--accent);
-        text-decoration: underline;
-    }
-    .verify-notice {
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.3);
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-    }
-    .verify-notice p {
-        color: var(--text-secondary);
-        margin-bottom: 16px;
-    }
-
-    .devices-section {
-        margin-top: 24px;
-        padding-top: 20px;
-        border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .devices-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    }
-    .devices-title {
-        font-weight: 600;
-        color: var(--text-primary);
-        font-size: 0.95rem;
-    }
-    .devices-count {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        background: rgba(255,255,255,0.05);
-        padding: 4px 10px;
-        border-radius: 20px;
-    }
-    .devices-empty {
-        text-align: center;
-        padding: 24px;
-        color: var(--text-secondary);
-    }
-    .devices-empty svg {
-        margin-bottom: 12px;
-    }
-    .devices-empty p {
-        margin: 0 0 4px;
-        font-size: 0.9rem;
-    }
-    .devices-empty small {
-        font-size: 0.8rem;
-        opacity: 0.7;
-    }
-    .devices-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .device-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 14px 16px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 10px;
-        transition: all 0.2s ease;
-    }
-    .device-item:hover {
-        background: rgba(255,255,255,0.05);
-        border-color: rgba(255,255,255,0.12);
-    }
-    .device-info {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-    .device-icon {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(139, 92, 246, 0.15);
-        border-radius: 10px;
-        color: #8b5cf6;
-    }
-    .device-details {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-    .device-name {
-        font-weight: 500;
-        color: var(--text-primary);
-        font-size: 0.9rem;
-    }
-    .device-meta {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-    }
-    .device-delete-btn {
-        background: transparent;
-        border: none;
-        color: var(--text-secondary);
-        cursor: pointer;
-        padding: 8px;
-        border-radius: 8px;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .device-delete-btn:hover {
-        background: rgba(239, 68, 68, 0.15);
-        color: #ef4444;
-    }
-</style>
-@endpush
-
-@push('scripts')
-<script>
-    function copySubLink() {
-        var input = document.getElementById('subLinkInput');
-        navigator.clipboard.writeText(input.value);
-        var btn = document.getElementById('copyBtn');
-        btn.textContent = 'Скопировано!';
-        btn.classList.add('btn-success');
-        setTimeout(function() {
-            btn.textContent = 'Копировать';
-            btn.classList.remove('btn-success');
-        }, 2000);
-    }
-</script>
-@endpush
-
 @php
     $trialHours = (int) config('vpn.trial.duration_hours', 3);
+    $isActive = $trialKey && $trialKey->isActive();
+    $timeProgress = 0;
+    if ($isActive && $trialKey->activated_at) {
+        $totalMinutes = max(1, $trialHours * 60);
+        $elapsed = (int) $trialKey->activated_at->diffInMinutes(now());
+        $timeProgress = (int) max(0, min(100, round((1 - $elapsed / $totalMinutes) * 100)));
+    }
+    $trafficProgress = $trialKey ? (100 - $trialKey->getUsagePercent()) : 0;
+    $showTraffic = $trialKey && $trialKey->total_bytes > 0;
 @endphp
 
 @section('content')
-    <h1 class="cab-page-title">Тест-драйв</h1>
-    <p class="cab-page-desc">Бесплатная подписка на {{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }} — те же серверы и ссылка, что у платного тарифа. Один раз на аккаунт.</p>
+<div class="trial-page">
+    <header class="trial-hero">
+        <h1 class="cab-page-title">Тест-драйв</h1>
+        <p class="cab-page-desc">
+            Бесплатный доступ на {{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }} —
+            те же серверы и подписочная ссылка, что у платного тарифа. Один раз на аккаунт.
+        </p>
+    </header>
 
-    @if (session('success'))
-        <div class="alert alert-success" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 20px; color: #22c55e;">
-            {{ session('success') }}
+    @if(session('success'))
+        <div class="sub-alert sub-alert-success">{{ session('success') }}</div>
+    @endif
+
+    @if($errors->any())
+        <div class="sub-alert sub-alert-error">
+            @foreach($errors->all() as $error)
+                <p>{{ $error }}</p>
+            @endforeach
         </div>
     @endif
 
-    @if ($errors->any())
-        <div class="alert alert-error" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 20px; color: #ef4444;">
-            {{ $errors->first() }}
-        </div>
-    @endif
-
-    <div class="cab-card">
-        @if (!$user->hasVerifiedEmail())
-            {{-- Email не подтверждён --}}
-            <div class="verify-notice">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="margin-bottom: 12px;">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <p>Для получения тестового ключа необходимо подтвердить email</p>
-                <form method="POST" action="{{ route('verification.send') }}">
-                    @csrf
-                    <button type="submit" class="btn btn-primary btn-sm">Отправить письмо повторно</button>
-                </form>
-            </div>
-
-        @elseif ($trialKey && $trialKey->isActive())
-            <div class="cab-card-header">
-                <span class="cab-card-title">Пробная подписка</span>
-                <span class="cab-badge green">Активна</span>
-            </div>
-            <p class="info-text">
-                Действует до <strong>{{ $trialKey->expires_at->timezone(config('app.timezone'))->format('d.m.Y H:i') }}</strong>
-                (осталось {{ $trialKey->getRemainingTimeRu() }}).
-                Подписочная ссылка и инструкции — в разделе «Подписка», как у платного тарифа.
-            </p>
-            <a href="{{ route('cabinet.subscription') }}" class="btn btn-primary">Перейти к подписке</a>
-
-        @elseif ($trialKey)
-            <div class="cab-card-header">
-                <span class="cab-card-title">Пробная подписка</span>
-                <span class="cab-badge gray">Истекла</span>
-            </div>
-            <p class="info-text">
-                Пробный период закончился {{ $trialKey->expires_at->format('d.m.Y H:i') }}.
-                Оформите платную подписку, чтобы снова получить доступ к тем же серверам.
-            </p>
-            <a href="{{ route('home') }}#pricing" class="btn btn-primary">Оформить подписку</a>
-
-        @elseif ($canUseTrial)
-            {{-- Можно получить ключ --}}
-            <div class="cab-card-header">
-                <span class="cab-card-title">Тестовый ключ</span>
-                <span class="cab-badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">Доступно</span>
-            </div>
-            <p class="info-text">
-                Нажмите кнопку — активируем пробную подписку на <strong>{{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }}</strong>
-                с той же подписочной ссылкой (Hysteria2 + VLESS), что и после оплаты.
-            </p>
-            <form method="POST" action="{{ route('cabinet.trial.create') }}">
-                @csrf
-                <button type="submit" class="btn btn-primary">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
+    <div class="trial-stack">
+        @if(!$user->hasVerifiedEmail())
+            <article class="cab-card trial-card trial-card--warn">
+                <div class="trial-card-icon trial-card-icon--warn" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <path d="m22 6-10 7L2 6"/>
                     </svg>
-                    Активировать пробную подписку
-                </button>
-            </form>
+                </div>
+                <h2 class="trial-card-title">Подтвердите email</h2>
+                <p class="trial-card-desc">
+                    Чтобы активировать пробный доступ, перейдите по ссылке из письма после регистрации.
+                </p>
+                <form method="POST" action="{{ route('verification.send') }}" class="trial-card-action">
+                    @csrf
+                    <button type="submit" class="btn btn-primary trial-cta">Отправить письмо повторно</button>
+                </form>
+            </article>
+
+        @elseif($isActive)
+            <article class="cab-card trial-card trial-card--active">
+                <div class="trial-card-top">
+                    <div class="trial-card-title-wrap">
+                        <span class="cab-badge green">Активна</span>
+                        <h2 class="trial-card-title">Пробная подписка</h2>
+                    </div>
+                </div>
+
+                <div class="trial-stats">
+                    <div class="trial-stat">
+                        <span class="trial-stat-label">Действует до</span>
+                        <span class="trial-stat-value">{{ $trialKey->expires_at->timezone(config('app.timezone'))->format('d.m.Y H:i') }}</span>
+                    </div>
+                    <div class="trial-stat">
+                        <span class="trial-stat-label">Осталось</span>
+                        <span class="trial-stat-value {{ $timeProgress <= 20 ? 'is-warn' : '' }}">{{ $trialKey->getRemainingTimeRu() }}</span>
+                    </div>
+                    @if($showTraffic)
+                        <div class="trial-stat">
+                            <span class="trial-stat-label">Трафик</span>
+                            <span class="trial-stat-value">{{ $trialKey->getRemainingGb() }} / {{ $trialKey->getTotalGb() }} ГБ</span>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="trial-progress-block">
+                    <div class="trial-progress-head">
+                        <span>Время доступа</span>
+                        <span>{{ $timeProgress }}%</span>
+                    </div>
+                    <div class="trial-progress" role="progressbar" aria-valuenow="{{ $timeProgress }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="trial-progress-fill {{ $timeProgress <= 20 ? 'is-warn' : '' }}" style="width: {{ $timeProgress }}%"></div>
+                    </div>
+                </div>
+
+                @if($showTraffic)
+                    <div class="trial-progress-block">
+                        <div class="trial-progress-head">
+                            <span>Остаток трафика</span>
+                            <span>{{ $trafficProgress }}%</span>
+                        </div>
+                        <div class="trial-progress" role="progressbar" aria-valuenow="{{ $trafficProgress }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="trial-progress-fill {{ $trafficProgress <= 20 ? 'is-warn' : '' }}" style="width: {{ $trafficProgress }}%"></div>
+                        </div>
+                    </div>
+                @endif
+
+                @include('partials.cabinet-subscription-link', ['connectionUri' => $connectionUri ?? null])
+
+                <div class="trial-card-actions">
+                    <a href="{{ route('cabinet.subscription') }}" class="btn btn-secondary trial-cta">Раздел «Подписка»</a>
+                    <a href="{{ route('cabinet.history') }}" class="btn btn-primary trial-cta">Оформить подписку</a>
+                </div>
+            </article>
+
+        @elseif($trialKey)
+            <article class="cab-card trial-card">
+                <div class="trial-card-top">
+                    <div class="trial-card-title-wrap">
+                        <span class="cab-badge gray">Истекла</span>
+                        <h2 class="trial-card-title">Пробный период завершён</h2>
+                    </div>
+                </div>
+                <p class="trial-card-desc">
+                    Доступ закончился {{ $trialKey->expires_at->timezone(config('app.timezone'))->format('d.m.Y H:i') }}.
+                    Оформите платный тариф — подключение по той же ссылке, что и в пробном режиме.
+                </p>
+                <div class="trial-card-actions">
+                    <a href="{{ route('cabinet.history') }}" class="btn btn-primary trial-cta">Выбрать тариф</a>
+                </div>
+            </article>
+
+        @elseif($canUseTrial)
+            <article class="cab-card trial-card trial-card--offer">
+                <div class="trial-card-top">
+                    <div class="trial-card-title-wrap">
+                        <span class="cab-badge green">Доступно</span>
+                        <h2 class="trial-card-title">Попробуйте бесплатно</h2>
+                    </div>
+                </div>
+
+                <ul class="trial-features">
+                    <li>
+                        <span class="trial-feature-icon" aria-hidden="true">✓</span>
+                        <span>{{ $trialHours }} {{ trans_choice('час|часа|часов', $trialHours) }} полного доступа</span>
+                    </li>
+                    <li>
+                        <span class="trial-feature-icon" aria-hidden="true">✓</span>
+                        <span>Серверы Hysteria2 + VLESS, как у платной подписки</span>
+                    </li>
+                    <li>
+                        <span class="trial-feature-icon" aria-hidden="true">✓</span>
+                        <span>Одна подписочная ссылка для Happ и v2RayTun</span>
+                    </li>
+                </ul>
+
+                <form method="POST" action="{{ route('cabinet.trial.create') }}" class="trial-card-action">
+                    @csrf
+                    <button type="submit" class="btn btn-primary trial-cta trial-cta--lg">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        Активировать пробную подписку
+                    </button>
+                </form>
+            </article>
 
         @else
-            {{-- Trial уже использован --}}
-            <div class="cab-card-header">
-                <span class="cab-card-title">Тестовый ключ</span>
-                <span class="cab-badge gray">Использовано</span>
+            <article class="cab-card trial-card">
+                <div class="trial-card-top">
+                    <div class="trial-card-title-wrap">
+                        <span class="cab-badge gray">Использовано</span>
+                        <h2 class="trial-card-title">Тест-драйв уже был</h2>
+                    </div>
+                </div>
+                <p class="trial-card-desc">
+                    На этом аккаунте пробный период уже активировали. Выберите платный тариф — подключение займёт пару минут.
+                </p>
+                <div class="trial-card-actions">
+                    <a href="{{ route('cabinet.history') }}" class="btn btn-primary trial-cta">Перейти к покупкам</a>
+                </div>
+            </article>
+        @endif
+
+        @if($user->hasVerifiedEmail())
+            <div class="trial-setup">
+                @include('partials.platform-instructions', [
+                    'subUrl' => $connectionUri ?? null,
+                    'title'  => 'Как подключиться',
+                    'desc'   => $isActive
+                        ? 'Выберите платформу — ссылка подставится в кнопки «Добавить в Happ / v2RayTun».'
+                        : 'После активации пробного доступа здесь появится ссылка и пошаговая инструкция.',
+                ])
             </div>
-            <p class="info-text">
-                Вы уже использовали тестовый период. Оформите подписку, чтобы продолжить пользоваться сервисом без ограничений.
-            </p>
-            <a href="{{ route('home') }}#pricing" class="btn btn-primary">Оформить подписку</a>
         @endif
     </div>
-
-    @if ($user->hasVerifiedEmail())
-        <div class="mt-24">
-            @include('partials.platform-instructions', [
-                'subUrl' => $connectionUri ?? null,
-                'title'  => 'Как подключиться',
-                'desc'   => $trialKey
-                    ? 'Выберите вашу платформу и следуйте трём шагам — ссылка подписки уже подставлена в кнопки ниже.'
-                    : 'Выберите вашу платформу и следуйте трём шагам. После получения тестового ключа ссылка появится автоматически.',
-            ])
-        </div>
-    @endif
+</div>
 @endsection
+
+@push('scripts')
+<script>
+document.querySelectorAll('.cabinet-copy-sub-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var input = document.getElementById(this.getAttribute('data-copy-target'));
+        if (!input) return;
+        var label = this.querySelector('.sub-link-copy-text');
+        navigator.clipboard.writeText(input.value).then(function () {
+            if (label) label.textContent = 'Скопировано';
+            setTimeout(function () { if (label) label.textContent = 'Копировать'; }, 2000);
+        });
+    });
+});
+</script>
+@endpush
