@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\HappRouting;
 use App\Support\SharedVpnAccess;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,11 +28,28 @@ class SubscriptionController extends Controller
             return response('Подключение не настроено', 500);
         }
 
+        $routing = HappRouting::isVpnClient($request->header('User-Agent', ''))
+            ? HappRouting::deeplink()
+            : null;
+
+        if ($routing) {
+            $decoded = base64_decode($body, true);
+            $lines = is_string($decoded) && $decoded !== '' ? explode("\n", trim($decoded)) : [];
+            if (! in_array($routing, $lines, true)) {
+                array_unshift($lines, $routing);
+            }
+            $body = base64_encode(implode("\n", $lines));
+        }
+
         $headers = [
             'Content-Type' => 'text/plain; charset=utf-8',
             'profile-update-interval' => '12',
             'profile-title' => SharedVpnAccess::PROFILE_TITLE,
         ];
+
+        if ($routing) {
+            $headers['routing'] = $routing;
+        }
 
         $expiresAt = SharedVpnAccess::accessExpiresAt($user);
         if ($expiresAt) {

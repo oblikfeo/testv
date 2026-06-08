@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <span class="trial-feature-icon" aria-hidden="true">✓</span>
-                        <span>Серверы Hysteria2 + VLESS, как у платной подписки</span>
+                        <span>Два сервера VLESS, как у платной подписки</span>
                     </li>
                     <li>
                         <span class="trial-feature-icon" aria-hidden="true">✓</span>

@@ -29,6 +29,6 @@
                 <span class="sub-link-copy-text">Копировать</span>
             </button>
         </div>
-        <p class="sub-link-hint">Добавьте как подписку в приложении — в списке появятся два сервера: Hysteria2 и VLESS.</p>
+        <p class="sub-link-hint">Добавьте как подписку в приложении — в списке появятся два сервера VLESS: Wi‑Fi и мобильная сеть.</p>
     </div>
 @endif
