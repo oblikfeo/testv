@@ -16,11 +16,17 @@ class HappRouting
             return null;
         }
 
+        $useBuiltinGeo = ! empty($cfg['use_builtin_geo']);
+        $geoipUrl = $useBuiltinGeo ? '' : (string) ($cfg['geoip_url'] ?? '');
+        $geositeUrl = $useBuiltinGeo ? '' : (string) ($cfg['geosite_url'] ?? '');
+
         $profile = [
             'Name' => (string) ($cfg['name'] ?? 'AVA Routing'),
             'GlobalProxy' => 'true',
-            'Geoipurl' => (string) ($cfg['geoip_url'] ?? ''),
-            'Geositeurl' => (string) ($cfg['geosite_url'] ?? ''),
+            'UseChunkFiles' => ! empty($cfg['use_chunk_files']) ? 'true' : 'false',
+            'Geoipurl' => $geoipUrl,
+            'Geositeurl' => $geositeUrl,
+            'LastUpdated' => (string) ($cfg['last_updated'] ?? ''),
             'DirectSites' => array_values(array_map('strval', $cfg['direct_sites'] ?? [])),
             'DirectIp' => array_values(array_map('strval', $cfg['direct_ip'] ?? [])),
             'ProxySites' => array_values(array_map('strval', $cfg['proxy_sites'] ?? [])),
