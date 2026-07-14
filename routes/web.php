@@ -9,15 +9,34 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SupportController;
 use App\Http\Middleware\AdminAuth;
+use App\Models\Plan;
 use App\Services\IndexNowService;
 use App\Services\LandingTrafficService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function (Request $request, LandingTrafficService $traffic) {
     $visitorCount = $traffic->recordHomeVisit($request);
 
-    return view('welcome', compact('visitorCount'));
+    $plans = Plan::active()->ordered()->get()->groupBy('devices');
+
+    return Inertia::render('Welcome', [
+        'visitorCount' => $visitorCount,
+        'planGroups' => $plans->map(fn ($group) => $group->map(fn (Plan $plan) => [
+            'id' => $plan->id,
+            'name' => $plan->name,
+            'devices' => $plan->devices,
+            'days' => $plan->days,
+            'periodLabel' => $plan->period_label,
+            'price' => $plan->price,
+            'formattedPrice' => $plan->formatted_price,
+            'originalPrice' => $plan->original_price,
+            'discount' => $plan->discount,
+            'isPopular' => $plan->is_popular,
+            'trafficGb' => $plan->traffic_gb,
+        ])->values())->values(),
+    ]);
 })->name('home');
 
 Route::get('/landing/traffic-stats', [LandingTrafficController::class, 'stats'])

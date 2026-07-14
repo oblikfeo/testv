@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import VisitorCounter from '@/Components/landing/VisitorCounter';
 
 function TelegramIcon() {
     return (
@@ -12,29 +14,26 @@ export default function Navbar({ visitorCount }) {
     const { props } = usePage();
     const user = props.auth?.user;
     const { botUrl, channelUrl } = props.telegram ?? {};
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        function onScroll() {
+            setScrolled(window.scrollY > 8);
+        }
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
     return (
-        <nav className="navbar">
+        <nav className={`navbar${scrolled ? ' is-scrolled' : ''}`}>
             <div className="container">
                 <Link href={route('home')} className="navbar-logo">
                     <img src="/assets/logo.png" alt="AVA VPN" />
                     <span>AVA <em>VPN</em></span>
                 </Link>
                 <div className="navbar-actions">
-                    {typeof visitorCount === 'number' && (
-                        <button
-                            type="button"
-                            className="visitor-counter-btn"
-                            aria-label="Счётчик посетителей сайта"
-                            title="Столько людей посетили сайт"
-                        >
-                            <table className="visitor-counter">
-                                <tbody>
-                                    <tr><td>{visitorCount.toLocaleString('ru-RU')}</td></tr>
-                                </tbody>
-                            </table>
-                        </button>
-                    )}
+                    <VisitorCounter visitorCount={visitorCount} />
                     {channelUrl && (
                         <a href={channelUrl} target="_blank" rel="noopener" className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                             <TelegramIcon />

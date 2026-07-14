@@ -1,0 +1,50 @@
+import Reveal from '@/Components/landing/Reveal';
+
+const CATEGORIES = [
+    {
+        title: 'Мессенджеры и соцсети',
+        text: 'Стабильные голосовые и видеозвонки в Telegram, доступ к Instagram* и X (Twitter).',
+        icon: <><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></>,
+    },
+    {
+        title: 'Видео и стриминг',
+        text: 'YouTube в полном качестве без вечной буферизации и зарубежные стриминговые сервисы.',
+        icon: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m10 9 5 3-5 3z" /></>,
+    },
+    {
+        title: 'Нейросети и рабочие сервисы',
+        text: 'ChatGPT и другие ИИ-сервисы, часть Google-инструментов, Notion, Figma и похожие рабочие платформы.',
+        icon: <><path d="M12 2a5 5 0 0 0-5 5v1a4 4 0 0 0-2 7v2a3 3 0 0 0 3 3h1a3 3 0 0 0 3-3" /><path d="M12 2a5 5 0 0 1 5 5v1a4 4 0 0 1 2 7v2a3 3 0 0 1-3 3h-1a3 3 0 0 1-3-3v-9" /></>,
+    },
+    {
+        title: 'Игры и голосовые чаты',
+        text: 'Discord, игровые серверы и матчмейкинг без скачков пинга и разрывов соединения.',
+        icon: <><rect x="2" y="7" width="20" height="10" rx="4" /><circle cx="8" cy="12" r="1.5" fill="currentColor" /><circle cx="16" cy="12" r="1.5" fill="currentColor" /></>,
+    },
+];
+
+export default function UnblockedServices() {
+    return (
+        <section className="section devices" id="unblocked" aria-labelledby="unblocked-title">
+            <div className="container">
+                <Reveal as="header" className="section-head">
+                    <span className="section-eyebrow">Доступ</span>
+                    <h2 id="unblocked-title" className="section-title">Какие сервисы возвращает VPN</h2>
+                    <p className="section-subtitle">Речь не про «магию» — просто стабильное шифрованное соединение туда, где обычный интернет работает нестабильно.</p>
+                </Reveal>
+
+                <div className="devices-grid">
+                    {CATEGORIES.map((c, i) => (
+                        <Reveal as="article" key={c.title} className="device-card" delay={i * 0.06}>
+                            <div className="device-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">{c.icon}</svg>
+                            </div>
+                            <h3>{c.title}</h3>
+                            <p>{c.text}</p>
+                        </Reveal>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}

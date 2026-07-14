@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
             'telegram' => [
                 'botUrl' => $this->telegramBotUrl(),
                 'channelUrl' => (string) config('app.telegram_channel_url') ?: null,
+                'supportUrl' => (string) config('app.telegram_support_url') ?: null,
             ],
         ];
     }
