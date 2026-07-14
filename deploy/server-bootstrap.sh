@@ -33,7 +33,8 @@ if ! command -v composer >/dev/null 2>&1; then
   curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 fi
 
-if ! command -v node >/dev/null 2>&1 || [[ "$(node -v 2>/dev/null || echo v0)" < "v18" ]]; then
+if ! command -v node >/dev/null 2>&1 || [[ "$(node -v 2>/dev/null || echo v0)" < "v20.19" ]]; then
+  # Inertia SSR (@inertiajs/react) + Vite 7 require Node >= 20.19 (or >= 22.12).
   echo "== Node.js 20 =="
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
   apt-get install -y nodejs
@@ -65,7 +66,25 @@ ExecStart=/usr/bin/php artisan queue:work database --sleep=3 --tries=3 --max-tim
 WantedBy=multi-user.target
 UNIT
 
+echo "== systemd: Inertia SSR (Node) сервер =="
+cat >/etc/systemd/system/testv-ssr.service <<'UNIT'
+[Unit]
+Description=testv Inertia SSR (Node) server
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=3
+WorkingDirectory=/var/www/testv
+ExecStart=/usr/bin/php artisan inertia:start-ssr
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
 systemctl daemon-reload
-systemctl enable testv-queue.service
+systemctl enable testv-queue.service testv-ssr.service
 
 echo "Bootstrap готов. Далее: клон в /var/www/testv и bash deploy/server-deploy.sh"

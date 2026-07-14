@@ -142,6 +142,7 @@ class CabinetController extends Controller
         $plans = Plan::active()->ordered()->get();
         $standardPlans = $plans->where('devices', 2)->sortBy('days')->values();
         $extendedPlans = $plans->where('devices', 5)->sortBy('days')->values();
+        $premiumPlans = $plans->where('devices', 10)->sortBy('days')->values();
 
         return view('cabinet.history', [
             'activeRoute' => 'history',
@@ -149,6 +150,7 @@ class CabinetController extends Controller
             'plans' => $plans,
             'standardPlans' => $standardPlans,
             'extendedPlans' => $extendedPlans,
+            'premiumPlans' => $premiumPlans,
             'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
     }

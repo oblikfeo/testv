@@ -26,7 +26,7 @@
 <div class="bg-gray-800 rounded-xl p-6">
     <h2 class="text-xl font-bold text-white mb-4">Подключение пользователей</h2>
     <div class="text-gray-400 space-y-2 text-sm">
-        <p>Все активные подписки и триал получают подписку из <code class="text-gray-300">SHARED_HY2_URI</code> (VLESS Wi‑Fi) + <code class="text-gray-300">SHARED_VLESS_URI</code> (VLESS моб.) — URL <code class="text-gray-300">/sub/…</code>.</p>
+        <p>Все активные подписки и триал получают подписку из <code class="text-gray-300">SHARED_HY2_URI</code> (Wi‑Fi) + <code class="text-gray-300">SHARED_CDN_URI</code> («Обход блокировок») — URL <code class="text-gray-300">/sub/…</code>.</p>
         <p>Срок доступа контролируется в БД (таблицы <code class="text-gray-300">subscriptions</code> и <code class="text-gray-300">trial_keys</code>).</p>
         <p>Новых пользователей в Blitz при оплате не создаём.</p>
     </div>

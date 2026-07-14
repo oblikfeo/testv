@@ -21,9 +21,16 @@
 /Верстка/доступы/
 /доступы/
 1.txt
+# Диагностические скрипты с захардкоженными паролями SSH — только локально
+/deploy/diag-cdn-logs.py
+/deploy/diag-cdn-origin.py
+/deploy/diag-sofia.py
+/deploy/diag-sofia-config.py
+/deploy/health-check-vpn.py
 /node_modules
 /public/build
 /public/hot
+/bootstrap/ssr
 /public/storage
 /storage/*.key
 /storage/pail

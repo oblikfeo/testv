@@ -37,6 +37,9 @@
             <div class="shop-tier-row">
                 <div class="shop-tier-row-info">
                     <span class="shop-tier-period">{{ $plan->period_label }}</span>
+                    @if((int) $plan->traffic_gb > 0)
+                        <span class="shop-tier-traffic">{{ number_format($plan->traffic_gb, 0, '', ' ') }} ГБ</span>
+                    @endif
                     <div class="shop-tier-pricing">
                         <span class="shop-tier-price">{{ $plan->formatted_price }}</span>
                         @if($plan->discount > 0)

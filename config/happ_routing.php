@@ -3,29 +3,47 @@
 $appUrl = rtrim((string) env('APP_URL', ''), '/');
 
 return [
+    // off | full_tunnel | split
+    'mode' => env('HAPP_ROUTING_MODE', 'split'),
+
     'enabled' => env('HAPP_ROUTING_ENABLED', true),
 
-    'name' => env('HAPP_ROUTING_NAME', 'AVA RU Direct'),
+    'name' => env('HAPP_ROUTING_NAME', 'AVA Split RU'),
 
-    // Lite geofiles на сайте (~500 KB). Builtin + geosite:category-ru ломали маршрутизацию.
+    // Lite geofiles на /geo (~500 KB). Теги geosite:category-ru / geoip:private — под DigneZzZ lite.
     'use_builtin_geo' => env('HAPP_GEO_USE_BUILTIN', false),
-    'use_chunk_files' => env('HAPP_GEO_USE_CHUNK_FILES', true),
+    'use_chunk_files' => env('HAPP_GEO_USE_CHUNK_FILES', false),
     'route_order' => 'block-proxy-direct',
-    'last_updated' => env('HAPP_ROUTING_LAST_UPDATED', '20260608b'),
+    // Unix timestamp — Happ перекачивает geo при увеличении значения.
+    'last_updated' => env('HAPP_ROUTING_LAST_UPDATED', '1784060400'),
+
+    'announcement' => env('HAPP_SUBSCRIPTION_ANNOUNCE', ''),
+    'subscription_pin' => env('HAPP_SUBSCRIPTION_PIN', true),
 
     'geoip_url' => env('HAPP_GEOIP_URL', $appUrl.'/geo/geoip.dat'),
     'geosite_url' => env('HAPP_GEOSITE_URL', $appUrl.'/geo/geosite.dat'),
 
-    // Зарубежные/заблокированные — явно через VPN (иначе Happ пускает напрямую с SIM → не работает).
+    // DNS split: зарубежное через VPN — Google; российское напрямую — Yandex.
+    'remote_dns_type' => 'DoH',
+    'remote_dns_domain' => env('HAPP_REMOTE_DNS_DOMAIN', 'https://8.8.8.8/dns-query'),
+    'remote_dns_ip' => env('HAPP_REMOTE_DNS_IP', '8.8.8.8'),
+    'domestic_dns_type' => 'DoH',
+    'domestic_dns_domain' => env('HAPP_DOMESTIC_DNS_DOMAIN', 'https://77.88.8.8/dns-query'),
+    'domestic_dns_ip' => env('HAPP_DOMESTIC_DNS_IP', '77.88.8.8'),
+
     'proxy_sites' => [
+        'geosite:github',
+        'geosite:twitch-ads',
         'geosite:youtube',
         'geosite:telegram',
+        'geosite:discord',
+        'geosite:whatsapp',
+        'geosite:google-deepmind',
+        'geosite:crypto',
         'geosite:instagram',
         'geosite:facebook',
         'geosite:twitter',
         'geosite:google',
-        'geosite:discord',
-        'geosite:whatsapp',
         'geosite:tiktok',
         'geosite:netflix',
         'geosite:spotify',
@@ -37,7 +55,22 @@ return [
     ],
 
     'direct_sites' => [
-        'geosite:ru',
+        'geosite:private',
+        'geosite:category-ru',
+        'geosite:whitelist',
+        'geosite:microsoft',
+        'geosite:apple',
+        'geosite:google-play',
+        'geosite:epicgames',
+        'geosite:riot',
+        'geosite:escapefromtarkov',
+        'geosite:steam',
+        'geosite:origin',
+        'geosite:twitch',
+        'geosite:pinterest',
+        'geosite:faceit',
+        'geosite:ip-check',
+        'geosite:vpndetect',
         'geosite:yandex',
         'geosite:mailru',
         'geosite:vk',
@@ -57,15 +90,15 @@ return [
     ],
 
     'direct_ip' => [
-        'geoip:ru',
-        '10.0.0.0/8',
-        '172.16.0.0/12',
-        '192.168.0.0/16',
-        '127.0.0.0/8',
-        '169.254.0.0/16',
-        '100.64.0.0/10',
-        '224.0.0.0/4',
-        '240.0.0.0/4',
-        '255.255.255.255/32',
+        'geoip:private',
+        'geoip:whitelist',
     ],
+
+    'block_sites' => [
+        'geosite:win-spy',
+        'geosite:torrent',
+        'geosite:category-ads',
+    ],
+
+    'block_ip' => [],
 ];

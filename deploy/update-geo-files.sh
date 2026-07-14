@@ -4,7 +4,7 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-/var/www/testv}"
 GEO_DIR="$APP_DIR/public/geo"
-BASE_URL="https://raw.githubusercontent.com/DigneZzZ/routing/main/v2ray/happ"
+BASE_URL="${GEO_BASE_URL:-https://cdn.jsdelivr.net/gh/DigneZzZ/routing@main/v2ray/happ}"
 
 mkdir -p "$GEO_DIR"
 

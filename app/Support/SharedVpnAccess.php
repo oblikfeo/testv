@@ -22,7 +22,7 @@ class SharedVpnAccess
      */
     private const NODE_LABELS = [
         'shared_hy2_uri' => ['name' => '🇷🇺 Высокая скорость Wi-Fi', 'desc' => null],
-        'shared_vless_uri' => ['name' => '🇷🇺 Мобильная сеть', 'desc' => null],
+        'shared_cdn_uri' => ['name' => '🇷🇺 Обход блокировок', 'desc' => null],
     ];
 
     /**

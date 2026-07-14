@@ -76,6 +76,17 @@ class PlansSeeder extends Seeder
                 'sort_order' => 6,
                 'traffic_gb' => 0,
             ],
+            [
+                'name' => 'Премиум',
+                'slug' => 'premium-90',
+                'devices' => 10,
+                'days' => 90,
+                'price' => 3490,
+                'discount' => 0,
+                'is_popular' => false,
+                'sort_order' => 7,
+                'traffic_gb' => 1000,
+            ],
         ];
 
         foreach ($plans as $plan) {

@@ -179,6 +179,7 @@ class BotApiController extends Controller
                 'devices' => (int) $p->devices,
                 'days' => (int) $p->days,
                 'price' => (int) $p->price,
+                'traffic_gb' => (int) ($p->traffic_gb ?? 0),
                 'discount' => (int) ($p->discount ?? 0),
                 'is_popular' => (bool) $p->is_popular,
             ])->values(),

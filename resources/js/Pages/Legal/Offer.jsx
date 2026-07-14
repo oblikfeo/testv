@@ -1,19 +1,10 @@
-@extends('layouts.landing')
+import LandingLayout from '@/Layouts/LandingLayout';
+import AgreementLayout from '@/Components/landing/AgreementLayout';
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/agreement.css') }}">
-@endpush
-
-@section('title', 'AVA VPN — Оферта')
-
-@section('content')
-    <main class="agreement-page">
-        <div class="container">
-            <div class="agreement-content">
-                <h1>Оферта</h1>
-                <p class="agreement-date">Редакция от 14.04.2026</p>
-
+export default function Offer() {
+    return (
+        <LandingLayout title="AVA VPN — Оферта" footerVariant="legal">
+            <AgreementLayout title="Оферта" dateLabel="Редакция от 14.04.2026">
                 <p>Данная Оферта от владельца интернет-сайта avavpn.ru, в дальнейшем «Продавец», в адрес пользователя услуг интернет-сайта, в дальнейшем «Заказчик», является предложением заключить Договор оказания Услуг и определяет основные условия оказания Услуг через интернет-сайт avavpn.ru. Покупатель, действуя с целью приобретения Услуг, принимает условия настоящего Договора оказания услуг (далее – Договор) на следующих условиях.</p>
 
                 <h2>1. ОПРЕДЕЛЕНИЕ ТЕРМИНОВ</h2>
@@ -77,24 +68,7 @@
                     <li>отказать в дальнейшем предоставлении услуг.</li>
                 </ul>
                 <p>Это правило направлено на защиту вашей безопасности, конфиденциальности и стабильной работы сервиса для всех пользователей.</p>
-
-                <a href="{{ route('home') }}" class="agreement-back">← Вернуться на главную</a>
-            </div>
-        </div>
-    </main>
-@endsection
-
-@section('footer')
-    <footer class="footer">
-        <div class="container">
-            <p>
-                AVA VPN — сервис для защиты и ускорения вашего интернет-соединения.<br>
-                Используя сервис, вы принимаете на себя ответственность за его применение
-                в соответствии с действующим законодательством.<br><br>
-                <a href="{{ route('privacy') }}">Политика конфиденциальности</a> ·
-                <a href="{{ route('offer') }}">Оферта</a> ·
-                <a href="{{ route('personal-data') }}">Обработка персональных данных</a>
-            </p>
-        </div>
-    </footer>
-@endsection
+            </AgreementLayout>
+        </LandingLayout>
+    );
+}

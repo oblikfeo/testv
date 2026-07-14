@@ -110,6 +110,13 @@ if systemctl list-unit-files testv-queue.service >/dev/null 2>&1; then
   $SUDO systemctl restart testv-queue.service || $SUDO systemctl start testv-queue.service
 fi
 
+echo "== 9. Inertia SSR (Node) =="
+# The SSR bundle (bootstrap/ssr/ssr.js) is cached in the running Node process's memory,
+# so it must be restarted on every deploy — a reload alone won't pick up new JS.
+if systemctl list-unit-files testv-ssr.service >/dev/null 2>&1; then
+  $SUDO systemctl restart testv-ssr.service || $SUDO systemctl start testv-ssr.service
+fi
+
 echo "== Готово =="
 php artisan about --only=environment 2>/dev/null || true
 echo "Откройте: http://${SITE_IP}/"

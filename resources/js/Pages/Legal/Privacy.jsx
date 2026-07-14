@@ -1,19 +1,10 @@
-@extends('layouts.landing')
+import LandingLayout from '@/Layouts/LandingLayout';
+import AgreementLayout from '@/Components/landing/AgreementLayout';
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/agreement.css') }}">
-@endpush
-
-@section('title', 'AVA VPN — Политика конфиденциальности')
-
-@section('content')
-    <main class="agreement-page">
-        <div class="container">
-            <div class="agreement-content">
-                <h1>Политика конфиденциальности</h1>
-                <p class="agreement-date">Редакция от 14.04.2026</p>
-
+export default function Privacy() {
+    return (
+        <LandingLayout title="AVA VPN — Политика конфиденциальности" footerVariant="legal">
+            <AgreementLayout title="Политика конфиденциальности" dateLabel="Редакция от 14.04.2026">
                 <h2>1. Введение</h2>
                 <p>Данная Политика конфиденциальности предоставляет информацию о сборе, использовании и раскрытии ваших персональных данных, а также о вашем выборе относительно этих данных. Мы стремимся защитить вашу конфиденциальность и обеспечить безопасность ваших данных.</p>
 
@@ -43,24 +34,7 @@
 
                 <h2>Заключение</h2>
                 <p>Мы придерживаемся высших стандартов конфиденциальности и ценим вашу доверительность. Ваша конфиденциальность и безопасность являются нашими высшими приоритетами, и мы стремимся обеспечить защиту ваших данных.</p>
-
-                <a href="{{ route('home') }}" class="agreement-back">← Вернуться на главную</a>
-            </div>
-        </div>
-    </main>
-@endsection
-
-@section('footer')
-    <footer class="footer">
-        <div class="container">
-            <p>
-                AVA VPN — сервис для защиты и ускорения вашего интернет-соединения.<br>
-                Используя сервис, вы принимаете на себя ответственность за его применение
-                в соответствии с действующим законодательством.<br><br>
-                <a href="{{ route('privacy') }}">Политика конфиденциальности</a> ·
-                <a href="{{ route('offer') }}">Оферта</a> ·
-                <a href="{{ route('personal-data') }}">Обработка персональных данных</a>
-            </p>
-        </div>
-    </footer>
-@endsection
+            </AgreementLayout>
+        </LandingLayout>
+    );
+}

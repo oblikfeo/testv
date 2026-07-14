@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <span class="trial-feature-icon" aria-hidden="true">✓</span>
-                        <span>Два сервера VLESS, как у платной подписки</span>
+                        <span>Два сервера, как у платной подписки: Wi‑Fi и «Обход блокировок»</span>
                     </li>
                     <li>
                         <span class="trial-feature-icon" aria-hidden="true">✓</span>

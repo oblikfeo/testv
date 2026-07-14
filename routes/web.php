@@ -28,9 +28,9 @@ Route::post('/landing/traffic-modal', [LandingTrafficController::class, 'recordM
     ->middleware('throttle:60,1')
     ->name('landing.traffic-modal');
 
-Route::view('/privacy', 'privacy')->name('privacy');
-Route::view('/offer', 'offer')->name('offer');
-Route::view('/personal-data', 'personal-data')->name('personal-data');
+Route::inertia('/privacy', 'Legal/Privacy')->name('privacy');
+Route::inertia('/offer', 'Legal/Offer')->name('offer');
+Route::inertia('/personal-data', 'Legal/PersonalData')->name('personal-data');
 
 // ---- SEO: robots.txt, sitemap.xml, IndexNow ключ-файл ----
 

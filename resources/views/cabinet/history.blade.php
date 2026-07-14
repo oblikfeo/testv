@@ -41,6 +41,12 @@
                     'plans' => $extendedPlans,
                     'featured' => true,
                 ])
+                @include('partials.cabinet-tariff-tier', [
+                    'tierName' => 'Премиум',
+                    'devices' => 10,
+                    'plans' => $premiumPlans,
+                    'featured' => false,
+                ])
             </div>
         </section>
 

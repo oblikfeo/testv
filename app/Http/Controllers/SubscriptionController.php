@@ -29,7 +29,7 @@ class SubscriptionController extends Controller
         }
 
         $routing = HappRouting::isVpnClient($request->header('User-Agent', ''))
-            ? HappRouting::deeplink()
+            ? HappRouting::subscriptionLine()
             : null;
 
         if ($routing) {
@@ -49,6 +49,17 @@ class SubscriptionController extends Controller
 
         if ($routing) {
             $headers['routing'] = $routing;
+        }
+
+        if (HappRouting::isVpnClient($request->header('User-Agent', ''))) {
+            if (HappRouting::subscriptionPinEnabled()) {
+                $headers['subscription-pin'] = 'true';
+            }
+
+            $announce = HappRouting::announcementHeader();
+            if ($announce !== null) {
+                $headers['announce'] = $announce;
+            }
         }
 
         $expiresAt = SharedVpnAccess::accessExpiresAt($user);

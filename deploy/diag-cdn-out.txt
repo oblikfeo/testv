@@ -1,0 +1,40 @@
+﻿=== HOST ===
+cdnyandex
+ 12:07:42 up 2 days, 0 min,  0 users,  load average: 0.06, 0.08, 0.09
+=== SERVICES ===
+active
+active
+=== LOCAL CDN ===
+HTTP/2 400 
+
+server: nginx/1.18.0 (Ubuntu)
+
+date: Sat, 11 Jul 2026 12:07:42 GMT
+
+access-control-allow-origin: *
+
+x-padding: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+
+=== XRAY LOG ===
+-- No entries --
+=== XRAY STATUS ===
+тЧП xray.service - Xray Service
+     Loaded: loaded (/etc/systemd/system/xray.service; enabled; vendor preset: enabled)
+    Drop-In: /etc/systemd/system/xray.service.d
+             тФФтФА10-donot_touch_single_conf.conf
+     Active: active (running) since Thu 2026-07-09 12:06:52 UTC; 2 days ago
+       Docs: https://github.com/xtls
+   Main PID: 795 (xray)
+      Tasks: 11 (limit: 2216)
+     Memory: 125.4M
+        CPU: 42min 18.583s
+     CGroup: /system.slice/xray.service
+             тФФтФА795 /usr/local/bin/xray run -config /usr/local/etc/xray/config.json
+=== NGINX ERR ===
+2026/07/11 00:12:06 [crit] 852#852: *2208796 SSL_do_handshake() failed (SSL: error:0A00006C:SSL routines::bad key share) while SSL handshaking, client: 65.49.20.68, server: 0.0.0.0:443
+2026/07/11 05:14:07 [crit] 852#852: *2445308 SSL_do_handshake() failed (SSL: error:0A00006C:SSL routines::bad key share) while SSL handshaking, client: 195.96.139.45, server: 0.0.0.0:443
+2026/07/11 07:47:02 [crit] 852#852: *2637211 SSL_do_handshake() failed (SSL: error:0A00006C:SSL routines::bad key share) while SSL handshaking, client: 85.217.149.4, server: 0.0.0.0:443
+2026/07/11 08:00:32 [crit] 852#852: *2651345 SSL_do_handshake() failed (SSL: error:0A00006C:SSL routines::bad key share) while SSL handshaking, client: 85.217.140.20, server: 0.0.0.0:443
+
