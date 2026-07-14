@@ -99,7 +99,7 @@ export default function Sidebar() {
     return (
         <>
             {/* Mobile: horizontal scrollable tab bar */}
-            <nav className="-mx-5 mb-6 flex gap-2 overflow-x-auto px-5 pb-1 lg:hidden" aria-label="Навигация кабинета">
+            <nav className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:-mx-8 sm:px-8 lg:hidden" aria-label="Навигация кабинета">
                 {NAV_GROUPS.flatMap((g) => g.items).map((item) => (
                     <NavLink key={item.name} item={item} mobile />
                 ))}

@@ -15,7 +15,7 @@ export default function CabinetLayout({ title, children }) {
             <Head title={title ? `${title} — AVA VPN` : 'AVA VPN'} />
             <div className="min-h-screen bg-ink-950">
                 <CabinetNavbar />
-                <div className="mx-auto flex max-w-7xl gap-8 px-5 py-8 sm:px-8">
+                <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-8 sm:px-8 lg:flex-row lg:gap-8">
                     <Sidebar />
                     <main className="min-w-0 flex-1">
                         {showVerifyBanner && <EmailVerifyBanner />}
