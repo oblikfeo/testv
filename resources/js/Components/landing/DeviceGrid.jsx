@@ -13,7 +13,7 @@ const DEVICES = [
 
 export default function DeviceGrid() {
     return (
-        <section className="relative bg-ink-950 py-24 sm:py-28" id="devices" aria-labelledby="devices-title">
+        <section className="relative bg-ink-950 py-20 sm:py-24" id="devices" aria-labelledby="devices-title">
             <div className="mx-auto max-w-6xl px-5 sm:px-8">
                 <SectionHeading
                     eyebrow="Платформы"

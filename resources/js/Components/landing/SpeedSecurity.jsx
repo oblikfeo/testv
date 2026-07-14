@@ -10,7 +10,7 @@ const SPECS = [
 
 export default function SpeedSecurity() {
     return (
-        <section className="relative overflow-hidden bg-ink-900 py-24 sm:py-28" id="speed-security" aria-labelledby="speed-security-title">
+        <section className="relative overflow-hidden bg-ink-900 py-20 sm:py-24" id="speed-security" aria-labelledby="speed-security-title">
             <div className="mx-auto max-w-5xl px-5 sm:px-8">
                 <SectionHeading
                     eyebrow="Под капотом"

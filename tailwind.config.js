@@ -25,12 +25,14 @@ export default {
             keyframes: {
                 float: {
                     '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
-                    '33%': { transform: 'translate(3%, -4%) scale(1.05)' },
-                    '66%': { transform: 'translate(-3%, 3%) scale(0.97)' },
+                    '25%': { transform: 'translate(12%, -18%) scale(1.15)' },
+                    '50%': { transform: 'translate(-8%, 10%) scale(0.9)' },
+                    '75%': { transform: 'translate(-16%, -8%) scale(1.08)' },
                 },
                 'float-slow': {
                     '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
-                    '50%': { transform: 'translate(-4%, 4%) scale(1.08)' },
+                    '33%': { transform: 'translate(-18%, 14%) scale(1.2)' },
+                    '66%': { transform: 'translate(14%, 18%) scale(0.88)' },
                 },
                 shimmer: {
                     '0%': { backgroundPosition: '200% 0' },
@@ -54,7 +56,7 @@ export default {
                 'float-slow': 'float-slow 24s ease-in-out infinite',
                 shimmer: 'shimmer 2.5s linear infinite',
                 'pulse-glow': 'pulse-glow 2.4s ease-in-out infinite',
-                marquee: 'marquee 28s linear infinite',
+                marquee: 'marquee 22s linear infinite',
                 'gradient-x': 'gradient-x 6s ease infinite',
             },
             boxShadow: {

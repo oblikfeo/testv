@@ -9,7 +9,7 @@ export default function FinalCta() {
     const supportUrl = props.telegram?.supportUrl;
 
     return (
-        <section className="relative overflow-hidden bg-ink-900 py-24 sm:py-28">
+        <section className="relative overflow-hidden bg-ink-900 py-20 sm:py-24">
             <div className="mx-auto max-w-4xl px-5 sm:px-8">
                 <Reveal className="relative overflow-hidden rounded-3xl border border-red-500/30 bg-gradient-to-br from-red-600/15 via-ink-900 to-fuchsia-600/15 px-8 py-16 text-center shadow-glow-lg sm:px-16">
                     <AnimatedBackground variant="section" />

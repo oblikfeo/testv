@@ -36,7 +36,7 @@ export default function PricingTable({ planGroups = [] }) {
     ];
 
     return (
-        <section className="relative bg-ink-950 py-24 sm:py-28" id="pricing" aria-labelledby="pricing-title">
+        <section className="relative bg-ink-950 py-20 sm:py-24" id="pricing" aria-labelledby="pricing-title">
             <div className="mx-auto max-w-5xl px-5 sm:px-8">
                 <SectionHeading
                     eyebrow="Тарифы"

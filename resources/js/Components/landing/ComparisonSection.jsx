@@ -3,7 +3,7 @@ import SectionHeading from '@/Components/ui/SectionHeading';
 
 export default function ComparisonSection() {
     return (
-        <section className="relative bg-ink-900 py-24 sm:py-28" id="compare" aria-labelledby="compare-title">
+        <section className="relative bg-ink-900 py-20 sm:py-24" id="compare" aria-labelledby="compare-title">
             <div className="mx-auto max-w-5xl px-5 sm:px-8">
                 <SectionHeading
                     eyebrow="Сравнение"

@@ -27,7 +27,7 @@ const CATEGORIES = [
 
 export default function UnblockedServices() {
     return (
-        <section className="relative bg-ink-900 py-24 sm:py-28" id="unblocked" aria-labelledby="unblocked-title">
+        <section className="relative bg-ink-900 py-20 sm:py-24" id="unblocked" aria-labelledby="unblocked-title">
             <div className="mx-auto max-w-6xl px-5 sm:px-8">
                 <SectionHeading
                     eyebrow="Доступ"
@@ -36,14 +36,14 @@ export default function UnblockedServices() {
                     subtitle="Речь не про «магию» — просто стабильное шифрованное соединение туда, где обычный интернет работает нестабильно."
                 />
 
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {CATEGORIES.map((c, i) => (
                         <Reveal key={c.title} delay={i * 0.08}>
-                            <GlassCard className="h-full">
-                                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-red-600/25 to-fuchsia-600/25 text-red-300">
+                            <GlassCard className="h-full !p-5">
+                                <div className="mb-3.5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-red-600/25 to-fuchsia-600/25 text-red-300">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">{c.icon}</svg>
                                 </div>
-                                <h3 className="mb-2 text-base font-bold text-white">{c.title}</h3>
+                                <h3 className="mb-1.5 text-base font-bold text-white">{c.title}</h3>
                                 <p className="text-sm leading-relaxed text-white/55">{c.text}</p>
                             </GlassCard>
                         </Reveal>

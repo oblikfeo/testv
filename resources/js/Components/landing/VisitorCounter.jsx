@@ -31,8 +31,8 @@ export default function VisitorCounter({ visitorCount }) {
             <button
                 type="button"
                 onClick={handleOpen}
-                aria-label="Статистика заходов на главную"
-                title="Нажми — откуда приходят гости"
+                aria-label="Счётчик переходов из поисковиков"
+                title="Нажми — сколько людей пришло из поиска"
                 className="flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold tabular-nums text-white/70 backdrop-blur transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-white"
             >
                 <span className="h-1.5 w-1.5 animate-pulse-glow rounded-full bg-red-500" />
@@ -66,7 +66,7 @@ export default function VisitorCounter({ visitorCount }) {
                             >
                                 &times;
                             </button>
-                            <h2 className="mb-4 text-lg font-bold text-white">Откуда приходят гости</h2>
+                            <h2 className="mb-4 text-lg font-bold text-white">Переходы из поиска</h2>
 
                             {status === 'loading' && <p className="text-sm text-white/50">Загрузка…</p>}
                             {status === 'error' && <p className="text-sm text-red-400">Не удалось загрузить. Попробуйте позже.</p>}
@@ -74,7 +74,7 @@ export default function VisitorCounter({ visitorCount }) {
                                 <>
                                     <div className="mb-5 grid grid-cols-2 gap-3">
                                         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                                            <span className="block text-xs text-white/45">Визитов главной</span>
+                                            <span className="block text-xs text-white/45">Заходов из поисковиков</span>
                                             <strong className="text-xl font-extrabold text-white">{stats.total_visits ?? 0}</strong>
                                         </div>
                                         <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3">
@@ -83,7 +83,7 @@ export default function VisitorCounter({ visitorCount }) {
                                         </div>
                                     </div>
                                     {!(stats.sources ?? []).length ? (
-                                        <p className="text-sm text-white/45">Источники ещё копятся — загляни позже.</p>
+                                        <p className="text-sm text-white/45">Переходов из поиска ещё не было — загляни позже.</p>
                                     ) : (
                                         <div className="space-y-2.5">
                                             {stats.sources.map((s) => {

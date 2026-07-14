@@ -27,24 +27,13 @@ export default function Hero() {
     const { botUrl, channelUrl } = props.telegram ?? {};
 
     return (
-        <section className="relative isolate overflow-hidden bg-ink-950 pb-28 pt-32 sm:pt-40">
+        <section className="relative isolate overflow-hidden bg-ink-950 pb-16 pt-20 sm:pt-24">
             <AnimatedBackground variant="hero" />
             <Spotlight />
 
             <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 text-center sm:px-8">
-                <motion.div
-                    initial="hidden" animate="show" variants={fadeUp}
-                    className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-4 py-1.5 text-xs font-medium text-white/70 backdrop-blur"
-                >
-                    <span className="relative flex h-2 w-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-                    </span>
-                    Серверы в ЕС · Подключение за 1 минуту
-                </motion.div>
-
                 <motion.h1
-                    initial="hidden" animate="show" custom={0.08} variants={fadeUp}
+                    initial="hidden" animate="show" variants={fadeUp}
                     className="text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-7xl"
                 >
                     Быстрый VPN для России —
@@ -55,14 +44,14 @@ export default function Hero() {
                 </motion.h1>
 
                 <motion.p
-                    initial="hidden" animate="show" custom={0.16} variants={fadeUp}
-                    className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/55"
+                    initial="hidden" animate="show" custom={0.1} variants={fadeUp}
+                    className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-white/55"
                 >
                     AVA VPN — это шифрование трафика, защита приватности и стабильная работа любимых сервисов.
                     Подключите смартфон, компьютер или роутер за минуту и пользуйтесь интернетом без ограничений.
                 </motion.p>
 
-                <motion.div initial="hidden" animate="show" custom={0.24} variants={fadeUp} className="mt-9 flex flex-col items-center gap-3">
+                <motion.div initial="hidden" animate="show" custom={0.18} variants={fadeUp} className="mt-7 flex flex-col items-center gap-3">
                     {user ? (
                         <GlowButton href={route('cabinet.subscription')} size="lg">Перейти в кабинет →</GlowButton>
                     ) : (
@@ -72,7 +61,7 @@ export default function Hero() {
                 </motion.div>
 
                 {(channelUrl || botUrl) && (
-                    <motion.div initial="hidden" animate="show" custom={0.3} variants={fadeUp} className="mt-4 flex flex-wrap justify-center gap-3">
+                    <motion.div initial="hidden" animate="show" custom={0.24} variants={fadeUp} className="mt-3 flex flex-wrap justify-center gap-3">
                         {channelUrl && (
                             <GlowButton as="a" href={channelUrl} target="_blank" rel="noopener" variant="secondary" size="md">
                                 <TelegramIcon /> ТГ-канал
@@ -87,8 +76,8 @@ export default function Hero() {
                 )}
 
                 <motion.ul
-                    initial="hidden" animate="show" custom={0.38} variants={fadeUp}
-                    className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/45"
+                    initial="hidden" animate="show" custom={0.3} variants={fadeUp}
+                    className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/45"
                     aria-label="Преимущества"
                 >
                     {['Без логов', 'Оплата ЮKassa', 'Поддержка 24/7', 'Возврат при сбое'].map((item) => (
