@@ -36,7 +36,7 @@ export default function Hero() {
                     initial="hidden" animate="show" variants={fadeUp}
                     className="text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-7xl"
                 >
-                    Быстрый VPN для России —
+                    Быстрый VPN —
                     <br />
                     <span className="bg-gradient-to-r from-red-500 via-rose-400 to-fuchsia-500 bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-x">
                         без блокировок и тормозов

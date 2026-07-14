@@ -34,6 +34,12 @@ export default {
                     '33%': { transform: 'translate(-18%, 14%) scale(1.2)' },
                     '66%': { transform: 'translate(14%, 18%) scale(0.88)' },
                 },
+                'float-fast': {
+                    '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+                    '25%': { transform: 'translate(-14%, 16%) scale(1.12)' },
+                    '50%': { transform: 'translate(16%, -6%) scale(0.92)' },
+                    '75%': { transform: 'translate(8%, 14%) scale(1.06)' },
+                },
                 shimmer: {
                     '0%': { backgroundPosition: '200% 0' },
                     '100%': { backgroundPosition: '-200% 0' },
@@ -52,12 +58,13 @@ export default {
                 },
             },
             animation: {
-                float: 'float 18s ease-in-out infinite',
-                'float-slow': 'float-slow 24s ease-in-out infinite',
+                float: 'float 7s ease-in-out infinite',
+                'float-slow': 'float-slow 9s ease-in-out infinite',
+                'float-fast': 'float-fast 5.5s ease-in-out infinite',
                 shimmer: 'shimmer 2.5s linear infinite',
                 'pulse-glow': 'pulse-glow 2.4s ease-in-out infinite',
                 marquee: 'marquee 22s linear infinite',
-                'gradient-x': 'gradient-x 6s ease infinite',
+                'gradient-x': 'gradient-x 2.5s ease infinite',
             },
             boxShadow: {
                 glow: '0 0 40px -8px rgba(220, 38, 38, 0.55)',
