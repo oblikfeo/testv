@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\KeyOrder;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\TrialFeedback;
 use App\Models\TrialFeedbackRequest;
 use App\Services\TrialKeyService;
 use App\Support\SharedVpnAccess;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class CabinetController extends Controller
 {
@@ -16,52 +19,62 @@ class CabinetController extends Controller
         protected TrialKeyService $trialKeyService
     ) {}
 
-    protected function pendingTrialFeedbackRequest(int $userId): ?TrialFeedbackRequest
-    {
-        $alreadyLeftFeedback = TrialFeedback::query()
-            ->where('user_id', $userId)
-            ->exists();
-        if ($alreadyLeftFeedback) {
-            return null;
-        }
-
-        return TrialFeedbackRequest::query()
-            ->where('user_id', $userId)
-            ->whereNull('submitted_at')
-            ->latest('id')
-            ->first();
-    }
-
-    public function subscription(Request $request): View
+    public function subscription(Request $request): Response
     {
         $user = $request->user();
-        $subscriptions = $user->activeSubscriptions()->with('plan')->get();
+        $subscriptions = $user->activeSubscriptions()->with('plan')->get()
+            ->map(fn (Subscription $sub) => [
+                'id' => $sub->id,
+                'planName' => $sub->plan->name,
+                'isActive' => $sub->isActive(),
+                'isExpired' => $sub->isExpired(),
+                'expiresAt' => $sub->expires_at->format('d.m.Y'),
+                'daysLeft' => $sub->days_left,
+            ])->values();
+
         $activeTrialKey = SharedVpnAccess::activeTrialKey($user);
         $connectionUri = SharedVpnAccess::connectionUriForUser($user);
 
-        return view('cabinet.subscription', [
-            'activeRoute' => 'subscription',
-            'user' => $user,
+        return Inertia::render('Cabinet/Subscription', [
             'subscriptions' => $subscriptions,
-            'activeTrialKey' => $activeTrialKey,
+            'activeTrial' => $activeTrialKey ? [
+                'expiresAt' => $activeTrialKey->expires_at->timezone(config('app.timezone'))->format('d.m.Y H:i'),
+                'remainingTime' => $activeTrialKey->getRemainingTimeRu(),
+            ] : null,
             'connectionUri' => $connectionUri,
-            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
         ]);
     }
 
-    public function trial(Request $request): View
+    public function trial(Request $request): Response
     {
         $user = $request->user();
         $trialKey = $user->trialKey;
         $connectionUri = SharedVpnAccess::connectionUriForUser($user);
+        $trialHours = (int) config('vpn.trial.duration_hours', 3);
 
-        return view('cabinet.trial', [
-            'activeRoute' => 'trial',
-            'user' => $user,
-            'trialKey' => $trialKey,
-            'connectionUri' => $connectionUri,
+        $isActive = $trialKey && $trialKey->isActive();
+        $timeProgress = 0;
+        if ($isActive && $trialKey->activated_at) {
+            $totalMinutes = max(1, $trialHours * 60);
+            $elapsed = (int) $trialKey->activated_at->diffInMinutes(now());
+            $timeProgress = (int) max(0, min(100, round((1 - $elapsed / $totalMinutes) * 100)));
+        }
+        $showTraffic = $trialKey && $trialKey->total_bytes > 0;
+
+        return Inertia::render('Cabinet/Trial', [
+            'trialHours' => $trialHours,
             'canUseTrial' => $user->canUseTrial(),
-            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
+            'connectionUri' => $connectionUri,
+            'trial' => $trialKey ? [
+                'isActive' => $isActive,
+                'expiresAt' => $trialKey->expires_at->timezone(config('app.timezone'))->format('d.m.Y H:i'),
+                'remainingTime' => $trialKey->getRemainingTimeRu(),
+                'timeProgress' => $timeProgress,
+                'trafficProgress' => 100 - $trialKey->getUsagePercent(),
+                'showTraffic' => $showTraffic,
+                'remainingGb' => $showTraffic ? $trialKey->getRemainingGb() : null,
+                'totalGb' => $showTraffic ? $trialKey->getTotalGb() : null,
+            ] : null,
         ]);
     }
 
@@ -107,51 +120,58 @@ class CabinetController extends Controller
         }
     }
 
-    public function profile(Request $request): View
+    public function profile(Request $request): Response
     {
         $user = $request->user();
 
-        return view('cabinet.profile', [
-            'activeRoute' => 'profile',
-            'user' => $user,
+        return Inertia::render('Cabinet/Profile', [
             'hasActiveAccess' => $user->activeSubscriptions()->exists()
                 || SharedVpnAccess::activeTrialKey($user) !== null,
-            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
+            'createdAt' => optional($user->created_at)->timezone(config('app.timezone'))->format('d.m.Y') ?? '—',
         ]);
     }
 
-    public function security(Request $request): View
+    public function security(Request $request): Response
     {
-        $user = $request->user();
-
-        return view('cabinet.security', [
-            'activeRoute' => 'security',
-            'user' => $user,
-            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
-        ]);
+        return Inertia::render('Cabinet/Security');
     }
 
-    public function history(Request $request): View
+    public function history(Request $request): Response
     {
         $user = $request->user();
         $orders = $user->keyOrders()
             ->with('plan')
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->through(fn (KeyOrder $order) => [
+                'id' => $order->id,
+                'planName' => $order->plan?->name,
+                'periodLabel' => $order->plan?->period_label,
+                'devices' => $order->plan?->devices,
+                'note' => $order->note,
+                'amount' => $order->amount ? number_format($order->amount, 0, '', ' ').' ₽' : null,
+                'createdAt' => $order->created_at->format('d.m.Y H:i'),
+                'status' => $order->status->value ?? (string) $order->status,
+            ])
+            ->withQueryString();
+
+        $mapPlans = fn ($plans) => $plans->map(fn (Plan $plan) => [
+            'id' => $plan->id,
+            'periodLabel' => $plan->period_label,
+            'trafficGb' => $plan->traffic_gb,
+            'formattedPrice' => $plan->formatted_price,
+            'discount' => $plan->discount,
+        ])->values();
 
         $plans = Plan::active()->ordered()->get();
-        $standardPlans = $plans->where('devices', 2)->sortBy('days')->values();
-        $extendedPlans = $plans->where('devices', 5)->sortBy('days')->values();
-        $premiumPlans = $plans->where('devices', 10)->sortBy('days')->values();
 
-        return view('cabinet.history', [
-            'activeRoute' => 'history',
+        return Inertia::render('Cabinet/History', [
             'orders' => $orders,
-            'plans' => $plans,
-            'standardPlans' => $standardPlans,
-            'extendedPlans' => $extendedPlans,
-            'premiumPlans' => $premiumPlans,
-            'pendingTrialFeedbackRequest' => $this->pendingTrialFeedbackRequest($user->id),
+            'tiers' => [
+                ['name' => 'Стандартный', 'devices' => 2, 'featured' => false, 'plans' => $mapPlans($plans->where('devices', 2)->sortBy('days'))],
+                ['name' => 'Расширенный', 'devices' => 5, 'featured' => true, 'plans' => $mapPlans($plans->where('devices', 5)->sortBy('days'))],
+                ['name' => 'Премиум', 'devices' => 10, 'featured' => false, 'plans' => $mapPlans($plans->where('devices', 10)->sortBy('days'))],
+            ],
         ]);
     }
 }

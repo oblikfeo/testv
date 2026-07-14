@@ -8,7 +8,8 @@ use App\Models\SupportTicket;
 use App\Services\SupportNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SupportController extends Controller
 {
@@ -16,16 +17,24 @@ class SupportController extends Controller
         protected SupportNotifier $notifier
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $tickets = SupportTicket::query()
             ->where('user_id', $request->user()->id)
             ->orderByDesc('last_message_at')
             ->orderByDesc('id')
-            ->paginate(15);
+            ->paginate(15)
+            ->through(fn (SupportTicket $ticket) => [
+                'id' => $ticket->id,
+                'subject' => $ticket->subject,
+                'categoryLabel' => $ticket->categoryLabel(),
+                'statusLabel' => $ticket->statusLabel(),
+                'status' => $ticket->status,
+                'lastMessageAt' => optional($ticket->last_message_at ?? $ticket->created_at)->format('d.m.Y H:i'),
+            ])
+            ->withQueryString();
 
-        return view('cabinet.support.index', [
-            'activeRoute' => 'support',
+        return Inertia::render('Support/Index', [
             'tickets' => $tickets,
             'categories' => SupportTicket::CATEGORIES,
         ]);
@@ -71,15 +80,28 @@ class SupportController extends Controller
             ->with('success', 'Обращение отправлено. Мы ответим как можно скорее.');
     }
 
-    public function show(Request $request, SupportTicket $ticket): View
+    public function show(Request $request, SupportTicket $ticket): Response
     {
         $this->authorizeOwn($request, $ticket);
 
         $ticket->load(['messages.authorUser:id,name,email']);
 
-        return view('cabinet.support.show', [
-            'activeRoute' => 'support',
-            'ticket' => $ticket,
+        return Inertia::render('Support/Show', [
+            'ticket' => [
+                'id' => $ticket->id,
+                'subject' => $ticket->subject,
+                'categoryLabel' => $ticket->categoryLabel(),
+                'statusLabel' => $ticket->statusLabel(),
+                'status' => $ticket->status,
+                'isOpen' => $ticket->isOpen(),
+                'createdAt' => $ticket->created_at->timezone(config('app.timezone'))->format('d.m.Y H:i'),
+                'messages' => $ticket->messages->map(fn (SupportMessage $message) => [
+                    'id' => $message->id,
+                    'isAdmin' => $message->isAdmin(),
+                    'body' => $message->body,
+                    'createdAt' => $message->created_at->timezone(config('app.timezone'))->format('d.m.Y H:i'),
+                ])->values(),
+            ],
         ]);
     }
 
