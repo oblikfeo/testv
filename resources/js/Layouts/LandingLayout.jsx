@@ -58,7 +58,7 @@ export default function LandingLayout({
             </Head>
 
             <Navbar visitorCount={visitorCount} />
-            <main>{children}</main>
+            <main className="bg-ink-950">{children}</main>
             <Footer variant={footerVariant} />
         </>
     );

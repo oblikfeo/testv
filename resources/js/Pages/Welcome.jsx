@@ -62,7 +62,6 @@ export default function Welcome({ visitorCount, planGroups = [] }) {
             visitorCount={visitorCount}
         >
             <Head>
-                <link rel="stylesheet" href="/css/landing.css" />
                 <script type="application/ld+json">{JSON.stringify(productJsonLd)}</script>
                 <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
                 <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
@@ -81,8 +80,8 @@ export default function Welcome({ visitorCount, planGroups = [] }) {
             <FaqAccordion />
             <FinalCta />
 
-            <p className="footnote container">
-                * Instagram&nbsp;— проект Meta, признан в&nbsp;РФ экстремистским и&nbsp;запрещён.
+            <p className="mx-auto max-w-6xl px-5 py-6 text-center text-xs text-white/30 sm:px-8">
+                * Instagram — проект Meta, признан в РФ экстремистским и запрещён.
             </p>
         </LandingLayout>
     );

@@ -1,5 +1,8 @@
 import { motion } from 'framer-motion';
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import AnimatedBackground from '@/Components/ui/AnimatedBackground';
+import Spotlight from '@/Components/ui/Spotlight';
+import GlowButton from '@/Components/ui/GlowButton';
 
 function TelegramIcon() {
     return (
@@ -10,11 +13,11 @@ function TelegramIcon() {
 }
 
 const fadeUp = {
-    hidden: { opacity: 0, y: 22 },
+    hidden: { opacity: 0, y: 26 },
     show: (delay = 0) => ({
         opacity: 1,
         y: 0,
-        transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] },
+        transition: { duration: 0.65, delay, ease: [0.16, 1, 0.3, 1] },
     }),
 };
 
@@ -24,86 +27,75 @@ export default function Hero() {
     const { botUrl, channelUrl } = props.telegram ?? {};
 
     return (
-        <section className="hero" aria-labelledby="hero-title">
-            <div className="hero-bg" aria-hidden="true">
-                <motion.div
-                    className="hero-orb hero-orb--1"
-                    animate={{ x: [0, 30, -10, 0], y: [0, -20, 15, 0] }}
-                    transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-                />
-                <motion.div
-                    className="hero-orb hero-orb--2"
-                    animate={{ x: [0, -25, 15, 0], y: [0, 20, -10, 0] }}
-                    transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
-                />
-                <div className="hero-grid" />
-            </div>
+        <section className="relative isolate overflow-hidden bg-ink-950 pb-28 pt-32 sm:pt-40">
+            <AnimatedBackground variant="hero" />
+            <Spotlight />
 
-            <div className="container hero-inner">
-                <motion.div className="hero-badge" initial="hidden" animate="show" variants={fadeUp}>
-                    <span className="hero-badge-dot" />
+            <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 text-center sm:px-8">
+                <motion.div
+                    initial="hidden" animate="show" variants={fadeUp}
+                    className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-4 py-1.5 text-xs font-medium text-white/70 backdrop-blur"
+                >
+                    <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                    </span>
                     Серверы в ЕС · Подключение за 1 минуту
                 </motion.div>
 
                 <motion.h1
-                    id="hero-title"
-                    initial="hidden"
-                    animate="show"
-                    custom={0.06}
-                    variants={fadeUp}
+                    initial="hidden" animate="show" custom={0.08} variants={fadeUp}
+                    className="text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-6xl lg:text-7xl"
                 >
-                    Быстрый VPN&nbsp;для&nbsp;России —<br />
-                    <span className="accent">без блокировок и&nbsp;тормозов</span>
+                    Быстрый VPN для России —
+                    <br />
+                    <span className="bg-gradient-to-r from-red-500 via-rose-400 to-fuchsia-500 bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-x">
+                        без блокировок и тормозов
+                    </span>
                 </motion.h1>
 
-                <motion.p className="hero-subtitle" initial="hidden" animate="show" custom={0.12} variants={fadeUp}>
+                <motion.p
+                    initial="hidden" animate="show" custom={0.16} variants={fadeUp}
+                    className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/55"
+                >
                     AVA VPN — это шифрование трафика, защита приватности и стабильная работа любимых сервисов.
                     Подключите смартфон, компьютер или роутер за минуту и пользуйтесь интернетом без ограничений.
                 </motion.p>
 
-                <motion.div className="hero-cta" initial="hidden" animate="show" custom={0.18} variants={fadeUp}>
+                <motion.div initial="hidden" animate="show" custom={0.24} variants={fadeUp} className="mt-9 flex flex-col items-center gap-3">
                     {user ? (
-                        <>
-                            <Link href={route('cabinet.subscription')} className="btn btn-primary btn-lg">Перейти в кабинет →</Link>
-                            <span className="hint">Ваши ключи и активные подписки</span>
-                        </>
+                        <GlowButton href={route('cabinet.subscription')} size="lg">Перейти в кабинет →</GlowButton>
                     ) : (
-                        <>
-                            <Link href={route('register')} className="btn btn-primary btn-lg">Получить тест бесплатно →</Link>
-                            <span className="hint">3 часа без оплаты. Карта не нужна.</span>
-                        </>
+                        <GlowButton href={route('register')} size="lg">Получить тест бесплатно →</GlowButton>
                     )}
+                    <span className="text-sm text-white/40">3 часа без оплаты. Карта не нужна.</span>
                 </motion.div>
 
                 {(channelUrl || botUrl) && (
-                    <motion.div
-                        className="hero-cta hero-cta-social"
-                        style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 }}
-                        initial="hidden"
-                        animate="show"
-                        custom={0.21}
-                        variants={fadeUp}
-                    >
+                    <motion.div initial="hidden" animate="show" custom={0.3} variants={fadeUp} className="mt-4 flex flex-wrap justify-center gap-3">
                         {channelUrl && (
-                            <a href={channelUrl} target="_blank" rel="noopener" className="btn btn-secondary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                                <TelegramIcon />
-                                <span>ТГ-канал</span>
-                            </a>
+                            <GlowButton as="a" href={channelUrl} target="_blank" rel="noopener" variant="secondary" size="md">
+                                <TelegramIcon /> ТГ-канал
+                            </GlowButton>
                         )}
                         {botUrl && (
-                            <a href={botUrl} target="_blank" rel="noopener" className="btn btn-secondary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                                <TelegramIcon />
-                                <span>ТГ-бот</span>
-                            </a>
+                            <GlowButton as="a" href={botUrl} target="_blank" rel="noopener" variant="secondary" size="md">
+                                <TelegramIcon /> ТГ-бот
+                            </GlowButton>
                         )}
                     </motion.div>
                 )}
 
-                <motion.ul className="hero-trust" initial="hidden" animate="show" custom={0.24} variants={fadeUp} aria-label="Преимущества">
-                    <li><span className="trust-check">✓</span> Без логов</li>
-                    <li><span className="trust-check">✓</span> Оплата ЮKassa</li>
-                    <li><span className="trust-check">✓</span> Поддержка 24/7</li>
-                    <li><span className="trust-check">✓</span> Возврат при сбое</li>
+                <motion.ul
+                    initial="hidden" animate="show" custom={0.38} variants={fadeUp}
+                    className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/45"
+                    aria-label="Преимущества"
+                >
+                    {['Без логов', 'Оплата ЮKassa', 'Поддержка 24/7', 'Возврат при сбое'].map((item) => (
+                        <li key={item} className="flex items-center gap-1.5">
+                            <span className="text-red-400">✓</span> {item}
+                        </li>
+                    ))}
                 </motion.ul>
             </div>
         </section>

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import VisitorCounter from '@/Components/landing/VisitorCounter';
+import GlowButton from '@/Components/ui/GlowButton';
 
 function TelegramIcon() {
     return (
@@ -26,33 +28,59 @@ export default function Navbar({ visitorCount }) {
     }, []);
 
     return (
-        <nav className={`navbar${scrolled ? ' is-scrolled' : ''}`}>
-            <div className="container">
-                <Link href={route('home')} className="navbar-logo">
-                    <img src="/assets/logo.png" alt="AVA VPN" />
-                    <span>AVA <em>VPN</em></span>
+        <motion.nav
+            initial={{ y: -32, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className={`sticky top-0 z-50 border-b transition-all duration-300 ${
+                scrolled
+                    ? 'border-white/10 bg-ink-950/80 shadow-[0_8px_30px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl'
+                    : 'border-transparent bg-transparent'
+            }`}
+        >
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
+                <Link href={route('home')} className="group flex items-center gap-2.5">
+                    <img src="/assets/logo.png" alt="AVA VPN" className="h-8 w-8 transition-transform duration-300 group-hover:scale-110" />
+                    <span className="text-lg font-extrabold tracking-tight text-white">
+                        AVA <em className="bg-gradient-to-r from-red-500 to-fuchsia-500 bg-clip-text not-italic text-transparent">VPN</em>
+                    </span>
                 </Link>
-                <div className="navbar-actions">
-                    <VisitorCounter visitorCount={visitorCount} />
+
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="hidden sm:block">
+                        <VisitorCounter visitorCount={visitorCount} />
+                    </div>
                     {channelUrl && (
-                        <a href={channelUrl} target="_blank" rel="noopener" className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        <a
+                            href={channelUrl}
+                            target="_blank"
+                            rel="noopener"
+                            className="hidden items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/80 backdrop-blur transition-colors hover:border-white/25 hover:bg-white/[0.08] hover:text-white md:inline-flex"
+                        >
                             <TelegramIcon />
-                            <span>ТГ-канал</span>
+                            <span>Канал</span>
                         </a>
                     )}
                     {botUrl && (
-                        <a href={botUrl} target="_blank" rel="noopener" className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        <a
+                            href={botUrl}
+                            target="_blank"
+                            rel="noopener"
+                            className="hidden items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/80 backdrop-blur transition-colors hover:border-white/25 hover:bg-white/[0.08] hover:text-white md:inline-flex"
+                        >
                             <TelegramIcon />
-                            <span>ТГ-бот</span>
+                            <span>Бот</span>
                         </a>
                     )}
-                    {user ? (
-                        <Link href={route('cabinet.subscription')} className="btn btn-primary btn-sm">Кабинет</Link>
-                    ) : (
-                        <Link href={route('login')} className="btn btn-primary btn-sm">Войти</Link>
-                    )}
+                    <GlowButton
+                        href={user ? route('cabinet.subscription') : route('login')}
+                        size="sm"
+                        variant="primary"
+                    >
+                        {user ? 'Кабинет' : 'Войти'}
+                    </GlowButton>
                 </div>
             </div>
-        </nav>
+        </motion.nav>
     );
 }

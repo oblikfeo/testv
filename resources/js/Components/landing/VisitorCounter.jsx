@@ -30,73 +30,79 @@ export default function VisitorCounter({ visitorCount }) {
         <>
             <button
                 type="button"
-                className="visitor-counter-btn"
                 onClick={handleOpen}
                 aria-label="Статистика заходов на главную"
                 title="Нажми — откуда приходят гости"
+                className="flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold tabular-nums text-white/70 backdrop-blur transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-white"
             >
-                <table className="visitor-counter"><tbody><tr><td>{visitorCount.toLocaleString('ru-RU')}</td></tr></tbody></table>
+                <span className="h-1.5 w-1.5 animate-pulse-glow rounded-full bg-red-500" />
+                {visitorCount.toLocaleString('ru-RU')}
             </button>
 
             <AnimatePresence>
                 {open && (
-                    <div className="traffic-modal-root" role="presentation">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div
-                            className="traffic-modal-backdrop"
+                            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                             onClick={handleClose}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                         />
                         <motion.div
-                            className="traffic-modal-shell"
                             role="dialog"
                             aria-modal="true"
-                            aria-labelledby="traffic-modal-title"
-                            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 12 }}
                             transition={{ duration: 0.2 }}
+                            className="relative w-full max-w-md rounded-2xl border border-white/10 bg-ink-900/95 p-6 shadow-glow backdrop-blur-xl"
                         >
-                            <button type="button" className="traffic-modal-x" onClick={handleClose} aria-label="Закрыть">&times;</button>
-                            <div className="traffic-modal-inner">
-                                <h2 id="traffic-modal-title" className="traffic-modal-title">Откуда приходят гости</h2>
-                                <div className="traffic-modal-body">
-                                    {status === 'loading' && <p className="traffic-modal-loading">Загрузка…</p>}
-                                    {status === 'error' && <p className="traffic-modal-error">Не удалось загрузить. Попробуйте позже.</p>}
-                                    {status === 'ready' && stats && (
-                                        <>
-                                            <div className="traffic-stat-grid">
-                                                <div className="traffic-stat-card">
-                                                    <span>Визитов главной</span>
-                                                    <strong>{stats.total_visits ?? 0}</strong>
-                                                </div>
-                                                <div className="traffic-stat-card traffic-stat-card--accent">
-                                                    <span>Открыли эту панель</span>
-                                                    <strong>{stats.modal_opens ?? 0}</strong>
-                                                </div>
-                                            </div>
-                                            {!(stats.sources ?? []).length ? (
-                                                <p className="traffic-modal-empty">Источники ещё копятся — загляни позже.</p>
-                                            ) : (
-                                                <div className="traffic-bars">
-                                                    {stats.sources.map((s) => {
-                                                        const pct = typeof s.pct === 'number' ? s.pct : 0;
-                                                        const width = Math.min(100, Math.max(6, pct));
-                                                        return (
-                                                            <div className="traffic-bar-row" key={s.label}>
-                                                                <span className="traffic-bar-label">{s.label}</span>
-                                                                <div className="traffic-bar-track"><div className="traffic-bar-fill" style={{ width: `${width}%` }} /></div>
-                                                                <span className="traffic-bar-meta">{s.hits} · {pct}%</span>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </>
+                            <button
+                                type="button"
+                                onClick={handleClose}
+                                aria-label="Закрыть"
+                                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+                            >
+                                &times;
+                            </button>
+                            <h2 className="mb-4 text-lg font-bold text-white">Откуда приходят гости</h2>
+
+                            {status === 'loading' && <p className="text-sm text-white/50">Загрузка…</p>}
+                            {status === 'error' && <p className="text-sm text-red-400">Не удалось загрузить. Попробуйте позже.</p>}
+                            {status === 'ready' && stats && (
+                                <>
+                                    <div className="mb-5 grid grid-cols-2 gap-3">
+                                        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                                            <span className="block text-xs text-white/45">Визитов главной</span>
+                                            <strong className="text-xl font-extrabold text-white">{stats.total_visits ?? 0}</strong>
+                                        </div>
+                                        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3">
+                                            <span className="block text-xs text-white/45">Открыли эту панель</span>
+                                            <strong className="text-xl font-extrabold text-white">{stats.modal_opens ?? 0}</strong>
+                                        </div>
+                                    </div>
+                                    {!(stats.sources ?? []).length ? (
+                                        <p className="text-sm text-white/45">Источники ещё копятся — загляни позже.</p>
+                                    ) : (
+                                        <div className="space-y-2.5">
+                                            {stats.sources.map((s) => {
+                                                const pct = typeof s.pct === 'number' ? s.pct : 0;
+                                                const width = Math.min(100, Math.max(6, pct));
+                                                return (
+                                                    <div key={s.label} className="flex items-center gap-3 text-xs">
+                                                        <span className="w-24 shrink-0 truncate text-white/60">{s.label}</span>
+                                                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+                                                            <div className="h-full rounded-full bg-gradient-to-r from-red-600 to-fuchsia-500" style={{ width: `${width}%` }} />
+                                                        </div>
+                                                        <span className="w-16 shrink-0 text-right text-white/45">{s.hits} · {pct}%</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     )}
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </motion.div>
                     </div>
                 )}
