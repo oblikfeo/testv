@@ -51,7 +51,7 @@ export default function SupportShow({ ticket }) {
                 </Alert>
             )}
 
-            <div role="log" aria-label="Переписка" className="mb-5 flex flex-col gap-3">
+            <div role="log" aria-label="Переписка" className="mb-5 flex flex-col items-start gap-3">
                 {ticket.messages.map((message) => (
                     <article
                         key={message.id}

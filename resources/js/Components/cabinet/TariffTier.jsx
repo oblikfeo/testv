@@ -40,10 +40,10 @@ export default function TariffTier({ tier }) {
             <div className="flex flex-col gap-2.5">
                 {tier.plans.length === 0 && <p className="text-sm text-white/40">Тарифы временно недоступны</p>}
                 {tier.plans.map((plan) => (
-                    <div key={plan.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                    <div key={plan.id} className="flex flex-col gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <div className="text-sm font-medium text-white">{plan.periodLabel}</div>
-                            <div className="flex items-center gap-2 text-xs text-white/40">
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-white/40">
                                 {plan.trafficGb > 0 && <span>{plan.trafficGb} ГБ</span>}
                                 <span className="font-semibold text-white/80">{plan.formattedPrice}</span>
                                 {plan.discount > 0 && <span className="text-emerald-400">−{plan.discount}%</span>}
@@ -51,7 +51,7 @@ export default function TariffTier({ tier }) {
                         </div>
                         <button
                             type="button" onClick={() => buy(plan.id)}
-                            className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                            className={`w-full shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition sm:w-auto ${
                                 tier.featured
                                     ? 'bg-gradient-to-r from-red-600 to-fuchsia-600 text-white shadow-glow hover:brightness-110'
                                     : 'border border-white/15 bg-white/[0.06] text-white/90 hover:bg-white/[0.1]'
