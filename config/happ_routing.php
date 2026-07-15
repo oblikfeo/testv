@@ -15,7 +15,7 @@ return [
     'use_chunk_files' => env('HAPP_GEO_USE_CHUNK_FILES', false),
     'route_order' => 'block-proxy-direct',
     // Unix timestamp — Happ перекачивает geo при увеличении значения.
-    'last_updated' => env('HAPP_ROUTING_LAST_UPDATED', '1784060400'),
+    'last_updated' => env('HAPP_ROUTING_LAST_UPDATED', '1784126801'),
 
     'announcement' => env('HAPP_SUBSCRIPTION_ANNOUNCE', ''),
     'subscription_pin' => env('HAPP_SUBSCRIPTION_PIN', true),
@@ -31,6 +31,9 @@ return [
     'domestic_dns_domain' => env('HAPP_DOMESTIC_DNS_DOMAIN', 'https://77.88.8.8/dns-query'),
     'domestic_dns_ip' => env('HAPP_DOMESTIC_DNS_IP', '77.88.8.8'),
 
+    // Теги ограничены набором, реально присутствующим в lite geosite.dat (DigneZzZ/routing v2ray/happ).
+    // Не добавлять сюда instagram/facebook/twitter/google/tiktok/netflix/spotify/openai — этих тегов
+    // нет в lite-файле, Xray в Happ падает с "отсутствует секция ..." при старте.
     'proxy_sites' => [
         'geosite:github',
         'geosite:twitch-ads',
@@ -40,14 +43,6 @@ return [
         'geosite:whatsapp',
         'geosite:google-deepmind',
         'geosite:crypto',
-        'geosite:instagram',
-        'geosite:facebook',
-        'geosite:twitter',
-        'geosite:google',
-        'geosite:tiktok',
-        'geosite:netflix',
-        'geosite:spotify',
-        'geosite:openai',
     ],
 
     'proxy_ip' => [
@@ -71,9 +66,6 @@ return [
         'geosite:faceit',
         'geosite:ip-check',
         'geosite:vpndetect',
-        'geosite:yandex',
-        'geosite:mailru',
-        'geosite:vk',
         'domain:tbank.ru',
         'domain:tinkoff.ru',
         'domain:sberbank.ru',
@@ -85,6 +77,10 @@ return [
         'domain:wildberries.ru',
         'domain:wb.ru',
         'domain:avito.ru',
+        'domain:yandex.ru',
+        'domain:ya.ru',
+        'domain:mail.ru',
+        'domain:vk.com',
         'domain:lan',
         'domain:local',
     ],
