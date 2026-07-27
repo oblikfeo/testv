@@ -2,11 +2,14 @@
 
 return [
 
-    'shared_hy2_uri' => env('SHARED_HY2_URI', 'vless://902c8050-10a1-4405-881c-1f6055400d28@169.40.15.223:443?type=tcp&security=reality&sni=www.microsoft.com&fp=chrome&pbk=EdzPHpQEArSM18Z2mhiQ0IQcE7CSRud5JDPmeSH2l3k&sid=a1b2c3d4&spx=%2F&flow=xtls-rprx-vision#223'),
+    // Узлы подписки задаются в .env как готовые URI (см. .env.example).
+    // Первый узел подписки (VLESS Reality, Wi-Fi).
+    'shared_hy2_uri' => env('SHARED_HY2_URI', ''),
 
+    // Необязательный узел (в /sub сейчас не отдаётся).
     'shared_vless_uri' => env('SHARED_VLESS_URI', ''),
 
-    // CDN xhttp (белые списки операторов) — последний узел в подписке.
+    // CDN xhttp (белые списки операторов) — узел «обход блокировок» в подписке.
     'shared_cdn_uri' => env('SHARED_CDN_URI', ''),
 
     'trial' => [
