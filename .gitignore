@@ -2,6 +2,7 @@
 .DS_Store
 .env
 .env.backup
+.env.bak*
 .env.production
 .phpactor.json
 .phpunit.result.cache
@@ -29,6 +30,7 @@
 /deploy/health-check-vpn.py
 /node_modules
 /public/build
+/public/geo
 /public/hot
 /bootstrap/ssr
 /public/storage
