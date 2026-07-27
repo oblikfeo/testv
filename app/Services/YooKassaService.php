@@ -20,7 +20,8 @@ class YooKassaService
     protected string $apiUrl = 'https://api.yookassa.ru/v3';
 
     public function __construct(
-        protected TelegramBotNotifier $tgNotifier
+        protected TelegramBotNotifier $tgNotifier,
+        protected SubscriptionManager $subscriptions,
     ) {
         $this->shopId = config('yookassa.shop_id');
         $this->secretKey = config('yookassa.secret_key');
@@ -252,6 +253,8 @@ class YooKassaService
         $user = $order->user;
 
         if ($plan && $user) {
+            $source = $order->purchase_source ?? 'unknown';
+
             if ($order->purchase_action === 'renew_subscription' && $order->target_subscription_id) {
                 $targetSubscription = $user->subscriptions()
                     ->where('id', $order->target_subscription_id)
@@ -266,28 +269,9 @@ class YooKassaService
                     return false;
                 }
 
-                $baseDate = $targetSubscription->expires_at && $targetSubscription->expires_at->isFuture()
-                    ? $targetSubscription->expires_at->copy()
-                    : now();
-
-                $targetSubscription->update([
-                    'plan_id' => $plan->id,
-                    'status' => 'active',
-                    'expires_at' => $baseDate->addDays($plan->days),
-                    'max_devices' => $plan->devices,
-                    'purchase_source' => $order->purchase_source ?? 'unknown',
-                ]);
-                $subscription = $targetSubscription->fresh();
+                $subscription = $this->subscriptions->extendWithPlan($targetSubscription, $plan, $source);
             } else {
-                $subscription = Subscription::create([
-                    'user_id' => $user->id,
-                    'plan_id' => $plan->id,
-                    'status' => 'active',
-                    'purchase_source' => $order->purchase_source ?? 'unknown',
-                    'max_devices' => $plan->devices,
-                    'starts_at' => now(),
-                    'expires_at' => now()->addDays($plan->days),
-                ]);
+                $subscription = $this->subscriptions->createForPlan($user, $plan, $source);
             }
 
             if ($user->telegram_id) {

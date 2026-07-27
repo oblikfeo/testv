@@ -16,50 +16,6 @@ class AdminController extends Controller
         protected TrialKeyService $trialKeyService,
     ) {}
 
-    public function login()
-    {
-        if (session('admin_authenticated')) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        return view('admin.login');
-    }
-
-    public function authenticate(Request $request)
-    {
-        $request->validate([
-            'login' => 'required|string',
-            'password' => 'required|string',
-        ]);
-
-        $envLogin = (string) config('admin.login');
-        $envPassword = (string) config('admin.password');
-
-        if ($envLogin === '' || $envPassword === '') {
-            return back()->withErrors(['login' => 'Задайте ADMIN_LOGIN и ADMIN_PASSWORD в .env']);
-        }
-
-        if ($request->login === $envLogin && $request->password === $envPassword) {
-            session(['admin_authenticated' => true]);
-
-            return redirect()->route('admin.dashboard');
-        }
-
-        return back()->withErrors(['login' => 'Неверный логин или пароль']);
-    }
-
-    public function logout()
-    {
-        session()->forget('admin_authenticated');
-
-        return redirect()->route('admin.login');
-    }
-
-    public function dashboard()
-    {
-        return view('admin.dashboard');
-    }
-
     public function trials()
     {
         $trialKeys = TrialKey::query()

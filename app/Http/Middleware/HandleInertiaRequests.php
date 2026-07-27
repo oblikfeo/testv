@@ -58,8 +58,12 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
                 'status' => fn () => $request->session()->get('status'),
             ],
+            'admin' => fn () => $request->session()->get('admin_authenticated')
+                ? ['login' => (string) config('admin.login')]
+                : null,
             'purchaseChoice' => fn () => $request->session()->get('purchase_choice'),
             'pendingTrialFeedback' => function () use ($user) {
                 if (! $user) {

@@ -8,7 +8,8 @@ use App\Models\SupportTicket;
 use App\Services\SupportNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AdminSupportController extends Controller
 {
@@ -16,7 +17,7 @@ class AdminSupportController extends Controller
         protected SupportNotifier $notifier
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $filter = (string) $request->query('status', 'active');
 
@@ -41,7 +42,20 @@ class AdminSupportController extends Controller
             ->orderByDesc('last_message_at')
             ->orderByDesc('id')
             ->paginate(25)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (SupportTicket $t) => [
+                'id' => $t->id,
+                'subject' => $t->subject,
+                'category' => $t->categoryLabel(),
+                'status' => $t->status,
+                'statusLabel' => $t->statusLabel(),
+                'messagesCount' => $t->messages_count,
+                'user' => $t->user ? [
+                    'id' => $t->user->id,
+                    'label' => $t->user->name ?: $t->user->email,
+                ] : null,
+                'lastMessageAt' => $t->last_message_at?->format('d.m.Y H:i'),
+            ]);
 
         $counters = [
             'open' => SupportTicket::query()->where('status', SupportTicket::STATUS_OPEN)->count(),
@@ -49,19 +63,39 @@ class AdminSupportController extends Controller
             'closed' => SupportTicket::query()->where('status', SupportTicket::STATUS_CLOSED)->count(),
         ];
 
-        return view('admin.support.index', [
+        return Inertia::render('Admin/Support/Index', [
             'tickets' => $tickets,
             'filter' => $filter,
             'counters' => $counters,
         ]);
     }
 
-    public function show(SupportTicket $ticket): View
+    public function show(SupportTicket $ticket): Response
     {
         $ticket->load(['user', 'messages.authorUser:id,email,name']);
 
-        return view('admin.support.show', [
-            'ticket' => $ticket,
+        return Inertia::render('Admin/Support/Show', [
+            'ticket' => [
+                'id' => $ticket->id,
+                'subject' => $ticket->subject,
+                'category' => $ticket->categoryLabel(),
+                'status' => $ticket->status,
+                'statusLabel' => $ticket->statusLabel(),
+                'isClosed' => $ticket->status === SupportTicket::STATUS_CLOSED,
+                'createdAt' => $ticket->created_at?->format('d.m.Y H:i'),
+                'user' => $ticket->user ? [
+                    'id' => $ticket->user->id,
+                    'label' => $ticket->user->name ?: $ticket->user->email,
+                    'email' => $ticket->user->email,
+                ] : null,
+            ],
+            'messages' => $ticket->messages->map(fn ($m) => [
+                'id' => $m->id,
+                'isAdmin' => $m->isAdmin(),
+                'author' => $m->isAdmin() ? 'Поддержка' : ($m->authorUser?->name ?: 'Пользователь'),
+                'body' => $m->body,
+                'createdAt' => $m->created_at?->format('d.m.Y H:i'),
+            ]),
         ]);
     }
 

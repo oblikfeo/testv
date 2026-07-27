@@ -2,6 +2,12 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminSupportController;
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\OrdersController as AdminOrdersController;
+use App\Http\Controllers\Admin\PlansController as AdminPlansController;
+use App\Http\Controllers\Admin\SubscriptionsController as AdminSubscriptionsController;
+use App\Http\Controllers\Admin\UsersController as AdminUsersController;
 use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\LandingTrafficController;
 use App\Http\Controllers\PaymentController;
@@ -166,12 +172,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Admin routes
 Route::prefix('admin')->group(function () {
-    Route::get('/login', [AdminController::class, 'login'])->name('admin.login');
-    Route::post('/login', [AdminController::class, 'authenticate'])->name('admin.authenticate');
-    Route::post('/logout', [AdminController::class, 'logout'])->name('admin.logout');
+    Route::get('/login', [AdminAuthController::class, 'show'])->name('admin.login');
+    Route::post('/login', [AdminAuthController::class, 'authenticate'])->name('admin.authenticate');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
     Route::middleware(AdminAuth::class)->group(function () {
-        Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
+        // Пользователи
+        Route::get('/users', [AdminUsersController::class, 'index'])->name('admin.users');
+        Route::get('/users/{user}', [AdminUsersController::class, 'show'])->name('admin.users.show');
+        Route::post('/users/{user}/subscriptions', [AdminUsersController::class, 'grantSubscription'])->name('admin.users.subscriptions.grant');
+        Route::post('/users/{user}/subscriptions/{subscription}/extend', [AdminUsersController::class, 'extendSubscription'])->name('admin.users.subscriptions.extend');
+        Route::post('/users/{user}/subscriptions/{subscription}/expire', [AdminUsersController::class, 'expireSubscription'])->name('admin.users.subscriptions.expire');
+        Route::post('/users/{user}/trial', [AdminUsersController::class, 'issueTrial'])->name('admin.users.trial.issue');
+        Route::delete('/users/{user}/trial', [AdminUsersController::class, 'revokeTrial'])->name('admin.users.trial.revoke');
+
+        // Заказы / платежи
+        Route::get('/orders', [AdminOrdersController::class, 'index'])->name('admin.orders');
+        Route::post('/orders/{order}/sync', [AdminOrdersController::class, 'sync'])->name('admin.orders.sync');
+
+        // Подписки
+        Route::get('/subscriptions', [AdminSubscriptionsController::class, 'index'])->name('admin.subscriptions');
+        Route::post('/subscriptions/{subscription}/extend', [AdminSubscriptionsController::class, 'extend'])->name('admin.subscriptions.extend');
+        Route::post('/subscriptions/{subscription}/expire', [AdminSubscriptionsController::class, 'expire'])->name('admin.subscriptions.expire');
+
+        // Тарифы
+        Route::get('/plans', [AdminPlansController::class, 'index'])->name('admin.plans');
+        Route::post('/plans', [AdminPlansController::class, 'store'])->name('admin.plans.store');
+        Route::put('/plans/{plan}', [AdminPlansController::class, 'update'])->name('admin.plans.update');
+        Route::post('/plans/{plan}/toggle', [AdminPlansController::class, 'toggle'])->name('admin.plans.toggle');
+        Route::delete('/plans/{plan}', [AdminPlansController::class, 'destroy'])->name('admin.plans.destroy');
+
+        // Legacy (Blade) — kept operational until migrated into the new UI in later phases.
         Route::get('/trials', [AdminController::class, 'trials'])->name('admin.trials');
         Route::post('/trials/create', [AdminController::class, 'createTrial'])->name('admin.trials.create');
         Route::post('/trials/revoke', [AdminController::class, 'revokeTrial'])->name('admin.trials.revoke');
