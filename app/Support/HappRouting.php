@@ -109,6 +109,21 @@ class HappRouting
             return null;
         }
 
+        return self::encodeAnnouncement($text);
+    }
+
+    public static function expiredAnnouncementHeader(): string
+    {
+        $text = trim((string) config('happ_routing.expired_announcement', ''));
+        if ($text === '') {
+            $text = 'Подписка истекла. Продлите тариф на avavpn.ru — VPN перестанет работать после обновления подписки.';
+        }
+
+        return self::encodeAnnouncement($text);
+    }
+
+    private static function encodeAnnouncement(string $text): string
+    {
         if (mb_strlen($text) > 200) {
             $text = mb_substr($text, 0, 200);
         }

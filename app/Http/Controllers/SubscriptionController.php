@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Support\HappRouting;
 use App\Support\SharedVpnAccess;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class SubscriptionController extends Controller
         }
 
         if (! SharedVpnAccess::userHasAccess($user)) {
-            return response('Подписка не активна', 403);
+            return $this->expiredResponse($user, $request);
         }
 
         $body = SharedVpnAccess::subscriptionBody();
@@ -28,9 +29,9 @@ class SubscriptionController extends Controller
             return response('Подключение не настроено', 500);
         }
 
-        $routing = HappRouting::isVpnClient($request->header('User-Agent', ''))
-            ? HappRouting::subscriptionLine()
-            : null;
+        $isVpnClient = HappRouting::isVpnClient($request->header('User-Agent', ''));
+
+        $routing = $isVpnClient ? HappRouting::subscriptionLine() : null;
 
         if ($routing) {
             $decoded = base64_decode($body, true);
@@ -41,22 +42,48 @@ class SubscriptionController extends Controller
             $body = base64_encode(implode("\n", $lines));
         }
 
+        return $this->subscriptionResponse($user, $body, $isVpnClient, $routing, active: true);
+    }
+
+    private function expiredResponse(User $user, Request $request): Response
+    {
+        $isVpnClient = HappRouting::isVpnClient($request->header('User-Agent', ''));
+
+        return $this->subscriptionResponse(
+            $user,
+            SharedVpnAccess::expiredSubscriptionBody(),
+            $isVpnClient,
+            $isVpnClient ? HappRouting::ROUTING_OFF : null,
+            active: false,
+        );
+    }
+
+    private function subscriptionResponse(
+        User $user,
+        string $body,
+        bool $isVpnClient,
+        ?string $routing,
+        bool $active,
+    ): Response {
         $headers = [
             'Content-Type' => 'text/plain; charset=utf-8',
             'profile-update-interval' => '12',
-            'profile-title' => SharedVpnAccess::PROFILE_TITLE,
+            'profile-title' => $active ? SharedVpnAccess::PROFILE_TITLE : SharedVpnAccess::EXPIRED_PROFILE_TITLE,
         ];
 
         if ($routing) {
             $headers['routing'] = $routing;
         }
 
-        if (HappRouting::isVpnClient($request->header('User-Agent', ''))) {
-            if (HappRouting::subscriptionPinEnabled()) {
+        if ($isVpnClient) {
+            if ($active && HappRouting::subscriptionPinEnabled()) {
                 $headers['subscription-pin'] = 'true';
             }
 
-            $announce = HappRouting::announcementHeader();
+            $announce = $active
+                ? HappRouting::announcementHeader()
+                : HappRouting::expiredAnnouncementHeader();
+
             if ($announce !== null) {
                 $headers['announce'] = $announce;
             }

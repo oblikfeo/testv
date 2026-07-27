@@ -13,6 +13,10 @@ class SharedVpnAccess
      */
     public const PROFILE_TITLE = 'AVA VPN';
 
+    public const EXPIRED_PROFILE_TITLE = 'AVA VPN · истекла';
+
+    private const EXPIRED_NODE_STUB = 'vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?encryption=none';
+
     /**
      * Подписи узлов в Happ. Ключ — config-ключ URI.
      * name  — отображаемое имя (фрагмент #..., поддерживает эмодзи-флаги).
@@ -129,15 +133,46 @@ class SharedVpnAccess
 
     public static function connectionUriForUser(User $user): ?string
     {
-        if (! self::userHasAccess($user)) {
-            return null;
-        }
-
         if (self::nodeUris() === []) {
             return null;
         }
 
+        if (! self::userHasAccess($user)) {
+            return $user->vpn_sub_id ? self::subscriptionUrl($user) : null;
+        }
+
         return self::subscriptionUrl($user);
+    }
+
+    /**
+     * Тело подписки для истёкшего доступа: routing off + заглушки с подписью «Подписка истекла».
+     * Happ получает HTTP 200, сбрасывает старые серверы и показывает announce.
+     */
+    public static function expiredSubscriptionBody(): string
+    {
+        $lines = [HappRouting::ROUTING_OFF];
+
+        $labels = [
+            '⛔ Подписка истекла',
+            'Продлите на avavpn.ru',
+        ];
+
+        $slot = 0;
+        foreach (array_keys(self::NODE_LABELS) as $key) {
+            if (trim((string) config("vpn.{$key}", '')) === '') {
+                continue;
+            }
+
+            $label = $labels[$slot] ?? $labels[0];
+            $lines[] = self::EXPIRED_NODE_STUB.'#'.$label;
+            $slot++;
+        }
+
+        if ($slot === 0) {
+            $lines[] = self::EXPIRED_NODE_STUB.'#'.$labels[0];
+        }
+
+        return base64_encode(implode("\n", $lines));
     }
 
     /**
@@ -164,6 +199,10 @@ class SharedVpnAccess
 
     public static function accessExpiresAt(User $user): ?\Illuminate\Support\Carbon
     {
+        if (! self::userHasAccess($user)) {
+            return self::lastAccessExpiresAt($user);
+        }
+
         $latest = null;
 
         foreach ($user->activeSubscriptions()->get() as $subscription) {
@@ -173,6 +212,26 @@ class SharedVpnAccess
         }
 
         $trial = self::activeTrialKey($user);
+        if ($trial?->expires_at) {
+            if ($latest === null || $trial->expires_at->gt($latest)) {
+                $latest = $trial->expires_at;
+            }
+        }
+
+        return $latest;
+    }
+
+    public static function lastAccessExpiresAt(User $user): ?\Illuminate\Support\Carbon
+    {
+        $latest = null;
+
+        foreach ($user->subscriptions()->orderByDesc('expires_at')->get() as $subscription) {
+            if ($subscription->expires_at && ($latest === null || $subscription->expires_at->gt($latest))) {
+                $latest = $subscription->expires_at;
+            }
+        }
+
+        $trial = $user->trialKey;
         if ($trial?->expires_at) {
             if ($latest === null || $trial->expires_at->gt($latest)) {
                 $latest = $trial->expires_at;

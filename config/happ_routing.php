@@ -18,6 +18,7 @@ return [
     'last_updated' => env('HAPP_ROUTING_LAST_UPDATED', '1784126801'),
 
     'announcement' => env('HAPP_SUBSCRIPTION_ANNOUNCE', ''),
+    'expired_announcement' => env('HAPP_EXPIRED_ANNOUNCE', 'Подписка истекла. Продлите тариф на avavpn.ru — VPN перестанет работать после обновления подписки.'),
     'subscription_pin' => env('HAPP_SUBSCRIPTION_PIN', true),
 
     'geoip_url' => env('HAPP_GEOIP_URL', $appUrl.'/geo/geoip.dat'),

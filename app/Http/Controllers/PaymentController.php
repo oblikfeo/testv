@@ -8,6 +8,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Services\YooKassaService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
@@ -107,7 +108,8 @@ class PaymentController extends Controller
         $confirmationUrl = $payment['confirmation']['confirmation_url'] ?? null;
         
         if ($confirmationUrl) {
-            return redirect($confirmationUrl);
+            // Inertia XHR cannot follow external redirects (YooKassa → CORS). Force full navigation.
+            return Inertia::location($confirmationUrl);
         }
 
         return back()->withErrors(['payment' => 'Не удалось получить ссылку на оплату.']);
