@@ -35,8 +35,29 @@ export default function UsersIndex({ users, filters }) {
                 </form>
             </header>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-                <div className="overflow-x-auto">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 sm:p-5">
+                {/* Mobile: cards */}
+                <div className="flex flex-col gap-2 sm:hidden">
+                    {users.data.length === 0 && <p className="py-6 text-center text-white/40">Ничего не найдено</p>}
+                    {users.data.map((u) => (
+                        <Link key={u.id} href={route('admin.users.show', u.id)} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3.5 py-3 transition active:bg-white/[0.04]">
+                            <div className="min-w-0">
+                                <div className="truncate font-medium text-white">{u.name}</div>
+                                <div className="truncate text-xs text-white/45">
+                                    {u.isTelegram && <span className="mr-1 rounded bg-sky-500/15 px-1 py-0.5 text-[9px] font-semibold text-sky-300">TG</span>}
+                                    {u.contact}
+                                </div>
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-1">
+                                <AccessBadge status={u.access} />
+                                <span className="text-[11px] text-white/35">{u.createdAt}</span>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden overflow-x-auto sm:block">
                     <table className="w-full text-left text-sm">
                         <thead className="text-xs uppercase tracking-wider text-white/35">
                             <tr>

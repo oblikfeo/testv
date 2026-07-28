@@ -64,8 +64,29 @@ export default function PlansIndex({ plans }) {
                 <button onClick={openCreate} className="rounded-full bg-gradient-to-r from-red-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:brightness-110">+ Тариф</button>
             </header>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-                <div className="overflow-x-auto">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 sm:p-5">
+                {/* Mobile: cards */}
+                <div className="flex flex-col gap-2 sm:hidden">
+                    {plans.map((p) => (
+                        <div key={p.id} className={`rounded-xl border border-white/10 bg-black/20 px-3.5 py-3 ${p.isActive ? '' : 'opacity-50'}`}>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                    <div className="font-medium text-white">{p.name} {p.isPopular && <span className="ml-1 rounded bg-fuchsia-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-fuchsia-300">POPULAR</span>}</div>
+                                    <div className="truncate text-xs text-white/40"><code>{p.slug}</code> · {p.devices} устр. · {p.days} дн. · {p.subscriptionsCount} подп.</div>
+                                </div>
+                                <div className="shrink-0 text-right font-semibold text-white">{p.price} ₽{p.discount > 0 && <span className="ml-1 text-xs text-emerald-300">−{p.discount}%</span>}</div>
+                            </div>
+                            <div className="mt-2.5 flex items-center justify-end gap-1.5">
+                                <button onClick={() => toggle(p)} className={`mr-auto rounded px-2 py-1 text-[11px] font-semibold ${p.isActive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/10 text-white/45'}`}>{p.isActive ? 'ON' : 'OFF'}</button>
+                                <button onClick={() => openEdit(p)} className="rounded-lg border border-white/10 px-2.5 py-1 text-xs text-white/70">Ред.</button>
+                                <button onClick={() => remove(p)} className="rounded-lg border border-red-500/25 px-2.5 py-1 text-xs text-red-300">Удл.</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden overflow-x-auto sm:block">
                     <table className="w-full text-left text-sm">
                         <thead className="text-xs uppercase tracking-wider text-white/35">
                             <tr>

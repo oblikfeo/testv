@@ -63,7 +63,39 @@ export default function OrdersIndex({ orders, filters, revenue, sources }) {
                     )}
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Mobile: cards */}
+                <div className="flex flex-col gap-2 sm:hidden">
+                    {orders.data.length === 0 && <p className="py-6 text-center text-white/40">Ничего не найдено</p>}
+                    {orders.data.map((o) => {
+                        const s = STATUS[o.status] ?? { label: o.status ?? '—', cls: 'bg-white/10 text-white/50' };
+                        const refunded = o.paymentStatus === 'refunded';
+                        return (
+                            <div key={o.id} className="rounded-xl border border-white/10 bg-black/20 px-3.5 py-3">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        {o.user
+                                            ? <Link href={route('admin.users.show', o.user.id)} className="block truncate font-medium text-white">{o.user.label}</Link>
+                                            : <span className="text-white/40">—</span>}
+                                        <div className="truncate text-xs text-white/35">#{o.id} · {o.plan} · {o.createdAt}</div>
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <div className="font-semibold text-white">{money(o.amount)}</div>
+                                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${s.cls}`}>{s.label}</span>
+                                    </div>
+                                </div>
+                                <div className="mt-2 flex items-center justify-between gap-2">
+                                    <span className="truncate text-xs text-white/40">
+                                        {refunded ? 'возврат' : (o.paymentStatus ?? '—')}{o.method ? ` · ${o.method}` : ''} · {o.source}
+                                    </span>
+                                    {o.canSync && <button onClick={() => sync(o.id)} className="shrink-0 rounded-lg border border-white/10 px-2.5 py-1 text-xs text-white/60">Синхр.</button>}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden overflow-x-auto sm:block">
                     <table className="w-full text-left text-sm">
                         <thead className="text-xs uppercase tracking-wider text-white/35">
                             <tr>

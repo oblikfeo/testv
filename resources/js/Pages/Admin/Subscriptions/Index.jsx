@@ -3,16 +3,55 @@ import { Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Pagination from '@/Components/admin/Pagination';
 
-function Row({ sub }) {
+function useSubActions(sub) {
     const [days, setDays] = useState(30);
-
-    function extend() {
-        router.post(route('admin.subscriptions.extend', sub.id), { days }, { preserveScroll: true });
-    }
-    function expire() {
+    const extend = () => router.post(route('admin.subscriptions.extend', sub.id), { days }, { preserveScroll: true });
+    const expire = () => {
         if (!confirm(`Деактивировать подписку #${sub.id} (${sub.user?.label ?? ''})?`)) return;
         router.post(route('admin.subscriptions.expire', sub.id), {}, { preserveScroll: true });
-    }
+    };
+    return { days, setDays, extend, expire };
+}
+
+function StatusBadge({ sub }) {
+    return (
+        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${sub.isActive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/10 text-white/45'}`}>
+            {sub.isActive ? `активна · ${sub.daysLeft} дн.` : sub.status}
+        </span>
+    );
+}
+
+function DaysActions({ sub, days, setDays, extend, expire }) {
+    return (
+        <div className="flex items-center justify-end gap-1.5">
+            <input type="number" min="1" value={days} onChange={(e) => setDays(e.target.value)}
+                className="w-14 rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-xs text-white outline-none focus:border-red-500/50" />
+            <button onClick={extend} className="rounded-lg border border-white/10 px-2.5 py-1 text-xs text-white/70 transition hover:text-white">+дн</button>
+            {sub.isActive && <button onClick={expire} className="rounded-lg border border-red-500/25 px-2.5 py-1 text-xs text-red-300 transition hover:bg-red-500/10">Стоп</button>}
+        </div>
+    );
+}
+
+function MobileCard({ sub }) {
+    const a = useSubActions(sub);
+    return (
+        <div className="rounded-xl border border-white/10 bg-black/20 px-3.5 py-3">
+            <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                    {sub.user
+                        ? <Link href={route('admin.users.show', sub.user.id)} className="block truncate font-medium text-white">{sub.user.label}</Link>
+                        : <span className="text-white/40">—</span>}
+                    <div className="truncate text-xs text-white/35">#{sub.id} · {sub.plan} · {sub.maxDevices} устр. · до {sub.expiresAt}</div>
+                </div>
+                <StatusBadge sub={sub} />
+            </div>
+            <div className="mt-2.5"><DaysActions sub={sub} {...a} /></div>
+        </div>
+    );
+}
+
+function Row({ sub }) {
+    const a = useSubActions(sub);
 
     return (
         <tr>
@@ -24,20 +63,9 @@ function Row({ sub }) {
             </td>
             <td className="py-2.5 pr-2 text-white/70">{sub.plan}</td>
             <td className="py-2.5 pr-2 text-white/60">{sub.maxDevices}</td>
-            <td className="py-2.5 pr-2">
-                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${sub.isActive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/10 text-white/45'}`}>
-                    {sub.isActive ? `активна · ${sub.daysLeft} дн.` : sub.status}
-                </span>
-            </td>
+            <td className="py-2.5 pr-2"><StatusBadge sub={sub} /></td>
             <td className="py-2.5 pr-2 text-white/50">{sub.expiresAt}</td>
-            <td className="py-2.5 text-right">
-                <div className="flex items-center justify-end gap-1.5">
-                    <input type="number" min="1" value={days} onChange={(e) => setDays(e.target.value)}
-                        className="w-14 rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-xs text-white outline-none focus:border-red-500/50" />
-                    <button onClick={extend} className="rounded-lg border border-white/10 px-2.5 py-1 text-xs text-white/70 transition hover:text-white">+дн</button>
-                    {sub.isActive && <button onClick={expire} className="rounded-lg border border-red-500/25 px-2.5 py-1 text-xs text-red-300 transition hover:bg-red-500/10">Стоп</button>}
-                </div>
-            </td>
+            <td className="py-2.5 text-right"><DaysActions sub={sub} {...a} /></td>
         </tr>
     );
 }
@@ -76,8 +104,15 @@ export default function SubscriptionsIndex({ subscriptions, filters, counts }) {
                 {tab('all', 'Все')}
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-                <div className="overflow-x-auto">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 sm:p-5">
+                {/* Mobile: cards */}
+                <div className="flex flex-col gap-2 sm:hidden">
+                    {subscriptions.data.length === 0 && <p className="py-6 text-center text-white/40">Нет подписок</p>}
+                    {subscriptions.data.map((s) => <MobileCard key={s.id} sub={s} />)}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden overflow-x-auto sm:block">
                     <table className="w-full text-left text-sm">
                         <thead className="text-xs uppercase tracking-wider text-white/35">
                             <tr>
