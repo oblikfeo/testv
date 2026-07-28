@@ -9,11 +9,6 @@ const NAV_MAIN = [
     { name: 'admin.support.index', match: 'admin.support.*', label: 'Поддержка', icon: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /> },
 ];
 
-const NAV_LEGACY = [
-    { href: '/admin/trials', label: 'Триалы' },
-    { href: '/admin/trial-feedback', label: 'Отзывы' },
-];
-
 function NavIcon({ children }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
@@ -98,17 +93,6 @@ export default function AdminLayout({ title, children }) {
                             <nav className="flex flex-col gap-1">
                                 {NAV_MAIN.map((item) => <NavLink key={item.name} item={item} />)}
                             </nav>
-                            <div className="border-t border-white/10 pt-3">
-                                <p className="mb-1.5 px-3.5 text-xs font-semibold uppercase tracking-wider text-white/30">Пока старое</p>
-                                <div className="flex flex-col gap-1">
-                                    {NAV_LEGACY.map((item) => (
-                                        <a key={item.href} href={item.href}
-                                            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-white/45 transition hover:bg-white/[0.06] hover:text-white">
-                                            <span>{item.label}</span>
-                                        </a>
-                                    ))}
-                                </div>
-                            </div>
                         </div>
                     </aside>
 

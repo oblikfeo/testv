@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminSupportController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -204,12 +203,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/plans/{plan}/toggle', [AdminPlansController::class, 'toggle'])->name('admin.plans.toggle');
         Route::delete('/plans/{plan}', [AdminPlansController::class, 'destroy'])->name('admin.plans.destroy');
 
-        // Legacy (Blade) — kept operational until migrated into the new UI in later phases.
-        Route::get('/trials', [AdminController::class, 'trials'])->name('admin.trials');
-        Route::post('/trials/create', [AdminController::class, 'createTrial'])->name('admin.trials.create');
-        Route::post('/trials/revoke', [AdminController::class, 'revokeTrial'])->name('admin.trials.revoke');
-        Route::get('/trial-feedback', [AdminController::class, 'trialFeedback'])->name('admin.trial-feedback');
-
+        // Поддержка
         Route::get('/support', [AdminSupportController::class, 'index'])->name('admin.support.index');
         Route::get('/support/{ticket}', [AdminSupportController::class, 'show'])->name('admin.support.show');
         Route::post('/support/{ticket}/reply', [AdminSupportController::class, 'reply'])->name('admin.support.reply');
