@@ -43,7 +43,7 @@ MIGRATE_FRESH=1 bash deploy/server-deploy.sh
 | `server-bootstrap.sh` | nginx, PHP 8.2, Composer, Node, cron, queue systemd |
 | `server-deploy.sh` | pull, composer, npm build, migrate, nginx reload |
 | `nginx-site-ip.conf` | vhost :80 — только редирект 308 на HTTPS + ACME-challenge |
-| `nginx-security-headers.conf` | заголовки безопасности для vhost'а `reality-fallback` (:8443) — подключается вручную, см. ниже |
+| `nginx-reality-fallback.conf` | vhost `127.0.0.1:8443` (TLS) — сам сайт, fallback для xray Reality |
 
 ### Как отдаётся HTTPS (важно)
 
@@ -57,17 +57,11 @@ HTTP-01 продление Let's Encrypt.
 и уронит VPN-узел. Редирект на HTTPS живёт в `:80`-vhost'е, заголовки — в vhost'е
 `reality-fallback`.
 
-### Разовая ручная правка: заголовки на :8443
-
-Файл `reality-fallback` не лежит в репозитории (его TLS-часть завёл certbot),
-поэтому `server-deploy.sh` его не трогает. Один раз добавьте include:
-
-```bash
-sudo nano /etc/nginx/sites-available/reality-fallback
-# внутрь server { ... }:
-#   include /var/www/testv/deploy/nginx-security-headers.conf;
-sudo nginx -t && sudo systemctl reload nginx
-```
+Оба vhost'а лежат в репозитории и раскатываются `server-deploy.sh` (шаг 7).
+`reality-fallback` до сентября 2026 правился руками прямо на сервере и успел
+разойтись с репозиторием: в нём не было ни `fastcgi_buffer_size` (риск 502 на
+длинных ответах `/sub/{token}`), ни заголовков безопасности. Не редактируйте
+его на сервере — правьте в git, иначе следующий деплой всё перезапишет.
 
 ### Проверка
 

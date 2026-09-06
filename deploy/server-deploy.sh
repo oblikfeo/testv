@@ -112,13 +112,23 @@ $SUDO chown -R www-data:www-data storage bootstrap/cache database 2>/dev/null ||
 $SUDO chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
 
 echo "== 7. Nginx =="
+# Два vhost'а: :80 — только редирект на HTTPS, reality-fallback (127.0.0.1:8443)
+# — сам сайт, куда xray отправляет браузеры без Reality-ключа.
+# Оба под git: раньше reality-fallback правили руками на сервере и он молча
+# разошёлся с репозиторием (не было буферов fastcgi и заголовков безопасности).
 if [[ -f deploy/nginx-site-ip.conf ]]; then
   $SUDO cp deploy/nginx-site-ip.conf /etc/nginx/sites-available/testv
   $SUDO ln -sf /etc/nginx/sites-available/testv /etc/nginx/sites-enabled/testv
   $SUDO rm -f /etc/nginx/sites-enabled/default
-  $SUDO nginx -t
-  $SUDO systemctl reload nginx
 fi
+if [[ -f deploy/nginx-reality-fallback.conf ]]; then
+  $SUDO cp deploy/nginx-reality-fallback.conf /etc/nginx/sites-available/reality-fallback
+  $SUDO ln -sf /etc/nginx/sites-available/reality-fallback /etc/nginx/sites-enabled/reality-fallback
+fi
+# nginx -t до reload: при ошибке set -e оборвёт деплой, старый конфиг останется
+# в памяти nginx и сайт продолжит работать.
+$SUDO nginx -t
+$SUDO systemctl reload nginx
 
 echo "== 8. Queue worker =="
 if systemctl list-unit-files testv-queue.service >/dev/null 2>&1; then
