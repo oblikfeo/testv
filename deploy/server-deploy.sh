@@ -67,6 +67,21 @@ if [[ ! -f "$APP_DIR/.env" ]]; then
   echo "Создан .env — заполните секреты (YooKassa, API_TOKEN, ADMIN_*, VPN nodes) и перезапустите deploy."
 fi
 
+echo "== 3b. Обязательные прод-настройки в .env =="
+# Сайт наружу доступен только по HTTPS (:80 отдаёт 308), поэтому сессионная кука
+# обязана иметь флаг secure. Без этого Laravel ставит его по схеме запроса и по
+# http:// кука уходила бы открытым текстом. Идемпотентно: правим, а не дублируем.
+if grep -q '^APP_ENV=production' .env 2>/dev/null; then
+  if grep -q '^SESSION_SECURE_COOKIE=' .env; then
+    sed -i 's|^SESSION_SECURE_COOKIE=.*|SESSION_SECURE_COOKIE=true|' .env
+  else
+    printf '\nSESSION_SECURE_COOKIE=true\n' >> .env
+  fi
+  echo "SESSION_SECURE_COOKIE=true"
+else
+  echo "APP_ENV != production — пропущено"
+fi
+
 echo "== 4. Frontend (Vite) =="
 if [[ -f package.json ]]; then
   run_as_app_owner "cd '$APP_DIR' && npm install && npm run build"
@@ -119,4 +134,4 @@ fi
 
 echo "== Готово =="
 php artisan about --only=environment 2>/dev/null || true
-echo "Откройте: http://${SITE_IP}/"
+echo "Откройте: https://avavpn.ru/  (http://${SITE_IP}/ теперь отдаёт 308 на HTTPS)"
