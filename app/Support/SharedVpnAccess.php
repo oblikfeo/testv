@@ -25,8 +25,7 @@ class SharedVpnAccess
      * @var array<string, array{name: string, desc: ?string}>
      */
     private const NODE_LABELS = [
-        'shared_hy2_uri' => ['name' => '🇷🇺 Высокая скорость Wi-Fi', 'desc' => null],
-        'shared_cdn_uri' => ['name' => '🇷🇺 Обход блокировок', 'desc' => null],
+        'shared_home_uri' => ['name' => '🇩🇪 Домашний интернет', 'desc' => null],
     ];
 
     /**
