@@ -7,6 +7,7 @@ use App\Models\KeyOrder;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -31,50 +32,61 @@ class YooKassaService
     {
         $idempotenceKey = Str::uuid()->toString();
 
-        $response = Http::withBasicAuth($this->shopId, $this->secretKey)
-            ->connectTimeout(10)
-            ->timeout(25)
-            ->withHeaders([
-                'Idempotence-Key' => $idempotenceKey,
-                'Content-Type' => 'application/json',
-            ])
-            ->post("{$this->apiUrl}/payments", [
-                'amount' => [
-                    'value' => number_format($plan->price, 2, '.', ''),
-                    'currency' => 'RUB',
-                ],
-                'confirmation' => [
-                    'type' => 'redirect',
-                    'return_url' => $returnUrlOverride !== null && $returnUrlOverride !== ''
-                        ? $returnUrlOverride
-                        : $this->paymentReturnUrl($order),
-                ],
-                'capture' => true,
-                'description' => "Оплата тарифа {$plan->name} - {$plan->period_label}",
-                'receipt' => [
-                    'customer' => [
-                        'email' => $user->email,
+        try {
+            $response = Http::withBasicAuth($this->shopId, $this->secretKey)
+                ->connectTimeout(10)
+                ->timeout(25)
+                ->withHeaders([
+                    'Idempotence-Key' => $idempotenceKey,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$this->apiUrl}/payments", [
+                    'amount' => [
+                        'value' => number_format($plan->price, 2, '.', ''),
+                        'currency' => 'RUB',
                     ],
-                    'items' => [
-                        [
-                            'description' => "VPN подписка: {$plan->name} ({$plan->period_label})",
-                            'quantity' => '1.00',
-                            'amount' => [
-                                'value' => number_format($plan->price, 2, '.', ''),
-                                'currency' => 'RUB',
+                    'confirmation' => [
+                        'type' => 'redirect',
+                        'return_url' => $returnUrlOverride !== null && $returnUrlOverride !== ''
+                            ? $returnUrlOverride
+                            : $this->paymentReturnUrl($order),
+                    ],
+                    'capture' => true,
+                    'description' => "Оплата тарифа {$plan->name} - {$plan->period_label}",
+                    'receipt' => [
+                        'customer' => [
+                            'email' => $user->email,
+                        ],
+                        'items' => [
+                            [
+                                'description' => "VPN подписка: {$plan->name} ({$plan->period_label})",
+                                'quantity' => '1.00',
+                                'amount' => [
+                                    'value' => number_format($plan->price, 2, '.', ''),
+                                    'currency' => 'RUB',
+                                ],
+                                'vat_code' => 1,
+                                'payment_mode' => 'full_payment',
+                                'payment_subject' => 'service',
                             ],
-                            'vat_code' => 1,
-                            'payment_mode' => 'full_payment',
-                            'payment_subject' => 'service',
                         ],
                     ],
-                ],
-                'metadata' => [
-                    'order_id' => $order->id,
-                    'user_id' => $user->id,
-                    'plan_id' => $plan->id,
-                ],
+                    'metadata' => [
+                        'order_id' => $order->id,
+                        'user_id' => $user->id,
+                        'plan_id' => $plan->id,
+                    ],
+                ]);
+        } catch (ConnectionException $e) {
+            // Таймаут/DNS до api.yookassa.ru. Без перехвата уходит в 500 —
+            // пользователь должен увидеть внятную ошибку, а заказ отмениться.
+            Log::error('YooKassa payment creation failed', [
+                'order_id' => $order->id,
+                'message' => $e->getMessage(),
             ]);
+
+            return null;
+        }
 
         if ($response->successful()) {
             $data = $response->json();
@@ -97,10 +109,19 @@ class YooKassaService
 
     public function getPayment(string $paymentId): ?array
     {
-        $response = Http::withBasicAuth($this->shopId, $this->secretKey)
-            ->connectTimeout(5)
-            ->timeout(10)
-            ->get("{$this->apiUrl}/payments/{$paymentId}");
+        try {
+            $response = Http::withBasicAuth($this->shopId, $this->secretKey)
+                ->connectTimeout(5)
+                ->timeout(10)
+                ->get("{$this->apiUrl}/payments/{$paymentId}");
+        } catch (ConnectionException $e) {
+            Log::error('YooKassa get payment failed', [
+                'payment_id' => $paymentId,
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
 
         if ($response->successful()) {
             return $response->json();
