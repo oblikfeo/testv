@@ -26,6 +26,7 @@ class SharedVpnAccess
      */
     private const NODE_LABELS = [
         'shared_home_uri' => ['name' => '🇩🇪 Домашний интернет', 'desc' => null],
+        'shared_cellular_uri' => ['name' => '🇷🇺 Сотовая сеть', 'desc' => null],
     ];
 
     /**
