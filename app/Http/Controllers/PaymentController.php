@@ -80,6 +80,33 @@ class PaymentController extends Controller
             }
         }
 
+        // Повторный клик по «Купить» не должен плодить заказы и платежи в ЮKassa:
+        // если у пользователя уже есть свежий неоплаченный заказ на тот же тариф —
+        // возвращаем его на ту же страницу оплаты.
+        $pendingOrder = KeyOrder::query()
+            ->where('user_id', $user->id)
+            ->where('plan_id', $plan->id)
+            ->where('status', OrderStatus::Pending)
+            ->where('purchase_action', $purchaseAction)
+            ->when(
+                $targetSubscriptionId === null,
+                fn ($query) => $query->whereNull('target_subscription_id'),
+                fn ($query) => $query->where('target_subscription_id', $targetSubscriptionId),
+            )
+            ->whereNotNull('payment_id')
+            ->where('payment_status', 'pending')
+            ->where('created_at', '>=', now()->subMinutes(15))
+            ->latest('id')
+            ->first();
+
+        if ($pendingOrder) {
+            $pendingUrl = $this->yooKassaService->pendingConfirmationUrl($pendingOrder);
+
+            if ($pendingUrl) {
+                return Inertia::location($pendingUrl);
+            }
+        }
+
         $order = KeyOrder::create([
             'user_id' => $user->id,
             'plan_id' => $plan->id,

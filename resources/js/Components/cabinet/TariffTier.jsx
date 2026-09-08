@@ -1,5 +1,3 @@
-import { router } from '@inertiajs/react';
-
 function deviceWord(devices) {
     const mod10 = devices % 10;
     const mod100 = devices % 100;
@@ -8,10 +6,8 @@ function deviceWord(devices) {
     return 'устройств';
 }
 
-export default function TariffTier({ tier }) {
-    function buy(planId) {
-        router.post(route('payment.create'), { plan_id: planId });
-    }
+export default function TariffTier({ tier, onBuy, purchasingPlanId }) {
+    const busy = purchasingPlanId !== null;
 
     return (
         <article
@@ -39,28 +35,38 @@ export default function TariffTier({ tier }) {
 
             <div className="flex flex-col gap-2.5">
                 {tier.plans.length === 0 && <p className="text-sm text-white/40">Тарифы временно недоступны</p>}
-                {tier.plans.map((plan) => (
-                    <div key={plan.id} className="flex flex-col gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <div className="text-sm font-medium text-white">{plan.periodLabel}</div>
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-white/40">
-                                {plan.trafficGb > 0 && <span>{plan.trafficGb} ГБ</span>}
-                                <span className="font-semibold text-white/80">{plan.formattedPrice}</span>
-                                {plan.discount > 0 && <span className="text-emerald-400">−{plan.discount}%</span>}
+                {tier.plans.map((plan) => {
+                    const pending = purchasingPlanId === plan.id;
+                    return (
+                        <div key={plan.id} className="flex flex-col gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <div className="text-sm font-medium text-white">{plan.periodLabel}</div>
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-white/40">
+                                    {plan.trafficGb > 0 && <span>{plan.trafficGb} ГБ</span>}
+                                    <span className="font-semibold text-white/80">{plan.formattedPrice}</span>
+                                    {plan.discount > 0 && <span className="text-emerald-400">−{plan.discount}%</span>}
+                                </div>
                             </div>
+                            <button
+                                type="button" disabled={busy} onClick={() => onBuy(plan.id)}
+                                aria-busy={pending}
+                                className={`flex w-full shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${
+                                    tier.featured
+                                        ? 'bg-gradient-to-r from-red-600 to-fuchsia-600 text-white shadow-glow hover:brightness-110'
+                                        : 'border border-white/15 bg-white/[0.06] text-white/90 hover:bg-white/[0.1]'
+                                }`}
+                            >
+                                {pending && (
+                                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                                        <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                                    </svg>
+                                )}
+                                {pending ? 'Открываем оплату…' : 'Купить'}
+                            </button>
                         </div>
-                        <button
-                            type="button" onClick={() => buy(plan.id)}
-                            className={`w-full shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition sm:w-auto ${
-                                tier.featured
-                                    ? 'bg-gradient-to-r from-red-600 to-fuchsia-600 text-white shadow-glow hover:brightness-110'
-                                    : 'border border-white/15 bg-white/[0.06] text-white/90 hover:bg-white/[0.1]'
-                            }`}
-                        >
-                            Купить
-                        </button>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </article>
     );

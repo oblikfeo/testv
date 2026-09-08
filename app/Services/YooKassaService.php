@@ -32,6 +32,8 @@ class YooKassaService
         $idempotenceKey = Str::uuid()->toString();
 
         $response = Http::withBasicAuth($this->shopId, $this->secretKey)
+            ->connectTimeout(10)
+            ->timeout(25)
             ->withHeaders([
                 'Idempotence-Key' => $idempotenceKey,
                 'Content-Type' => 'application/json',
@@ -96,6 +98,8 @@ class YooKassaService
     public function getPayment(string $paymentId): ?array
     {
         $response = Http::withBasicAuth($this->shopId, $this->secretKey)
+            ->connectTimeout(5)
+            ->timeout(10)
             ->get("{$this->apiUrl}/payments/{$paymentId}");
 
         if ($response->successful()) {
@@ -109,6 +113,24 @@ class YooKassaService
         ]);
 
         return null;
+    }
+
+    /**
+     * Ссылка на оплату уже созданного и ещё не оплаченного платежа заказа.
+     * Позволяет вернуть пользователя на тот же платёж вместо создания нового.
+     */
+    public function pendingConfirmationUrl(KeyOrder $order): ?string
+    {
+        if (! $order->payment_id) {
+            return null;
+        }
+
+        $payment = $this->getPayment($order->payment_id);
+        if (! $payment || ($payment['status'] ?? null) !== 'pending') {
+            return null;
+        }
+
+        return $payment['confirmation']['confirmation_url'] ?? null;
     }
 
     public function processWebhook(array $data): bool

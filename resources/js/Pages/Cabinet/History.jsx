@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import CabinetLayout from '@/Layouts/CabinetLayout';
 import GlassCard from '@/Components/ui/GlassCard';
 import Alert from '@/Components/cabinet/Alert';
@@ -16,7 +16,20 @@ export default function History({ tiers, orders }) {
     const { props } = usePage();
     const errorList = Object.values(props.errors ?? {});
     const [dismissed, setDismissed] = useState(false);
+    const [purchasingPlanId, setPurchasingPlanId] = useState(null);
     const purchaseChoice = dismissed ? null : props.purchaseChoice;
+
+    // Создание платежа в ЮKassa занимает несколько секунд. Без этой блокировки
+    // повторные клики отменяли предыдущий Inertia-визит и плодили заказы.
+    function buy(planId) {
+        if (purchasingPlanId !== null) return;
+        setPurchasingPlanId(planId);
+        router.post(
+            route('payment.create'),
+            { plan_id: planId },
+            { onFinish: () => setPurchasingPlanId(null) },
+        );
+    }
 
     return (
         <CabinetLayout title="Покупки">
@@ -41,7 +54,7 @@ export default function History({ tiers, orders }) {
                 </div>
                 <div className="grid gap-5 md:grid-cols-3">
                     {tiers.map((tier) => (
-                        <TariffTier key={tier.name} tier={tier} />
+                        <TariffTier key={tier.name} tier={tier} onBuy={buy} purchasingPlanId={purchasingPlanId} />
                     ))}
                 </div>
             </section>
