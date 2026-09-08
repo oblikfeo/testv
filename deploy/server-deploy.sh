@@ -109,7 +109,11 @@ fi
 
 echo "== 6. Права =="
 $SUDO chown -R www-data:www-data storage bootstrap/cache database 2>/dev/null || true
-$SUDO chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
+# Каталогам нужен +x (обход), файлам — нет. Раньше здесь был `chmod -R ug+rwx`,
+# который вешал бит выполнения и на отслеживаемые .gitignore внутри storage/ —
+# после каждого деплоя `git status` на сервере показывал 11 изменённых файлов.
+$SUDO find storage bootstrap/cache -type d -exec chmod ug+rwx {} + 2>/dev/null || true
+$SUDO find storage bootstrap/cache -type f -exec chmod ug+rw {} + 2>/dev/null || true
 
 echo "== 7. Nginx =="
 # Два vhost'а: :80 — только редирект на HTTPS, reality-fallback (127.0.0.1:8443)
