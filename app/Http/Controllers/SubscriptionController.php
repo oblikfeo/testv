@@ -67,7 +67,10 @@ class SubscriptionController extends Controller
     ): Response {
         $headers = [
             'Content-Type' => 'text/plain; charset=utf-8',
-            'profile-update-interval' => '12',
+            // Отзыв доступа (возврат/окончание) виден клиенту только после
+            // перезапроса фида, поэтому интервал короткий: 12 часов давали
+            // почти сутки работы уже отозванной подписки.
+            'profile-update-interval' => '3',
             'profile-title' => $active ? SharedVpnAccess::PROFILE_TITLE : SharedVpnAccess::EXPIRED_PROFILE_TITLE,
         ];
 

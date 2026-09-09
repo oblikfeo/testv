@@ -194,6 +194,19 @@ class YooKassaService
             return false;
         }
 
+        // Возврат уже проведён. ЮKassa доставляет payment.succeeded повторно
+        // (ретраи до суток), и без этой проверки заказ снова становится оплаченным,
+        // а handleSuccessfulPayment выдаёт пользователю новую подписку.
+        if ($this->isRefundedOrder($order)) {
+            Log::info('YooKassa webhook ignored: order already refunded', [
+                'order_id' => $order->id,
+                'payment_id' => $paymentId,
+                'event' => $event,
+            ]);
+
+            return true;
+        }
+
         $order->update([
             'payment_status' => $status,
         ]);
@@ -247,18 +260,7 @@ class YooKassaService
             'payment_status' => 'refunded',
         ]);
 
-        $subscriptionId = $order->purchase_action === 'renew_subscription' && $order->target_subscription_id
-            ? (int) $order->target_subscription_id
-            : null;
-
-        if (! $subscriptionId) {
-            $subscriptionId = (int) (Subscription::query()
-                ->where('user_id', $order->user_id)
-                ->where('plan_id', $order->plan_id)
-                ->where('created_at', '>=', $order->created_at?->subMinutes(5) ?? now()->subMinutes(5))
-                ->orderByDesc('id')
-                ->value('id') ?? 0);
-        }
+        $subscriptionId = $this->resolveOrderSubscriptionId($order);
 
         if ($subscriptionId) {
             Subscription::query()
@@ -267,15 +269,65 @@ class YooKassaService
                     'status' => 'expired',
                     'expires_at' => now(),
                 ]);
+        } else {
+            // Доступ не отозван — заказ оплачен, но подписку по нему найти не удалось.
+            // Это ровно тот случай, когда после возврата VPN продолжает работать,
+            // поэтому пишем error, а не info: нужен ручной разбор в админке.
+            Log::error('YooKassa refund: subscription for order not found, access NOT revoked', [
+                'order_id' => $order->id,
+                'user_id' => $order->user_id,
+                'payment_id' => $paymentId,
+            ]);
         }
 
         Log::info('YooKassa refund processed', [
             'order_id' => $order->id,
             'payment_id' => $paymentId,
             'refund_id' => $refundData['id'] ?? null,
+            'subscription_id' => $subscriptionId,
         ]);
 
         return true;
+    }
+
+    /**
+     * Подписка, выданная по заказу. Начиная с фикса возвратов её id пишется
+     * в orders.target_subscription_id прямо при проведении оплаты — и для продления,
+     * и для новой покупки, поэтому возврат всегда отзывает именно её.
+     *
+     * Фолбэк нужен только для заказов, оплаченных до этого фикса: ищем подписку,
+     * созданную в момент проведения платежа. Тариф в фильтре не участвует —
+     * продление меняет plan_id подписки, и старый заказ по нему уже не находится.
+     */
+    public function resolveOrderSubscriptionId(KeyOrder $order): ?int
+    {
+        if ($order->target_subscription_id) {
+            return (int) $order->target_subscription_id;
+        }
+
+        $paidAt = $order->paid_at ?? $order->created_at;
+        if (! $paidAt) {
+            return null;
+        }
+
+        $id = Subscription::query()
+            ->where('user_id', $order->user_id)
+            ->whereBetween('created_at', [
+                $paidAt->copy()->subMinutes(10),
+                $paidAt->copy()->addMinutes(10),
+            ])
+            ->orderByDesc('id')
+            ->value('id');
+
+        return $id ? (int) $id : null;
+    }
+
+    /**
+     * Заказ, по которому уже проведён возврат: доступ отозван и восстанавливать его нельзя.
+     */
+    protected function isRefundedOrder(KeyOrder $order): bool
+    {
+        return $order->payment_status === 'refunded';
     }
 
     protected function handleSuccessfulPayment(KeyOrder $order, array $paymentData): bool
@@ -283,6 +335,17 @@ class YooKassaService
         $order->refresh();
 
         if ($order->status === OrderStatus::Fulfilled) {
+            return true;
+        }
+
+        // По этому заказу уже прошёл возврат: заказ отменён, подписка отозвана.
+        // Повторная обработка payment.succeeded выдала бы пользователю новую подписку.
+        if ($this->isRefundedOrder($order)) {
+            Log::warning('YooKassa: successful payment skipped for refunded order', [
+                'order_id' => $order->id,
+                'payment_id' => $order->payment_id,
+            ]);
+
             return true;
         }
 
@@ -315,6 +378,13 @@ class YooKassaService
                 $subscription = $this->subscriptions->extendWithPlan($targetSubscription, $plan, $source);
             } else {
                 $subscription = $this->subscriptions->createForPlan($user, $plan, $source);
+            }
+
+            // Жёсткая связь «заказ → выданная подписка»: только по ней возврат
+            // может гарантированно отозвать доступ. Для продления id уже стоит,
+            // для новой покупки он до этого фикса нигде не сохранялся.
+            if ((int) $order->target_subscription_id !== (int) $subscription->id) {
+                $order->update(['target_subscription_id' => $subscription->id]);
             }
 
             if ($user->telegram_id) {
