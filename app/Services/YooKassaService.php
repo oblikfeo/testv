@@ -110,9 +110,15 @@ class YooKassaService
     public function getPayment(string $paymentId): ?array
     {
         try {
+            // Таймауты с запасом. На проде резолв api.yookassa.ru занимал ~5.1 c
+            // и ровно упирался в connectTimeout(5): каждый опрос платежа падал,
+            // возвраты не обнаруживались, доступ после возврата не отзывался.
+            // Корень чинится в резолвере (см. deploy/server-deploy.sh), но
+            // запас по времени нужен, чтобы сетевая просадка снова не отключала
+            // проверку возвратов молча.
             $response = Http::withBasicAuth($this->shopId, $this->secretKey)
-                ->connectTimeout(5)
-                ->timeout(10)
+                ->connectTimeout(8)
+                ->timeout(20)
                 ->get("{$this->apiUrl}/payments/{$paymentId}");
         } catch (ConnectionException $e) {
             Log::error('YooKassa get payment failed', [

@@ -82,6 +82,21 @@ else
   echo "APP_ENV != production — пропущено"
 fi
 
+echo "== 3c. DNS-резолвер =="
+# glibc по умолчанию шлёт A и AAAA параллельно с одного сокета. На этом хостинге
+# ответ на второй запрос теряется, getaddrinfo() ждёт полный timeout (5 c) и только
+# потом отвечает: `getent hosts` (только A) — 0.15 c, а curl/PHP — 5.1 c.
+# Из-за этого все вызовы api.yookassa.ru падали по connect timeout, возвраты не
+# обнаруживались и подписка после возврата продолжала работать.
+# single-request-reopen шлёт запросы последовательно на разных сокетах: 5.1 c → 0.15 c.
+if ! grep -q 'single-request-reopen' /etc/resolv.conf 2>/dev/null; then
+  $SUDO cp -a /etc/resolv.conf "/etc/resolv.conf.bak.$(date +%Y%m%d_%H%M%S)" || true
+  echo 'options single-request-reopen timeout:2 attempts:3' | $SUDO tee -a /etc/resolv.conf >/dev/null
+  echo "resolv.conf: добавлен single-request-reopen"
+else
+  echo "resolv.conf: уже настроен"
+fi
+
 echo "== 4. Frontend (Vite) =="
 if [[ -f package.json ]]; then
   run_as_app_owner "cd '$APP_DIR' && npm install && npm run build"
