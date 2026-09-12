@@ -7,7 +7,7 @@ return [
     // в SharedVpnAccess::NODE_LABELS: ключ здесь должен совпадать с ключом там,
     // иначе URI просто не попадёт в /sub.
     //
-    // Первый узел подписки: VLESS Reality, «🇩🇪 Домашний интернет».
+    // Первый узел подписки: VMess over WebSocket, «🇫🇮 Домашний интернет».
     'shared_home_uri' => env('SHARED_HOME_URI', ''),
 
     // Второй узел: VLESS xhttp через Yandex Cloud CDN, «🇷🇺 Сотовая сеть».

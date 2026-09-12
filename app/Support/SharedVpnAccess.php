@@ -25,7 +25,7 @@ class SharedVpnAccess
      * @var array<string, array{name: string, desc: ?string}>
      */
     private const NODE_LABELS = [
-        'shared_home_uri' => ['name' => '🇩🇪 Домашний интернет', 'desc' => null],
+        'shared_home_uri' => ['name' => '🇫🇮 Домашний интернет', 'desc' => null],
         'shared_cellular_uri' => ['name' => '🇷🇺 Сотовая сеть', 'desc' => null],
     ];
 
@@ -49,7 +49,7 @@ class SharedVpnAccess
     }
 
     /**
-     * URI с подписями для Happ: имя узла (#...) и serverDescription.
+     * URI с подписями для Happ: имя узла и serverDescription.
      * Любой существующий #fragment в URI заменяется на наш.
      *
      * @return list<string>
@@ -64,20 +64,79 @@ class SharedVpnAccess
                 continue;
             }
 
-            $hashPos = strpos($uri, '#');
-            if ($hashPos !== false) {
-                $uri = substr($uri, 0, $hashPos);
-            }
-
-            $fragment = $label['name'];
-            if (! empty($label['desc'])) {
-                $fragment .= '?serverDescription=' . base64_encode($label['desc']);
-            }
-
-            $uris[] = $uri . '#' . $fragment;
+            $uris[] = self::labelNodeUri($uri, $label);
         }
 
         return $uris;
+    }
+
+    /**
+     * @param  array{name: string, desc: ?string}  $label
+     */
+    private static function labelNodeUri(string $uri, array $label): string
+    {
+        // У vmess имя узла лежит в поле ps внутри base64-конфига, а не во
+        // #fragment: дописанный к vmess://-ссылке фрагмент клиент игнорирует,
+        // и узел показался бы пользователю своим исходным именем из ссылки.
+        if (str_starts_with(strtolower($uri), 'vmess://')) {
+            $labelled = self::labelVmessUri($uri, $label['name']);
+            if ($labelled !== null) {
+                return $labelled;
+            }
+        }
+
+        $hashPos = strpos($uri, '#');
+        if ($hashPos !== false) {
+            $uri = substr($uri, 0, $hashPos);
+        }
+
+        $fragment = $label['name'];
+        if (! empty($label['desc'])) {
+            $fragment .= '?serverDescription=' . base64_encode($label['desc']);
+        }
+
+        return $uri . '#' . $fragment;
+    }
+
+    /**
+     * Переписывает ps (отображаемое имя) внутри vmess://-конфига.
+     * serverDescription для vmess не поддерживается — Happ читает его только
+     * из #fragment, которого у vmess нет.
+     *
+     * @return string|null null, если ссылка не разбирается — тогда вызывающий
+     *                     код падает на обычную схему с #fragment.
+     */
+    private static function labelVmessUri(string $uri, string $name): ?string
+    {
+        $payload = substr($uri, strlen('vmess://'));
+
+        $hashPos = strpos($payload, '#');
+        if ($hashPos !== false) {
+            $payload = substr($payload, 0, $hashPos);
+        }
+
+        // Ссылки встречаются и в base64url, и без padding.
+        $payload = strtr(trim($payload), '-_', '+/');
+        $payload .= str_repeat('=', (4 - strlen($payload) % 4) % 4);
+
+        $json = base64_decode($payload, true);
+        if ($json === false || $json === '') {
+            return null;
+        }
+
+        $config = json_decode($json, true);
+        if (! is_array($config)) {
+            return null;
+        }
+
+        $config['ps'] = $name;
+
+        $encoded = json_encode($config, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($encoded === false) {
+            return null;
+        }
+
+        return 'vmess://'.base64_encode($encoded);
     }
 
     public static function subscriptionBody(): string
